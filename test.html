@@ -1,0 +1,252 @@
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8">
+    <title>Matrix Aura Sphere - Version Colorée</title>
+    <style>
+      body {
+        margin: 0;
+        overflow: hidden;
+        background: white;
+        font-family: monospace;
+      }
+      canvas {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import * as THREE from 'https://cdn.skypack.dev/three@0.136.0/build/three.module.js';
+      import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/controls/OrbitControls.js';
+      import { EffectComposer } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/EffectComposer.js';
+      import { RenderPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/RenderPass.js';
+      import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+      import { ShaderPass } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/postprocessing/ShaderPass.js';
+      import { FontLoader } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/loaders/FontLoader.js';
+      import { TextGeometry } from 'https://cdn.skypack.dev/three@0.136.0/examples/jsm/geometries/TextGeometry.js';
+      import { GUI } from 'https://cdn.skypack.dev/dat.gui';
+
+      let scene, camera, renderer, composer, controls;
+      let colorfulGroup;
+      const uniforms = { iTime: { value: 0.0 } };
+
+      init();
+      animate();
+
+      function init() {
+        scene = new THREE.Scene();
+        scene.background = new THREE.Color(0xffffff);
+        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
+        camera.position.z = 8;
+
+        renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        controls = new OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.5;
+
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1);
+        scene.add(ambientLight);
+
+        const directionalLight1 = new THREE.DirectionalLight(0xff00ff, 0.8);
+        directionalLight1.position.set(10, 10, 10);
+        scene.add(directionalLight1);
+
+        const pixelateShader = {
+          uniforms: {
+            tDiffuse: { value: null },
+            resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            pixelSize: { value: new THREE.Vector2(1.0, 12.0) }
+          },
+          vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                vUv = uv;
+                gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+            }
+          `,
+          fragmentShader: `
+            uniform sampler2D tDiffuse;
+            uniform vec2 resolution;
+            uniform vec2 pixelSize;
+            varying vec2 vUv;
+
+            void main() {
+                vec2 uv = gl_FragCoord.xy / resolution;
+                vec2 pixelatedUV = floor(uv * resolution / pixelSize) * pixelSize / resolution;
+                vec4 color = texture2D(tDiffuse, pixelatedUV);
+                gl_FragColor = color;
+            }
+          `};
+
+        composer = new EffectComposer(renderer);
+        composer.addPass(new RenderPass(scene, camera));
+        const bloomPass = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.4, 0.4, 1.0);
+        bloomPass.threshold = 0.95;
+        composer.addPass(bloomPass);
+
+        const pixelatePass = new ShaderPass(pixelateShader);
+        pixelatePass.uniforms['resolution'].value.set(window.innerWidth, window.innerHeight);
+        // pixelatePass.uniforms['pixelSize'].value = 20.0;
+        composer.addPass(pixelatePass);
+        
+        const scanLineShader = {
+          blending: THREE.NormalBlending,
+          uniforms: {
+            "tDiffuse": { value: null },
+            "time": { value: 0.0 },
+            "lineHeight": { value: 4.0 },
+            "lineSpacing": { value: 2.0 },
+            "opacity": { value: 0.15 }
+          },
+          vertexShader: `
+        varying vec2 vUv;
+        void main() {
+            vUv = uv;
+            gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+    `,
+          fragmentShader: `
+        uniform sampler2D tDiffuse;
+        uniform float time;
+        uniform float lineHeight;
+        uniform float lineSpacing;
+        uniform float opacity;
+        varying vec2 vUv;
+
+        void main() {
+            vec4 color = texture2D(tDiffuse, vUv);
+            float scanline = step(lineSpacing, mod(gl_FragCoord.y, lineHeight)) * opacity;
+            color.rgb = clamp(color.rgb - scanline, 0.0, 1.0);
+            gl_FragColor = color;
+        }
+    `
+        };
+        const scanLinePass = new ShaderPass(scanLineShader);
+        composer.addPass(scanLinePass);
+
+         const grainShader = {
+          uniforms: {
+            tDiffuse: { value: null },
+            time: { value: 0.0 }
+          },
+          vertexShader: `
+            varying vec2 vUv;
+            void main() {
+                  vUv = uv;
+                  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+              }
+          `,
+          fragmentShader: `
+            uniform sampler2D tDiffuse;
+            uniform float time;
+            varying vec2 vUv;
+
+            void main() {
+                vec4 color = texture2D(tDiffuse, vUv);
+                float grain = fract(sin(dot(vUv.xy, vec2(12.9898, 78.233))) * 43758.5453 + time);
+                color.rgb += (grain - 0.5) * 0.05; // Ajustement du grain
+                gl_FragColor = color;
+            }
+            `
+        };        
+
+        const grainPass = new ShaderPass(grainShader);
+        composer.addPass(grainPass);
+
+
+        
+        const gui = new GUI();
+        const pixelParams = {
+          enablePixelate: true, 
+          pixelWidth: 1.0,
+          pixelHeight: 12.0
+        };
+        gui.add(pixelParams, 'pixelWidth', 0, 50).step(1).onChange(value => {
+          pixelatePass.uniforms['pixelSize'].value.set(value, pixelParams.pixelHeight);
+        });
+
+        gui.add(pixelParams, 'pixelHeight', 0, 50).step(1).onChange(value => {
+          pixelatePass.uniforms['pixelSize'].value.set(pixelParams.pixelWidth, value);
+        });
+        gui.add(pixelParams, 'enablePixelate').onChange(value => {
+          if (value) {
+            composer.addPass(pixelatePass);
+          } else {
+            composer.passes = composer.passes.filter(pass => pass !== pixelatePass);
+          }
+        });
+        gui.close();
+
+        window.addEventListener('resize', () => {
+          const width = window.innerWidth;
+          const height = window.innerHeight;
+
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+
+          renderer.setSize(width, height);
+          composer.setSize(width, height);
+
+          pixelatePass.uniforms['resolution'].value.set(width, height);
+        });
+
+        colorfulGroup = new THREE.Group();
+        scene.add(colorfulGroup);
+
+        addColorfulShapes();      }
+
+      function addColorfulShapes() {
+        const loader = new FontLoader();
+        loader.load(
+          'https://threejs.org/examples/fonts/helvetiker_regular.typeface.json',
+          font => {
+            const geometry = new TextGeometry('1', {
+              font,
+              size: 3,
+              height: 0.6,
+              curveSegments: 12,
+              bevelEnabled: true,
+              bevelThickness: 0.08,
+              bevelSize: 0.04,
+              bevelOffset: 0,
+              bevelSegments: 4
+            });
+            geometry.center();
+
+            const material = new THREE.MeshPhongMaterial({
+              color: 0x024b9e,
+              shininess: 120,
+              specular: 0xffffff
+            });
+
+            const numberMesh = new THREE.Mesh(geometry, material);
+            colorfulGroup.add(numberMesh);
+          },
+          undefined,
+          error => {
+            console.error('Font load error:', error);
+          }
+        );
+      }
+
+      function animate() {
+        requestAnimationFrame(animate);
+        uniforms.iTime.value += 0.02;
+        colorfulGroup.rotation.y += 0.005;
+        controls.update();
+        composer.render();
+      }
+      document.body.addEventListener('dblclick', () => {
+        if (!document.fullscreenElement) {
+          document.body.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      });
+
+    </script>
+  </body>
+</html>
