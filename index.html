@@ -516,6 +516,10 @@
       height: 100%;
     }
 
+    .scene--detail-open .scene__detail-body {
+      height: auto;
+    }
+
     .scene__detail-title {
       margin: 0;
       display: inline-block;
@@ -5826,6 +5830,9 @@
       const articles = Array.from(gridEl.querySelectorAll('article')).filter(cell => DETAIL_TARGET_ID_SET.has(cell.id));
       if (!articles.length) return;
 
+      const initialViewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+      const initialViewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+
       const focusAnimation = {
         duration: 1000,
         frame: null,
@@ -5841,7 +5848,9 @@
         rowGap: 0,
         autoRowsInline: '',
         autoRowsComputed: '',
-        cellTrackInfo: new Map()
+        cellTrackInfo: new Map(),
+        viewportWidth: initialViewportWidth,
+        viewportHeight: initialViewportHeight
       };
       const POSITION_EPSILON = 1.5;
       let expandedArticle = null;
@@ -6047,6 +6056,8 @@
         focusAnimation.columnsCurrent = columnWidths.slice();
         focusAnimation.rowsCurrent = rowHeights.slice();
         updateCellTrackInfo();
+        focusAnimation.viewportWidth = window.innerWidth || document.documentElement.clientWidth || gridRect.width;
+        focusAnimation.viewportHeight = window.innerHeight || document.documentElement.clientHeight || gridRect.height;
 
         if (expandedColumn !== -1 || expandedRow !== -1) {
           gridEl.style.gridTemplateColumns = previousColumnStyle;
@@ -6455,12 +6466,26 @@
       });
 
       window.addEventListener('resize', () => {
+        const width = window.innerWidth || document.documentElement.clientWidth || 0;
+        const height = window.innerHeight || document.documentElement.clientHeight || 0;
+        const prevWidth = focusAnimation.viewportWidth ?? width;
+        const prevHeight = focusAnimation.viewportHeight ?? height;
+        const widthDiff = Math.abs(width - prevWidth);
+        const heightDiff = Math.abs(height - prevHeight);
+        if (widthDiff < 1 && heightDiff <= 160) {
+          focusAnimation.viewportWidth = width;
+          focusAnimation.viewportHeight = height;
+          return;
+        }
+
         const wasExpanded = expandedColumn !== -1 && expandedRow !== -1;
         const prevColumn = expandedColumn;
         const prevRow = expandedRow;
         const prevArticle = expandedArticle;
         resetFocus(true);
         measureBaseState();
+        focusAnimation.viewportWidth = width;
+        focusAnimation.viewportHeight = height;
         if (wasExpanded && prevArticle && gridEl.contains(prevArticle)) {
           const columnCount = focusAnimation.baseColumns.length;
           const rowCount = focusAnimation.baseRows.length;
