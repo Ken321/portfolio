@@ -5619,12 +5619,36 @@
         cell.appendChild(overlay);
       }
 
+      function lockGridToCurrentSize() {
+        const { baseColumns, baseRows, columnsCurrent, rowsCurrent } = focusAnimation;
+        const columns = columnsCurrent.length === baseColumns.length && columnsCurrent.length
+          ? columnsCurrent
+          : baseColumns;
+        const rows = rowsCurrent.length === baseRows.length && rowsCurrent.length
+          ? rowsCurrent
+          : baseRows;
+        if (columns.length) {
+          const list = columns.map(value => `${Math.max(value, 0)}px`).join(' ');
+          gridEl.style.gridTemplateColumns = list;
+          focusAnimation.columnsCurrent = columns.slice();
+        }
+        if (rows.length) {
+          const list = rows.map(value => `${Math.max(value, 0)}px`).join(' ');
+          gridEl.style.gridTemplateRows = list;
+          focusAnimation.rowsCurrent = rows.slice();
+        }
+      }
+
       function openDetail(cell) {
         if (!cell) return;
         ensureDetailContent(cell);
         if (expandedArticle && expandedArticle !== cell) {
           expandedArticle.classList.remove('scene--detail-open');
         }
+        if (!focusAnimation.baseColumns.length || !focusAnimation.baseRows.length) {
+          measureBaseState();
+        }
+        lockGridToCurrentSize();
         expandedArticle = cell;
         cell.classList.add('scene--detail-open');
         document.body.classList.add('scene-overlay-open');
@@ -5778,51 +5802,80 @@
       measureBaseState();
     })();
 
-    function render(now) {
-      const t = now / 1000; renderer.setScissorTest(true); renderer.clear();
-      for (const cell of visible) {
-        const eff = effects.get(cell); if (!eff) continue;
-        const rect = cell.getBoundingClientRect(); if (rect.width <= 0 || rect.height <= 0) continue;
-        // AsciiEffect を使うセルは独自レンダリング（DOM重ね描き）
-        if (eff.render && eff._ascii) {
+    let isRendering = false;
+    let lastManualRender = 0;
+
+    function renderFrame(now) {
+      if (isRendering) return false;
+      isRendering = true;
+      const timestamp = typeof now === 'number' ? now : performance.now();
+      const t = timestamp / 1000;
+      renderer.setScissorTest(true); renderer.clear();
+      try {
+        for (const cell of visible) {
+          const eff = effects.get(cell); if (!eff) continue;
+          const rect = cell.getBoundingClientRect(); if (rect.width <= 0 || rect.height <= 0) continue;
+          // AsciiEffect を使うセルは独自レンダリング（DOM重ね描き）
+          if (eff.render && eff._ascii) {
+            eff.update?.(t);
+            eff.render(rect);
+            continue;
+          }
+          // 画面内でクリップしたビューポート／シザー
+          const x = Math.max(0, Math.floor(rect.left));
+          const y = Math.max(0, Math.floor(innerHeight - rect.bottom));
+          const w = Math.max(0, Math.floor(Math.min(rect.right, innerWidth) - x));
+          const h = Math.max(0, Math.floor(Math.min(rect.bottom, innerHeight) - Math.max(rect.top, 0)));
+          if (w === 0 || h === 0) continue;
+          renderer.setViewport(x, y, w, h); renderer.setScissor(x, y, w, h);
+          // セル本来のサイズでアスペクトを固定し、部分表示分はViewOffsetでクロップ
+          const cellW = Math.max(1, Math.floor(rect.width));
+          const cellH = Math.max(1, Math.floor(rect.height));
+          eff.camera.aspect = cellW / cellH; eff.camera.updateProjectionMatrix();
+          const offsetXInCell = Math.max(0, -Math.floor(rect.left));
+          const offsetYInCell = Math.max(0, -Math.floor(rect.top));
+          if (eff.camera.setViewOffset) {
+            eff.camera.setViewOffset(cellW, cellH, offsetXInCell, offsetYInCell, w, h);
+          }
           eff.update?.(t);
-          eff.render(rect);
-          continue;
+          if (typeof eff.renderPost === 'function') {
+            eff.renderPost({
+              renderer,
+              viewportX: x,
+              viewportY: y,
+              viewportWidth: w,
+              viewportHeight: h,
+              time: t
+            });
+          } else {
+            renderer.render(eff.scene, eff.camera);
+          }
+          if (eff.camera.clearViewOffset) eff.camera.clearViewOffset();
         }
-        // 画面内でクリップしたビューポート／シザー
-        const x = Math.max(0, Math.floor(rect.left));
-        const y = Math.max(0, Math.floor(innerHeight - rect.bottom));
-        const w = Math.max(0, Math.floor(Math.min(rect.right, innerWidth) - x));
-        const h = Math.max(0, Math.floor(Math.min(rect.bottom, innerHeight) - Math.max(rect.top, 0)));
-        if (w === 0 || h === 0) continue;
-        renderer.setViewport(x, y, w, h); renderer.setScissor(x, y, w, h);
-        // セル本来のサイズでアスペクトを固定し、部分表示分はViewOffsetでクロップ
-        const cellW = Math.max(1, Math.floor(rect.width));
-        const cellH = Math.max(1, Math.floor(rect.height));
-        eff.camera.aspect = cellW / cellH; eff.camera.updateProjectionMatrix();
-        const offsetXInCell = Math.max(0, -Math.floor(rect.left));
-        const offsetYInCell = Math.max(0, -Math.floor(rect.top));
-        if (eff.camera.setViewOffset) {
-          eff.camera.setViewOffset(cellW, cellH, offsetXInCell, offsetYInCell, w, h);
-        }
-        eff.update?.(t);
-        if (typeof eff.renderPost === 'function') {
-          eff.renderPost({
-            renderer,
-            viewportX: x,
-            viewportY: y,
-            viewportWidth: w,
-            viewportHeight: h,
-            time: t
-          });
-        } else {
-          renderer.render(eff.scene, eff.camera);
-        }
-        if (eff.camera.clearViewOffset) eff.camera.clearViewOffset();
+      } finally {
+        renderer.setScissorTest(false);
+        isRendering = false;
       }
-      renderer.setScissorTest(false); requestAnimationFrame(render);
+      return true;
+    }
+
+    function render(now) {
+      renderFrame(now);
+      requestAnimationFrame(render);
     }
     requestAnimationFrame(render);
+
+    // Native scrolling can pause rAF (iOS Safari), so force redraws from scroll/touch events.
+    const forceRenderOnScroll = () => {
+      const now = performance.now();
+      if (now - lastManualRender < 16) return;
+      if (renderFrame(now)) lastManualRender = now;
+    };
+
+    window.addEventListener('scroll', forceRenderOnScroll, { passive: true });
+    window.addEventListener('touchstart', forceRenderOnScroll, { passive: true });
+    window.addEventListener('touchmove', forceRenderOnScroll, { passive: true });
+    window.addEventListener('touchend', forceRenderOnScroll, { passive: true });
 
     // === グリッド境界線を自動抽出して描く ===
     function buildGridStrokes({
