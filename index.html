@@ -306,6 +306,9 @@
       position: relative;
       padding: var(--cell-pad);
       border-radius: 0;
+      min-width: 0;
+      min-height: 0;
+      overflow: hidden;
       transition: box-shadow 0.5s ease, border-radius 0.5s ease, background 0.5s ease,
         transform 3s cubic-bezier(.22, .8, .25, 1);
     }
@@ -510,7 +513,7 @@
       flex-direction: column;
       gap: clamp(12px, 2vw, 20px);
       width: 100%;
-      height: auto;
+      height: 100%;
     }
 
     .scene__detail-title {
@@ -5687,10 +5690,7 @@
       }
 
       pauseForScroll() {
-        if (this.isActive) {
-          this.wasActiveBeforeScroll = true;
-          this.stop({ fromScroll: true });
-        }
+        // no-op to keep effects running during scroll interactions
       }
 
       resumeAfterScroll() {
@@ -5830,6 +5830,7 @@
         duration: 1000,
         frame: null,
         scrollFrame: null,
+        sequenceTimer: null,
         baseColumnOffsets: [],
         baseRowOffsets: [],
         baseColumns: [],
@@ -6072,24 +6073,115 @@
         while (targetRows.length < rowCount) targetRows.push(0);
 
         if (focusAnimation.frame) cancelAnimationFrame(focusAnimation.frame);
-        const startTime = performance.now();
+        if (focusAnimation.sequenceTimer) {
+          clearTimeout(focusAnimation.sequenceTimer);
+          focusAnimation.sequenceTimer = null;
+        }
 
-        function step(now) {
+        const applyFrame = (columns, rows) => {
+          const normalizedColumns = [];
+          const normalizedRows = [];
+          for (let i = 0; i < columnCount; i += 1) {
+            normalizedColumns.push(Math.max(columns[i] ?? 0, 0));
+          }
+          for (let i = 0; i < rowCount; i += 1) {
+            normalizedRows.push(Math.max(rows[i] ?? 0, 0));
+          }
+          gridEl.style.gridTemplateColumns = normalizedColumns.map(v => `${v}px`).join(' ');
+          gridEl.style.gridTemplateRows = normalizedRows.map(v => `${v}px`).join(' ');
+          focusAnimation.columnsCurrent = normalizedColumns;
+          focusAnimation.rowsCurrent = normalizedRows;
+        };
+
+        if (options.sequence === 'row-then-column') {
+          const EPSILON = 0.5;
+          const hasRowChange = targetRows.some((value, idx) => Math.abs(value - (startRows[idx] ?? 0)) > EPSILON);
+          const hasColumnChange = targetColumns.some((value, idx) => Math.abs(value - (startColumns[idx] ?? 0)) > EPSILON);
+
+          const rowPhaseRatio = typeof options.rowPhaseRatio === 'number' ? options.rowPhaseRatio : 0.6;
+          const clampedRowRatio = Math.min(Math.max(rowPhaseRatio, 0), 1);
+          const rowDuration = Math.max(1, Math.round(typeof options.rowDuration === 'number'
+            ? options.rowDuration
+            : focusAnimation.duration * clampedRowRatio));
+          const defaultColumnDuration = Math.max(focusAnimation.duration - rowDuration, Math.round(focusAnimation.duration * 0.4));
+          const columnDuration = Math.max(1, Math.round(typeof options.columnDuration === 'number'
+            ? options.columnDuration
+            : defaultColumnDuration));
+          const phaseDelay = typeof options.phaseDelay === 'number' ? options.phaseDelay : 140;
+
+          const startColumnAnimation = () => {
+            focusAnimation.sequenceTimer = null;
+            if (!hasColumnChange) {
+              applyFrame(targetColumns, targetRows);
+              options.onComplete?.();
+              return;
+            }
+            const columnStart = focusAnimation.columnsCurrent.length === columnCount
+              ? focusAnimation.columnsCurrent.slice()
+              : startColumns.slice();
+            const columnStartTime = performance.now();
+            const stepColumn = (now) => {
+              const progress = Math.min(1, (now - columnStartTime) / columnDuration);
+              const eased = easeInOutCubic(progress);
+              const columns = columnStart.map((start, idx) => start + (targetColumns[idx] - start) * eased);
+              applyFrame(columns, targetRows);
+              if (progress < 1) {
+                focusAnimation.frame = requestAnimationFrame(stepColumn);
+              } else {
+                focusAnimation.frame = null;
+                options.onComplete?.();
+              }
+            };
+            focusAnimation.frame = requestAnimationFrame(stepColumn);
+          };
+
+          const launchColumn = () => {
+            if (phaseDelay > 0 && hasColumnChange) {
+              focusAnimation.sequenceTimer = window.setTimeout(startColumnAnimation, phaseDelay);
+            } else {
+              startColumnAnimation();
+            }
+          };
+
+          if (!hasRowChange) {
+            applyFrame(startColumns, targetRows);
+            launchColumn();
+            return;
+          }
+
+          const rowStartTime = performance.now();
+          const stepRow = (now) => {
+            const progress = Math.min(1, (now - rowStartTime) / rowDuration);
+            const eased = easeInOutCubic(progress);
+            const rows = startRows.map((start, idx) => start + (targetRows[idx] - start) * eased);
+            applyFrame(startColumns, rows);
+            if (progress < 1) {
+              focusAnimation.frame = requestAnimationFrame(stepRow);
+            } else {
+              focusAnimation.frame = null;
+              applyFrame(startColumns, targetRows);
+              launchColumn();
+            }
+          };
+
+          focusAnimation.frame = requestAnimationFrame(stepRow);
+          return;
+        }
+
+        const startTime = performance.now();
+        const step = (now) => {
           const progress = Math.min(1, (now - startTime) / focusAnimation.duration);
           const eased = easeInOutCubic(progress);
           const columns = startColumns.map((start, idx) => start + (targetColumns[idx] - start) * eased);
           const rows = startRows.map((start, idx) => start + (targetRows[idx] - start) * eased);
-          gridEl.style.gridTemplateColumns = columns.map(v => `${Math.max(v, 0)}px`).join(' ');
-          gridEl.style.gridTemplateRows = rows.map(v => `${Math.max(v, 0)}px`).join(' ');
-          focusAnimation.columnsCurrent = columns;
-          focusAnimation.rowsCurrent = rows;
+          applyFrame(columns, rows);
           if (progress < 1) {
             focusAnimation.frame = requestAnimationFrame(step);
           } else {
             focusAnimation.frame = null;
             options.onComplete?.();
           }
-        }
+        };
 
         focusAnimation.frame = requestAnimationFrame(step);
       }
@@ -6286,7 +6378,7 @@
 
         expandedColumn = columnIndex;
         expandedRow = rowIndex;
-        startAnimation(columnsTarget, rowsTarget);
+        startAnimation(columnsTarget, rowsTarget, { sequence: 'row-then-column' });
         const rowOffset = focusAnimation.baseRowOffsets[rowIndex] ?? 0;
         const targetScrollY = Math.max(0, (window.scrollY || window.pageYOffset || 0) + gridRect.top + rowOffset);
         startScrollAnimation(targetScrollY);
@@ -6300,6 +6392,10 @@
         if (focusAnimation.scrollFrame) {
           cancelAnimationFrame(focusAnimation.scrollFrame);
           focusAnimation.scrollFrame = null;
+        }
+        if (focusAnimation.sequenceTimer) {
+          clearTimeout(focusAnimation.sequenceTimer);
+          focusAnimation.sequenceTimer = null;
         }
         closeDetail();
         expandedColumn = -1;
