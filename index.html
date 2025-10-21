@@ -807,6 +807,8 @@
 
       .mobile-header {
         display: block;
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
       }
 
       .mobile-drawer {
@@ -844,6 +846,11 @@
       .grid5x3>.cell {
         height: var(--mobile-row-height);
         min-height: var(--mobile-row-height);
+      }
+
+      .scene {
+        transform: none;
+        will-change: auto;
       }
 
       #top {
@@ -5571,7 +5578,7 @@
       svgRestoreTimer = window.setTimeout(() => {
         svgRestoreTimer = null;
         svgStrokesHidden = false;
-        buildGridStrokes();
+        buildGridStrokes({ force: true });
       }, Math.max(0, delay));
     }
 
@@ -6507,12 +6514,35 @@
       baseDelay = 200,           // 開始ディレイ(ms)
       stepDelay = 90,            // セグメント間ディレイ(ms)
       msPerPx = 1.4,             // 1pxあたりの描画時間(ms) → 長い線ほどゆっくり
-      epsilon = 2                // 隣接判定の許容誤差(px)
+      epsilon = 2,               // 隣接判定の許容誤差(px)
+      force = false              // レイアウト変更時など強制描画
     } = {}) {
       const root = document.querySelector('.page');
       const grid = document.querySelector('.grid5x3');
       if (!root || !grid) return;
       if (svgStrokesHidden) return;
+
+      const viewportWidth = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);
+      const viewportHeight = Math.round(window.innerHeight || document.documentElement.clientHeight || 0);
+      const lastWidth = buildGridStrokes._lastWidth;
+      const lastHeight = buildGridStrokes._lastHeight;
+      const orientationType = (window.screen && window.screen.orientation && typeof window.screen.orientation.type === 'string')
+        ? window.screen.orientation.type
+        : (viewportWidth >= viewportHeight ? 'landscape' : 'portrait');
+      const lastOrientation = buildGridStrokes._lastOrientation;
+
+      if (!force && typeof lastWidth === 'number' && typeof lastHeight === 'number') {
+        const widthDiff = Math.abs(viewportWidth - lastWidth);
+        const heightDiff = Math.abs(viewportHeight - lastHeight);
+        const orientationChanged = lastOrientation && lastOrientation !== orientationType;
+        const heightOnlyResize = widthDiff < 1 && heightDiff > 0 && heightDiff <= 160;
+        if (!orientationChanged && heightOnlyResize) {
+          buildGridStrokes._lastWidth = viewportWidth;
+          buildGridStrokes._lastHeight = viewportHeight;
+          buildGridStrokes._lastOrientation = orientationType;
+          return;
+        }
+      }
 
       // 既存の層を作り直し
       const old = root.querySelector('.svg-strokes');
@@ -6672,6 +6702,10 @@
         }
       }
       svg.dataset.strokeTimeline = String(maxEndTime);
+
+      buildGridStrokes._lastWidth = viewportWidth;
+      buildGridStrokes._lastHeight = viewportHeight;
+      buildGridStrokes._lastOrientation = orientationType;
     }
 
     // 初回＆リサイズで実行（フォントロード後に）
