@@ -510,7 +510,7 @@
       flex-direction: column;
       gap: clamp(12px, 2vw, 20px);
       width: 100%;
-      height: 100%;
+      height: auto;
     }
 
     .scene__detail-title {
@@ -685,6 +685,24 @@
       border: 0;
     }
 
+    #scene-2,
+    #scene-3,
+    #scene-4,
+    #scene-5,
+    #scene-7,
+    #scene-8,
+    #scene-9,
+    #scene-10,
+    #scene-11,
+    #scene-12,
+    #scene-13,
+    #scene-14,
+    #scene-21,
+    #contact-curtain {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
     #scene-21:hover {
       cursor: pointer;
     }
@@ -738,6 +756,23 @@
       grid-row: 4;
     }
 
+    #scene-6 {
+      overflow: hidden;
+    }
+
+    #scene-6 .cell-inner {
+      transition: opacity 0.4s ease;
+    }
+
+    #scene-6.scene-info--hidden {
+      pointer-events: none;
+    }
+
+    #scene-6.scene-info--hidden .cell-inner {
+      opacity: 0;
+      visibility: hidden;
+    }
+
     /* 6行目 左2セルを結合（= 1-2列を横断、2行分の高さ） */
     .merge-r5-left12 {
       grid-column: 1 / span 2;
@@ -754,16 +789,6 @@
     .merge-r6-all {
       grid-column: 1 / -1;
       grid-row: 6;
-    }
-
-    /* WebGLは1枚キャンバス（固定） */
-    canvas#gl {
-      position: fixed;
-      inset: 0;
-      width: 100vw;
-      height: 100vh;
-      pointer-events: none;
-      z-index: 0
     }
 
     /* Responsive */
@@ -936,8 +961,6 @@
         max-width: 100%;
         color: #deefff;
         overflow-y: auto;
-        box-shadow: 0 -18px 48px rgba(2, 75, 158, 0.32);
-        border-radius: 18px 18px 0 0;
       }
 
       body.scene-overlay-open .scene--detail-open .scene__detail-title,
@@ -1141,9 +1164,6 @@
       </section>
     </main>
   </div>
-
-  <!-- single WebGL canvas for all cells -->
-  <canvas id="gl" aria-hidden="true"></canvas>
 
   <script type="module">
     import * as THREE from 'https://unpkg.com/three@0.168.0/build/three.module.js';
@@ -1491,15 +1511,6 @@
 
     }
 
-    // ===== renderer =====
-    const canvas = document.getElementById('gl');
-    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
-    renderer.toneMapping = THREE.NoToneMapping;
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMappingExposure = 1.0;
-    function setSize() { renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.setSize(innerWidth, innerHeight); renderer.setClearColor(0xdeefff, 1); }
-    setSize(); addEventListener('resize', setSize);
-
     const globalPointer = { active: false, nx: 0, ny: 0 };
     function updateGlobalPointer(e) {
       const w = innerWidth || 1;
@@ -1568,23 +1579,73 @@
     })();
 
     // ===== effect factories =====
-    function createTorus() {
+    function createTorus(cellEl) {
+      if (!cellEl) return null;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.touchAction = 'none';
+      cellEl.appendChild(renderer.domElement);
+
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100); camera.position.set(0, 0, 4);
-      scene.add(new THREE.AmbientLight(0x445566, 1)); const d = new THREE.DirectionalLight(0xffffff, 1.2); d.position.set(1, 2, 3); scene.add(d);
-      const mesh = new THREE.Mesh(new THREE.TorusKnotGeometry(1, .35, 160, 24), new THREE.MeshStandardMaterial({ metalness: .7, roughness: .2, color: 0x7b9cff })); scene.add(mesh);
-      return { scene, camera, update(t) { mesh.rotation.x = t * .6; mesh.rotation.y = t * .8; } };
+      scene.background = new THREE.Color(0xdeefff);
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+      camera.position.set(0, 0, 4);
+
+      scene.add(new THREE.AmbientLight(0x445566, 1));
+      const d = new THREE.DirectionalLight(0xffffff, 1.2);
+      d.position.set(1, 2, 3);
+      scene.add(d);
+
+      const mesh = new THREE.Mesh(
+        new THREE.TorusKnotGeometry(1, 0.35, 160, 24),
+        new THREE.MeshStandardMaterial({ metalness: 0.7, roughness: 0.2, color: 0x7b9cff })
+      );
+      scene.add(mesh);
+
+      let disposed = false;
+
+      return {
+        resize(width, height) {
+          const w = Math.max(1, Math.floor(width));
+          const h = Math.max(1, Math.floor(height));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        },
+        tick(time) {
+          if (disposed) return;
+          mesh.rotation.x = time * 0.6;
+          mesh.rotation.y = time * 0.8;
+          renderer.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          mesh.geometry.dispose();
+          mesh.material.dispose();
+          renderer.dispose();
+          if (renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+          }
+        }
+      };
     }
 
     // === ★ Ascii対応のNumber3（セル内独立レンダラー＋AsciiEffect）
     function createNumber3(cellEl) {
-      // 1) three.js シーン（ASCII判定用にブラックで描画）
       const scene = new THREE.Scene();
-      scene.background = new THREE.Color(0x000000); // 内部レンダは黒
+      scene.background = new THREE.Color(0x000000);
       const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
       camera.position.set(0, 0, 2.2);
 
-      // ライト（Basic材質には影響しないが将来拡張用に残す）
       scene.add(new THREE.AmbientLight(0x334455, 1.0));
       const d = new THREE.DirectionalLight(0xffffff, 1.0);
       d.position.set(2, 2, 3);
@@ -1594,7 +1655,6 @@
       scene.add(group);
       group.rotation.set(NUMBER_BASE_ROT_X, NUMBER_BASE_ROT_Y, 0);
 
-      // 2) 3D文字（白＝明るい → ASCIIで濃い文字になる）
       const loader = new FontLoader();
       loader.load(
         'https://unpkg.com/three@0.168.0/examples/fonts/helvetiker_bold.typeface.json',
@@ -1610,25 +1670,23 @@
             bevelSegments: 2,
           });
           geo.center();
-          const mat = new THREE.MeshBasicMaterial({ color: 0xffffff }); // ライト非依存で安定
+          const mat = new THREE.MeshBasicMaterial({ color: 0xffffff });
           const mesh = new THREE.Mesh(geo, mat);
           group.add(mesh);
         }
       );
 
-      // 3) セル専用レンダラー + AsciiEffect
       const localRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
-      localRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      localRenderer.setClearColor(0x000000, 1);
       localRenderer.outputColorSpace = THREE.SRGBColorSpace;
       localRenderer.toneMapping = THREE.NoToneMapping;
+      localRenderer.setClearColor(0x000000, 1);
+      localRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-      // 背景(黒)はスペース、明るい(白)ほど濃い文字へ
       const normalChars = '321 ';
       const ZOOM_IDLE_Z = 2.2;
       const ZOOM_ACTIVE_Z = 0.6;
-      const ZOOM_DURATION = 0.5; // seconds
-      const ASCII_TRANSITION_DURATION = 1.0; // seconds for full char cycle
+      const ZOOM_DURATION = 0.5;
+      const ASCII_TRANSITION_DURATION = 1.0;
 
       const hoverState = {
         progress: 0,
@@ -1646,8 +1704,13 @@
         colorPalette: asciiPalette,
         stageReplacementChars: ['2', '1', '0']
       });
+
       let asciiProgress = 0;
       let lastAsciiUpdateTime = null;
+      let width = 1;
+      let height = 1;
+      let disposed = false;
+      let eventsBound = false;
 
       const pointerWithinCell = () => {
         if (!cellEl || !globalPointer.active) return false;
@@ -1688,7 +1751,7 @@
       const handleWindowBlur = () => { handleLeave(); };
 
       const bindCellEvents = () => {
-        if (!cellEl) return;
+        if (!cellEl || eventsBound) return;
         if (!cellEl.style.position) cellEl.style.position = 'relative';
         cellEl.addEventListener('pointerenter', handleEnter);
         cellEl.addEventListener('pointerleave', handleLeave);
@@ -1697,6 +1760,19 @@
         cellEl.addEventListener('mouseleave', handleLeave);
         window.addEventListener('pointerout', handleWindowPointerOut, { passive: true });
         window.addEventListener('blur', handleWindowBlur);
+        eventsBound = true;
+      };
+
+      const unbindCellEvents = () => {
+        if (!cellEl || !eventsBound) return;
+        cellEl.removeEventListener('pointerenter', handleEnter);
+        cellEl.removeEventListener('pointerleave', handleLeave);
+        cellEl.removeEventListener('pointercancel', handleLeave);
+        cellEl.removeEventListener('mouseenter', handleEnter);
+        cellEl.removeEventListener('mouseleave', handleLeave);
+        window.removeEventListener('pointerout', handleWindowPointerOut, { passive: true });
+        window.removeEventListener('blur', handleWindowBlur);
+        eventsBound = false;
       };
 
       applyEffectStyles(effect.domElement);
@@ -1712,7 +1788,6 @@
         cellEl.appendChild(effect.domElement);
       }
 
-      // === 4) マウス位置ベースの回転 ===
       const pointerRot = { currentX: 0, currentY: 0 };
 
       function update(t = 0) {
@@ -1776,46 +1851,167 @@
         group.rotation.x = NUMBER_BASE_ROT_X + pointerRot.currentX;
       }
 
-      // 6) セルrectに合わせて描画
-      function render(_rect) {
-        const w = Math.max(1, Math.floor(_rect?.width || _rect?.w || 1));
-        const h = Math.max(1, Math.floor(_rect?.height || _rect?.h || 1));
-        camera.aspect = w / h;
-        camera.updateProjectionMatrix();
-        localRenderer.setSize(w, h);
-        if (effect) {
-          effect.setSize(w, h);
+      return {
+        resize(newWidth, newHeight) {
+          width = Math.max(1, Math.floor(newWidth));
+          height = Math.max(1, Math.floor(newHeight));
+          localRenderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          localRenderer.setSize(width, height, false);
+          camera.aspect = width / height;
+          camera.updateProjectionMatrix();
+          effect.setSize(width, height);
+        },
+        tick(time) {
+          if (disposed) return;
+          update(time);
           effect.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          unbindCellEvents();
+          effect.domElement.removeEventListener('pointerenter', handleEnter);
+          effect.domElement.removeEventListener('pointerleave', handleLeave);
+          effect.domElement.removeEventListener('pointercancel', handleLeave);
+          effect.domElement.removeEventListener('mouseenter', handleEnter);
+          effect.domElement.removeEventListener('mouseleave', handleLeave);
+          if (effect.domElement.parentNode) {
+            effect.domElement.parentNode.removeChild(effect.domElement);
+          }
+          localRenderer.dispose();
         }
-      }
-
-      function setSize(w, h) {
-        const W = Math.max(1, Math.floor(w));
-        const H = Math.max(1, Math.floor(h));
-        camera.aspect = W / H;
-        camera.updateProjectionMatrix();
-        localRenderer.setSize(W, H);
-        if (effect) effect.setSize(W, H);
-      }
-
-      return { scene, camera, update, render, setSize, _ascii: true };
+      };
     }
 
 
 
-    function createParticles() {
-      const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(50, 1, .1, 100); camera.position.set(0, 0, 3.2);
-      const N = (innerWidth < 520 ? 1200 : 2200), pos = new Float32Array(N * 3);
-      for (let i = 0; i < N; i++) { const r = 1.2 + Math.random() * 0.9, th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1); pos[i * 3] = r * Math.sin(ph) * Math.cos(th); pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th); pos[i * 3 + 2] = r * Math.cos(ph); }
-      const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      const mat = new THREE.PointsMaterial({ size: .02, transparent: true, opacity: .9 }); const pts = new THREE.Points(geo, mat); scene.add(pts);
-      return { scene, camera, update(t) { pts.rotation.y = t * .35; pts.rotation.x = Math.sin(t * .5) * .25; } };
+    function createParticles(cellEl) {
+      if (!cellEl) return null;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.touchAction = 'none';
+      cellEl.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xdeefff);
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+      camera.position.set(0, 0, 3.2);
+
+      const N = 1800;
+      const positions = new Float32Array(N * 3);
+      for (let i = 0; i < N; i++) {
+        const r = 1.2 + Math.random() * 0.9;
+        const th = Math.random() * Math.PI * 2;
+        const ph = Math.acos(2 * Math.random() - 1);
+        positions[i * 3] = r * Math.sin(ph) * Math.cos(th);
+        positions[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+        positions[i * 3 + 2] = r * Math.cos(ph);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const mat = new THREE.PointsMaterial({ size: 0.02, transparent: true, opacity: 0.9, color: 0x024b9e });
+      const pts = new THREE.Points(geo, mat);
+      scene.add(pts);
+
+      let disposed = false;
+
+      return {
+        resize(width, height) {
+          const w = Math.max(1, Math.floor(width));
+          const h = Math.max(1, Math.floor(height));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        },
+        tick(time) {
+          if (disposed) return;
+          pts.rotation.y = time * 0.35;
+          pts.rotation.x = Math.sin(time * 0.5) * 0.25;
+          renderer.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          geo.dispose();
+          mat.dispose();
+          renderer.dispose();
+          if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+        }
+      };
     }
-    function createWaves() {
-      const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(50, 1, .1, 100); camera.position.set(0, .15, 3.2);
-      const COUNT = (innerWidth < 520 ? 140 : 220), geo = new THREE.BufferGeometry(), pos = new Float32Array(COUNT * 3); geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      const line = new THREE.Line(geo, new THREE.LineBasicMaterial()); scene.add(line);
-      return { scene, camera, update(t) { const p = geo.attributes.position.array; for (let i = 0; i < COUNT; i++) { const x = (i / (COUNT - 1)) * 4 - 2; p[i * 3] = x; p[i * 3 + 1] = Math.sin(x * 2 + t * 2) * .4; p[i * 3 + 2] = 0; } geo.attributes.position.needsUpdate = true; } };
+    function createWaves(cellEl) {
+      if (!cellEl) return null;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.touchAction = 'none';
+      cellEl.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xdeefff);
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+      camera.position.set(0, 0.15, 3.2);
+
+      const COUNT = 220;
+      const geo = new THREE.BufferGeometry();
+      const positions = new Float32Array(COUNT * 3);
+      geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      const material = new THREE.LineBasicMaterial({ color: 0x024b9e });
+      const line = new THREE.Line(geo, material);
+      scene.add(line);
+
+      const updateWave = (t) => {
+        const p = geo.attributes.position.array;
+        for (let i = 0; i < COUNT; i++) {
+          const x = (i / (COUNT - 1)) * 4 - 2;
+          p[i * 3] = x;
+          p[i * 3 + 1] = Math.sin(x * 2 + t * 2) * 0.4;
+          p[i * 3 + 2] = 0;
+        }
+        geo.attributes.position.needsUpdate = true;
+      };
+
+      let disposed = false;
+
+      return {
+        resize(width, height) {
+          const w = Math.max(1, Math.floor(width));
+          const h = Math.max(1, Math.floor(height));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        },
+        tick(time) {
+          if (disposed) return;
+          updateWave(time);
+          renderer.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          material.dispose();
+          geo.dispose();
+          renderer.dispose();
+          if (renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+          }
+        }
+      };
     }
     // function createBoxes() {
     //   const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(50, 1, .1, 100); camera.position.set(0, 0, 5);
@@ -1826,14 +2022,59 @@
     //   }
     //   scene.add(inst); return { scene, camera, update(t) { inst.rotation.x = t * .5; inst.rotation.y = t * .6; } };
     // }
-    function createSphereWire() {
-      const scene = new THREE.Scene(); const camera = new THREE.PerspectiveCamera(50, 1, .1, 100); camera.position.set(0, 0, 3.6);
-      const line = new THREE.LineSegments(new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(1.2, 2)), new THREE.LineBasicMaterial()); scene.add(line);
-      return { scene, camera, update(t) { line.rotation.y = t * .6; line.rotation.x = Math.sin(t * .8) * .2; } };
+    function createSphereWire(cellEl) {
+      if (!cellEl) return null;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.touchAction = 'none';
+      cellEl.appendChild(renderer.domElement);
+
+      const scene = new THREE.Scene();
+      scene.background = new THREE.Color(0xdeefff);
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
+      camera.position.set(0, 0, 3.6);
+
+      const geometry = new THREE.WireframeGeometry(new THREE.IcosahedronGeometry(1.2, 2));
+      const material = new THREE.LineBasicMaterial({ color: 0x024b9e });
+      const line = new THREE.LineSegments(geometry, material);
+      scene.add(line);
+
+      let disposed = false;
+
+      return {
+        resize(width, height) {
+          const w = Math.max(1, Math.floor(width));
+          const h = Math.max(1, Math.floor(height));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        },
+        tick(time) {
+          if (disposed) return;
+          line.rotation.y = time * 0.6;
+          line.rotation.x = Math.sin(time * 0.8) * 0.2;
+          renderer.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          geometry.dispose();
+          material.dispose();
+          renderer.dispose();
+          if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+        }
+      };
     }
 
     function createNumber2(cellEl) {
-      // --- 基本セットアップ ---
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
       camera.position.set(0, 0, 2.2);
@@ -1847,48 +2088,58 @@
       scene.add(group);
       group.rotation.set(NUMBER_BASE_ROT_X, NUMBER_BASE_ROT_Y, 0);
 
-      // --- 状態 ---
-      const COUNT = 4000;
-      let targetPoints = null; // Float32Array(len=COUNT*3)
-      let scatter = false;     // ホバー中はtrue
-      const tmp = new THREE.Vector3();
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-      // --- パーティクル（初期はランダム雲） ---
+      const canvasEl = renderer.domElement;
+      canvasEl.style.width = '100%';
+      canvasEl.style.height = '100%';
+      canvasEl.style.display = 'block';
+      canvasEl.style.touchAction = 'none';
+
+      if (cellEl) {
+        cellEl.appendChild(canvasEl);
+        cellEl.style.userSelect = 'none';
+        cellEl.style.touchAction = 'none';
+        cellEl.style.cursor = 'default';
+      }
+
+      const COUNT = 2000;
+      let targetPoints = null;
+      let scatter = false;
+      let disposed = false;
+
       const pg = new THREE.BufferGeometry();
       const positions = new Float32Array(COUNT * 3);
-      const velocities = new Float32Array(COUNT * 3); // 物理っぽい動き用
+      const velocities = new Float32Array(COUNT * 3);
       const colors = new Float32Array(COUNT * 3);
       const palette = ['#024b9e', '#217adf', '#72b4ff'].map((hex) => new THREE.Color(hex));
+
       for (let i = 0; i < COUNT; i++) {
-        // ランダム球内に初期配置
         const r = Math.cbrt(Math.random()) * 0.8;
         const th = Math.random() * Math.PI * 2;
         const ph = Math.acos(2 * Math.random() - 1);
         const x = r * Math.sin(ph) * Math.cos(th);
         const y = r * Math.sin(ph) * Math.sin(th);
         const z = r * Math.cos(ph);
-        const i3 = i * 3;
-        positions[i3] = x;
-        positions[i3 + 1] = y;
-        positions[i3 + 2] = z;
-        // 速度はゼロ開始
-        velocities[i3] = velocities[i3 + 1] = velocities[i3 + 2] = 0;
-
-        const col = palette[Math.floor(Math.random() * palette.length)];
-        col.toArray(colors, i3);
+        const idx = i * 3;
+        positions[idx] = x;
+        positions[idx + 1] = y;
+        positions[idx + 2] = z;
+        velocities[idx] = velocities[idx + 1] = velocities[idx + 2] = 0;
+        palette[Math.floor(Math.random() * palette.length)].toArray(colors, idx);
       }
+
       pg.setAttribute('position', new THREE.BufferAttribute(positions, 3));
       pg.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
-      const pm = new THREE.PointsMaterial({
-        size: 0.0125,
-        sizeAttenuation: true,
-        vertexColors: true
-      });
+      const pm = new THREE.PointsMaterial({ size: 0.05, sizeAttenuation: true, vertexColors: true });
       const points = new THREE.Points(pg, pm);
       group.add(points);
 
-      // --- 「2」のメッシュは不可視（サンプリング専用） ---
       const loader = new FontLoader();
       loader.load(
         'https://unpkg.com/three@0.168.0/examples/fonts/helvetiker_bold.typeface.json',
@@ -1904,10 +2155,8 @@
             bevelSegments: 2,
           });
           geo.center();
-          geo.computeVertexNormals(); // 面の向き安定
-          // ターゲット表面サンプルを作る
+          geo.computeVertexNormals();
           targetPoints = samplePointsOnGeometrySurface(geo, COUNT);
-          // ※可視メッシュは作るが非表示にする
           const mat = new THREE.MeshStandardMaterial({
             color: 0xffffff,
             metalness: 0.75,
@@ -1919,20 +2168,17 @@
         }
       );
 
-      // --- ホバーで散る/戻る ---
-      // --- マウス位置ベースの回転 ---
-      const pointerRot = { currentX: 0, currentY: 0 };
+      const handlePointerEnter = () => { scatter = true; };
+      const handlePointerLeave = () => { scatter = false; };
 
       if (cellEl) {
-        cellEl.style.userSelect = 'none';
-        cellEl.style.touchAction = 'none';
-        cellEl.style.cursor = 'default';
-        cellEl.addEventListener('pointerenter', () => { scatter = true; });
-        cellEl.addEventListener('pointerleave', () => { scatter = false; });
-        cellEl.addEventListener('pointercancel', () => { scatter = false; });
+        cellEl.addEventListener('pointerenter', handlePointerEnter);
+        cellEl.addEventListener('pointerleave', handlePointerLeave);
+        cellEl.addEventListener('pointercancel', handlePointerLeave);
       }
 
-      // --- 物理っぽい更新（散る/集まる） ---
+      const pointerRot = { currentX: 0, currentY: 0 };
+
       function update(t) {
         const active = globalPointer.active;
         const targetY = active ? THREE.MathUtils.clamp(globalPointer.nx * NUMBER_ROT_MAX_Y, -NUMBER_ROT_MAX_Y, NUMBER_ROT_MAX_Y) : 0;
@@ -1944,78 +2190,103 @@
         group.rotation.y = baseY + pointerRot.currentY;
         group.rotation.x = NUMBER_BASE_ROT_X + pointerRot.currentX;
 
-        // パーティクル挙動
         const pos = pg.attributes.position.array;
-        if (!targetPoints) return; // フォント未ロード時は待機
+        if (!targetPoints) return;
 
-        // パラメータ
-        const dt = 0.016;                   // 仮の固定Δt
-        const gatherStrength = 6.0;         // 集合力（spring係数）
-        const damping = 0.88;               // 減衰
-        const scatterImpulse = 1.5;         // 散るときのランダム加速
+        const dt = 0.016;
+        const gatherStrength = 6.0;
+        const damping = 0.88;
+        const scatterImpulse = 1.5;
         const maxSpeed = 2.0;
 
         for (let i = 0; i < COUNT; i++) {
-          const i3 = i * 3;
+          const idx = i * 3;
+          const tx = targetPoints[idx];
+          const ty = targetPoints[idx + 1];
+          const tz = targetPoints[idx + 2];
 
-          // 目標
-          const tx = targetPoints[i3];
-          const ty = targetPoints[i3 + 1];
-          const tz = targetPoints[i3 + 2];
-
-          // 現在
-          let x = pos[i3], y = pos[i3 + 1], z = pos[i3 + 2];
-          let vx = velocities[i3], vy = velocities[i3 + 1], vz = velocities[i3 + 2];
+          let x = pos[idx];
+          let y = pos[idx + 1];
+          let z = pos[idx + 2];
+          let vx = velocities[idx];
+          let vy = velocities[idx + 1];
+          let vz = velocities[idx + 2];
 
           if (scatter) {
-            // 1フレームに少しだけランダムインパルス
             vx += (Math.random() - 0.5) * scatterImpulse;
             vy += (Math.random() - 0.5) * scatterImpulse;
             vz += (Math.random() - 0.5) * scatterImpulse;
-            // 目標からの反発（遠ざかる力）を少し
             vx += (x - tx) * 0.2;
             vy += (y - ty) * 0.2;
             vz += (z - tz) * 0.2;
           } else {
-            // スプリングで目標へ吸引
             vx += (tx - x) * gatherStrength * dt;
             vy += (ty - y) * gatherStrength * dt;
             vz += (tz - z) * gatherStrength * dt;
           }
 
-          // 減衰＆速度制限
-          vx *= damping; vy *= damping; vz *= damping;
-          const sp2 = vx * vx + vy * vy + vz * vz;
-          if (sp2 > maxSpeed * maxSpeed) {
-            const s = maxSpeed / Math.sqrt(sp2);
-            vx *= s; vy *= s; vz *= s;
+          vx *= damping;
+          vy *= damping;
+          vz *= damping;
+          const speedSq = vx * vx + vy * vy + vz * vz;
+          if (speedSq > maxSpeed * maxSpeed) {
+            const scale = maxSpeed / Math.sqrt(speedSq);
+            vx *= scale;
+            vy *= scale;
+            vz *= scale;
           }
 
-          // 位置更新
           x += vx * dt;
           y += vy * dt;
           z += vz * dt;
 
-          // 書き戻し
-          velocities[i3] = vx; velocities[i3 + 1] = vy; velocities[i3 + 2] = vz;
-          pos[i3] = x; pos[i3 + 1] = y; pos[i3 + 2] = z;
+          velocities[idx] = vx;
+          velocities[idx + 1] = vy;
+          velocities[idx + 2] = vz;
+          pos[idx] = x;
+          pos[idx + 1] = y;
+          pos[idx + 2] = z;
         }
 
         pg.attributes.position.needsUpdate = true;
       }
 
-      return { scene, camera, update };
+      return {
+        resize(width, height) {
+          const w = Math.max(1, Math.floor(width));
+          const h = Math.max(1, Math.floor(height));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        },
+        tick(time) {
+          if (disposed) return;
+          update(time);
+          renderer.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          if (cellEl) {
+            cellEl.removeEventListener('pointerenter', handlePointerEnter);
+            cellEl.removeEventListener('pointerleave', handlePointerLeave);
+            cellEl.removeEventListener('pointercancel', handlePointerLeave);
+          }
+          if (canvasEl.parentNode) {
+            canvasEl.parentNode.removeChild(canvasEl);
+          }
+          renderer.dispose();
+        }
+      };
 
       // ---- ヘルパー：ジオメトリ表面から一様サンプリング（indexed/non-indexed両対応）----
       function samplePointsOnGeometrySurface(geometry, count) {
-        // BufferGeometry 前提（TextGeometryはOK）
         const posAttr = geometry.getAttribute('position');
         const indexAttr = geometry.getIndex();
 
-        // 三角形の取り出し方法を分岐
         const getTriangle = (triIndex, outA, outB, outC) => {
           if (indexAttr) {
-            // indexed: index から3頂点を取る
             const i0 = indexAttr.getX(triIndex * 3);
             const i1 = indexAttr.getX(triIndex * 3 + 1);
             const i2 = indexAttr.getX(triIndex * 3 + 2);
@@ -2023,7 +2294,6 @@
             outB.fromBufferAttribute(posAttr, i1);
             outC.fromBufferAttribute(posAttr, i2);
           } else {
-            // non-indexed: position が 3頂点ずつ直列で並ぶ
             const i0 = triIndex * 3;
             const i1 = i0 + 1;
             const i2 = i0 + 2;
@@ -2033,10 +2303,8 @@
           }
         };
 
-        // 三角形数
         const triCount = indexAttr ? (indexAttr.count / 3) : (posAttr.count / 3);
 
-        // 面積の累積分布を作る
         const areas = new Float32Array(triCount);
         let totalArea = 0;
         const a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
@@ -2055,9 +2323,9 @@
           return new Float32Array(count * 3).fill(0);
         }
 
-        // 面積比例で三角形を選び、バリセントリックで内部一様サンプル
         const out = new Float32Array(count * 3);
-        const p = new THREE.Vector3(), tmp = new THREE.Vector3();
+        const p = new THREE.Vector3();
+        const tmp = new THREE.Vector3();
 
         const pickTriangle = () => {
           const r = Math.random() * totalArea;
@@ -2073,12 +2341,10 @@
           const ti = pickTriangle();
           getTriangle(ti, a, b, c);
 
-          // 一様バリセントリック
           let u = Math.random();
           let v = Math.random();
           if (u + v > 1) { u = 1 - u; v = 1 - v; }
 
-          // p = a + u(b-a) + v(c-a)
           p.copy(a);
           tmp.copy(b).sub(a); p.addScaledVector(tmp, u);
           tmp.copy(c).sub(a); p.addScaledVector(tmp, v);
@@ -2775,6 +3041,7 @@
 
       let width = 0;
       let height = 0;
+      let disposed = false;
 
       function resize(rect) {
         const w = Math.max(1, Math.floor(rect.width));
@@ -3157,6 +3424,17 @@
       cellEl.style.touchAction = 'none';
       cellEl.style.cursor = 'default';
 
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.touchAction = 'none';
+      cellEl.appendChild(renderer.domElement);
+
       const pointerRot = { currentX: 0, currentY: 0 };
       const darkenNonBloomed = (obj) => {
         if (!obj.isMesh) return;
@@ -3191,21 +3469,9 @@
       const HOVER_PIXEL_SIZE = new THREE.Vector2(50.0, 50.0);
       const pixelSizeUniform = BASE_PIXEL_SIZE.clone();
       const pixelSizeTarget = BASE_PIXEL_SIZE.clone();
-      const copyCamera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-      const copyScene = new THREE.Scene();
-      const copyMaterial = new THREE.ShaderMaterial({
-        uniforms: {
-          tDiffuse: { value: null }
-        },
-        vertexShader: `varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position,1.0);}`,
-        fragmentShader: `uniform sampler2D tDiffuse;varying vec2 vUv;void main(){gl_FragColor=texture2D(tDiffuse,vUv);}`,
-        depthTest: false,
-        depthWrite: false,
-        transparent: false
-      });
-      copyMaterial.toneMapped = false;
-      const copyQuad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2), copyMaterial);
-      copyScene.add(copyQuad);
+      let width = 0;
+      let height = 0;
+      let disposed = false;
 
       const { shader: pixelateShader } = createPixelateShader({ resolutionUniform, pixelSizeUniform });
       const pointerWithinCell = () => {
@@ -3249,7 +3515,7 @@
         fragmentShader: `uniform sampler2D tDiffuse;uniform sampler2D bloomTexture;varying vec2 vUv;void main(){vec4 base=texture2D(tDiffuse,vUv);vec4 bloom=texture2D(bloomTexture,vUv);gl_FragColor=vec4(base.rgb + bloom.rgb, base.a);}`
       };
 
-      function ensureComposer(renderer, width, height) {
+      function ensureComposer(width, height) {
         const safeWidth = Math.max(1, Math.floor(width || 1));
         const safeHeight = Math.max(1, Math.floor(height || 1));
         if (!composer) {
@@ -3310,103 +3576,85 @@
         composerInitialized = !!(composer && bloomComposer && bloomCompositePass);
       }
 
+      function updateState(t) {
+        currentTime = t;
+        const active = globalPointer.active;
+        const targetY = active
+          ? THREE.MathUtils.clamp(globalPointer.nx * NUMBER_ROT_MAX_Y, -NUMBER_ROT_MAX_Y, NUMBER_ROT_MAX_Y)
+          : 0;
+        const targetX = active
+          ? THREE.MathUtils.clamp(-globalPointer.ny * NUMBER_ROT_MAX_X, -NUMBER_ROT_MAX_X, NUMBER_ROT_MAX_X)
+          : 0;
+        const ease = active ? 0.18 : 0.12;
+        pointerRot.currentX += (targetX - pointerRot.currentX) * ease;
+        pointerRot.currentY += (targetY - pointerRot.currentY) * ease;
+
+        const baseY = NUMBER_BASE_ROT_Y + t * NUMBER_AUTO_ROT_SPEED;
+        group.rotation.y = baseY + pointerRot.currentY;
+        group.rotation.x = NUMBER_BASE_ROT_X + pointerRot.currentX;
+        if (pointerWithinCell()) {
+          pixelSizeTarget.copy(HOVER_PIXEL_SIZE);
+        } else {
+          pixelSizeTarget.copy(BASE_PIXEL_SIZE);
+        }
+        pixelSizeUniform.lerp(pixelSizeTarget, 0.08);
+
+        if (ENABLE_SCANLINE && composerInitialized && scanLinePass) {
+          scanLinePass.uniforms.time.value = currentTime * 60.0;
+        }
+        if (composerInitialized && grainPass) {
+          grainPass.uniforms.time.value = currentTime * 0.5;
+        }
+        if (pixelateUniforms?.pixelSize?.value) {
+          pixelateUniforms.pixelSize.value.copy(pixelSizeUniform);
+        }
+      }
+
+      function renderFrame() {
+        if (!width || !height) return;
+        if (!USE_POST) {
+          renderer.render(scene, camera);
+          return;
+        }
+        ensureComposer(width, height);
+        if (!composerInitialized) return;
+        const prevAutoClear = renderer.autoClear;
+        renderer.autoClear = true;
+        const previousBackground = scene.background;
+        scene.background = bloomBackground;
+        scene.traverse(darkenNonBloomed);
+        bloomComposer?.render();
+        scene.traverse(restoreMaterial);
+        scene.background = previousBackground;
+        if (bloomCompositePass && bloomComposer) {
+          const bloomTexture =
+            (bloomComposer.renderTarget2 && bloomComposer.renderTarget2.texture) ||
+            (bloomComposer.renderTarget1 && bloomComposer.renderTarget1.texture) ||
+            null;
+          bloomCompositePass.uniforms.bloomTexture.value = bloomTexture;
+        }
+        composer.render();
+        renderer.autoClear = prevAutoClear;
+      }
+
       return {
-        scene,
-        camera,
-        update(t) {
-          currentTime = t;
-          const active = globalPointer.active;
-          const targetY = active
-            ? THREE.MathUtils.clamp(globalPointer.nx * NUMBER_ROT_MAX_Y, -NUMBER_ROT_MAX_Y, NUMBER_ROT_MAX_Y)
-            : 0;
-          const targetX = active
-            ? THREE.MathUtils.clamp(-globalPointer.ny * NUMBER_ROT_MAX_X, -NUMBER_ROT_MAX_X, NUMBER_ROT_MAX_X)
-            : 0;
-          const ease = active ? 0.18 : 0.12;
-          pointerRot.currentX += (targetX - pointerRot.currentX) * ease;
-          pointerRot.currentY += (targetY - pointerRot.currentY) * ease;
-
-          const baseY = NUMBER_BASE_ROT_Y + t * NUMBER_AUTO_ROT_SPEED;
-          group.rotation.y = baseY + pointerRot.currentY;
-          group.rotation.x = NUMBER_BASE_ROT_X + pointerRot.currentX;
-          if (pointerWithinCell()) {
-            pixelSizeTarget.copy(HOVER_PIXEL_SIZE);
-          } else {
-            pixelSizeTarget.copy(BASE_PIXEL_SIZE);
-          }
-          pixelSizeUniform.lerp(pixelSizeTarget, 0.08);
-
-          if (ENABLE_SCANLINE && composerInitialized && scanLinePass) {
-            scanLinePass.uniforms.time.value = currentTime * 60.0;
-          }
-          if (composerInitialized && grainPass) {
-            grainPass.uniforms.time.value = currentTime * 0.5;
-          }
-          if (pixelateUniforms?.pixelSize?.value) {
-            pixelateUniforms.pixelSize.value.copy(pixelSizeUniform);
-          }
-        },
-        renderPost({ renderer, viewportX = 0, viewportY = 0, viewportWidth, viewportHeight }) {
-          if (!renderer || viewportWidth <= 0 || viewportHeight <= 0) return;
-          camera.aspect = viewportWidth / viewportHeight;
+        resize(newWidth, newHeight) {
+          width = Math.max(1, Math.floor(newWidth));
+          height = Math.max(1, Math.floor(newHeight));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(width, height, false);
+          camera.aspect = width / height;
           camera.updateProjectionMatrix();
-          const prevRenderTarget = renderer.getRenderTarget();
-          const prevViewport = renderer.getViewport(new THREE.Vector4());
-          const prevScissor = renderer.getScissor(new THREE.Vector4());
-          const prevScissorTest = renderer.getScissorTest();
-          const prevAutoClear = renderer.autoClear;
-          const restore = () => {
-            renderer.setRenderTarget(prevRenderTarget);
-            renderer.setViewport(prevViewport.x, prevViewport.y, prevViewport.z, prevViewport.w);
-            renderer.setScissor(prevScissor.x, prevScissor.y, prevScissor.z, prevScissor.w);
-            renderer.setScissorTest(prevScissorTest);
-            renderer.autoClear = prevAutoClear;
-          };
-          if (!USE_POST) {
-            renderer.setViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-            renderer.setScissor(viewportX, viewportY, viewportWidth, viewportHeight);
-            renderer.setScissorTest(true);
-            renderer.render(scene, camera);
-            restore();
-            return;
-          }
-          ensureComposer(renderer, viewportWidth, viewportHeight);
-          if (!composerInitialized) {
-            restore();
-            return;
-          }
-          renderer.autoClear = true;
-          const previousBackground = scene.background;
-          scene.background = bloomBackground;
-          scene.traverse(darkenNonBloomed);
-          bloomComposer?.render();
-          scene.traverse(restoreMaterial);
-          scene.background = previousBackground;
-          if (bloomCompositePass && bloomComposer) {
-            const bloomTexture =
-              (bloomComposer.renderTarget2 && bloomComposer.renderTarget2.texture) ||
-              (bloomComposer.renderTarget1 && bloomComposer.renderTarget1.texture) ||
-              null;
-            bloomCompositePass.uniforms.bloomTexture.value = bloomTexture;
-          }
-          composer.render();
-          renderer.autoClear = prevAutoClear;
-
-          // composerの出力を画面にコピー
-          const outputTexture = composer.writeBuffer?.texture || composer.readBuffer?.texture || null;
-          if (outputTexture) {
-            copyMaterial.uniforms.tDiffuse.value = outputTexture;
-            copyMaterial.needsUpdate = true;
-            renderer.setRenderTarget(null);
-            renderer.setViewport(viewportX, viewportY, viewportWidth, viewportHeight);
-            renderer.setScissor(viewportX, viewportY, viewportWidth, viewportHeight);
-            renderer.setScissorTest(true);
-            renderer.autoClear = false;
-            renderer.render(copyScene, copyCamera);
-          }
-          restore();
+          ensureComposer(width, height);
+        },
+        tick(time) {
+          if (disposed) return;
+          updateState(time);
+          renderFrame();
         },
         dispose() {
+          if (disposed) return;
+          disposed = true;
           composer?.passes?.forEach((pass) => pass.dispose?.());
           composer?.dispose?.();
           bloomComposer?.passes?.forEach((pass) => pass.dispose?.());
@@ -3425,6 +3673,10 @@
           scanLinePass = null;
           grainPass = null;
           composerInitialized = false;
+          if (renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+          }
+          renderer.dispose();
         }
       };
     }
@@ -3560,6 +3812,8 @@
 
       const scene = new THREE.Scene();
       const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+
+      let disposed = false;
 
       class Vec2 {
         constructor(x = 0, y = 0) { this.x = x; this.y = y; }
@@ -3993,9 +4247,11 @@
 
       return {
         update(t) {
+          if (disposed) return;
           stepSimulation(t);
         },
         render(rect) {
+          if (disposed) return;
           const w = Math.max(1, Math.floor(rect?.width || 1));
           const h = Math.max(1, Math.floor(rect?.height || 1));
           if (w !== currentWidth || h !== currentHeight) {
@@ -4008,6 +4264,8 @@
         },
         _ascii: true,
         dispose() {
+          if (disposed) return;
+          disposed = true;
           canvas.removeEventListener('pointerenter', handlePointerEnter);
           canvas.removeEventListener('pointermove', handlePointerMove);
           canvas.removeEventListener('pointerleave', handlePointerLeave);
@@ -4244,12 +4502,15 @@
     //   };
     // }
     function createImage(cellEl) {
+      if (!cellEl) return null;
+
       const scene = new THREE.Scene();
-      const camera = new THREE.PerspectiveCamera(50, 1, .1, 100);
+      const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
       camera.position.set(0, 0, 2.6);
+
       const geometry = new THREE.PlaneGeometry(3.0, 3.0);
       const loader = new THREE.TextureLoader();
-      const src = cellEl?.dataset?.img || '';
+      const src = cellEl.dataset?.img || '';
       const uniforms = {
         uTex: { value: null },
         imageAspectRatio: { value: 1.0 },
@@ -4262,6 +4523,7 @@
         uSaturation: { value: 0.85 },
         uWash: { value: 0.10 },
       };
+
       const tex = loader.load(src, (loaded) => {
         if (loaded.image && loaded.image.width && loaded.image.height) {
           uniforms.uTex.value = loaded;
@@ -4269,6 +4531,7 @@
         }
       });
       tex.colorSpace = THREE.SRGBColorSpace;
+
       const vertexShader = `
         varying vec2 vUv;
         void main(){
@@ -4323,45 +4586,68 @@
         }
       `;
       const material = new THREE.ShaderMaterial({ uniforms, vertexShader, fragmentShader, transparent: false });
-      material.toneMapped = true; // allow renderer to handle output mapping
+      material.toneMapped = true;
       const mesh = new THREE.Mesh(geometry, material);
       scene.add(mesh);
-      // aspect is set in loader onLoad above
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.touchAction = 'none';
+      cellEl.appendChild(renderer.domElement);
+
       let targetHover = 0;
       let currentHover = 0;
       let glitch = 0;
+      let disposed = false;
       const target = { scale: 1, posX: 0, rotX: 0, rotY: 0 };
+
       const onEnter = () => { targetHover = 1; glitch = 0.6; };
-      const onLeave = () => { targetHover = 0; glitch = 0.6; target.scale = 1; target.posX = 0; target.rotX = 0; target.rotY = 0; };
+      const onLeave = () => {
+        targetHover = 0;
+        glitch = 0.6;
+        target.scale = 1;
+        target.posX = 0;
+        target.rotX = 0;
+        target.rotY = 0;
+      };
       const onMove = (e) => {
         const r = cellEl.getBoundingClientRect();
-        const mx = ((e.clientX - r.left) / r.width) * 2 - 1;   // -1 .. 1
+        const mx = ((e.clientX - r.left) / r.width) * 2 - 1;
         const my = -(((e.clientY - r.top) / r.height) * 2 - 1);
         target.scale = Math.max(1.05, 1 - my * 0.08);
-        target.posX = mx * 0.4; // small horizontal slide
+        target.posX = mx * 0.4;
         target.rotX = -my * (Math.PI / 3) * 0.3;
         target.rotY = mx * (Math.PI / 3) * 0.3;
       };
-      if (cellEl) {
-        cellEl.style.cursor = 'pointer';
-        cellEl.addEventListener('pointerenter', onEnter);
-        cellEl.addEventListener('pointerleave', onLeave);
-        cellEl.addEventListener('pointermove', onMove);
-      }
+
+      cellEl.style.cursor = 'pointer';
+      cellEl.addEventListener('pointerenter', onEnter);
+      cellEl.addEventListener('pointerleave', onLeave);
+      cellEl.addEventListener('pointermove', onMove);
+
       return {
-        scene,
-        camera,
-        update(t) {
-          // update aspect based on external camera aspect (set by renderer loop)
+        resize(width, height) {
+          const w = Math.max(1, Math.floor(width));
+          const h = Math.max(1, Math.floor(height));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
           camera.updateProjectionMatrix();
-          // smooth hover
+          uniforms.aspectRatio.value = camera.aspect;
+        },
+        tick(t) {
+          if (disposed) return;
           currentHover += (targetHover - currentHover) * 0.12;
           uniforms.hover.value = currentHover;
-          // glitch decay and time (even slower)
           glitch += (0.0 - glitch) * 0.02;
           uniforms.uGlitch.value = glitch;
           uniforms.uTime.value = t;
-          // smooth transforms
           const lerp = (a, b, s) => a + (b - a) * s;
           const rotFactor = 1.0 + 0.12 * (Math.abs(mesh.rotation.x) + Math.abs(mesh.rotation.y));
           const targetScaled = target.scale * rotFactor;
@@ -4370,6 +4656,18 @@
           mesh.position.x = lerp(mesh.position.x, target.posX, 0.2);
           mesh.rotation.x = lerp(mesh.rotation.x, target.rotX, 0.2);
           mesh.rotation.y = lerp(mesh.rotation.y, target.rotY, 0.2);
+          renderer.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          cellEl.removeEventListener('pointerenter', onEnter);
+          cellEl.removeEventListener('pointerleave', onLeave);
+          cellEl.removeEventListener('pointermove', onMove);
+          if (renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+          }
+          renderer.dispose();
         }
       };
     }
@@ -5019,7 +5317,7 @@
         _ascii: true
       };
     }
-    function createAvatar() {
+    function createAvatar(cellEl) {
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 100);
       camera.position.set(0, 1.5, 1.8);
@@ -5035,6 +5333,16 @@
       const actions = { waving: null, bow: null };
       let isBowPlaying = false;
       let clickBound = false;
+
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.outputColorSpace = THREE.SRGBColorSpace;
+      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.setClearColor(0xdeefff, 0);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.height = '100%';
+      renderer.domElement.style.display = 'block';
+      renderer.domElement.style.touchAction = 'none';
 
       loader.load('./avatar.glb', (gltf) => {
         const root = gltf.scene;
@@ -5066,7 +5374,6 @@
           }
 
           // click to play bow then return to waving with smooth crossfade
-          const cellEl = document.getElementById('scene-21');
           if (cellEl && !clickBound) {
             clickBound = true;
             const onFinished = (e) => {
@@ -5095,13 +5402,35 @@
       });
 
       let lastT = 0;
+      if (cellEl && !cellEl.contains(renderer.domElement)) {
+        cellEl.appendChild(renderer.domElement);
+      }
+
+      let disposed = false;
+
       return {
-        scene,
-        camera,
-        update(t) {
+        resize(width, height) {
+          const w = Math.max(1, Math.floor(width));
+          const h = Math.max(1, Math.floor(height));
+          renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+          renderer.setSize(w, h, false);
+          camera.aspect = w / h;
+          camera.updateProjectionMatrix();
+        },
+        tick(t) {
+          if (disposed) return;
           const dt = Math.max(0, t - lastT);
           lastT = t;
           if (mixer) mixer.update(dt);
+          renderer.render(scene, camera);
+        },
+        dispose() {
+          if (disposed) return;
+          disposed = true;
+          if (renderer.domElement.parentNode) {
+            renderer.domElement.parentNode.removeChild(renderer.domElement);
+          }
+          renderer.dispose();
         }
       };
     }
@@ -5242,13 +5571,254 @@
     // ===== attach to cells =====
     const sceneCells = Array.from(document.querySelectorAll('.scene'));
     const gridEl = document.querySelector('.grid5x3');
-    const effects = new Map();
-    sceneCells.forEach(cell => { const t = cell.dataset.effect; const f = EFFECTS[t]; if (f) { effects.set(cell, f(cell)); } });
+    const infoPanel = document.getElementById('scene-6');
+    const INFO_PANEL_HIDDEN_CLASS = 'scene-info--hidden';
 
-    // ===== render only visible cells =====
-    const visible = new Set();
-    const io = new IntersectionObserver(es => { for (const e of es) { if (e.isIntersecting) visible.add(e.target); else visible.delete(e.target); } }, { threshold: .01 });
-    sceneCells.forEach(c => io.observe(c));
+    class CellEffectController {
+      constructor(cell, factory) {
+        this.cell = cell;
+        this.factory = factory;
+        this.effect = null;
+        this.resizeObserver = null;
+        this.resizeCleanup = null;
+        this.isActive = false;
+        this.rafId = null;
+        this.wasActiveBeforeScroll = false;
+      }
+
+      ensureEffect() {
+        if (this.effect) return;
+        try {
+          this.effect = this.factory(this.cell);
+        } catch (error) {
+          console.error('Failed to create effect for cell', this.cell, error);
+          this.effect = null;
+          return;
+        }
+        if (!this.effect) return;
+
+        if (typeof this.effect.resize === 'function') {
+          const applySize = () => {
+            const rect = this.cell.getBoundingClientRect();
+            if (rect.width && rect.height) {
+              this.effect.resize(rect.width, rect.height);
+            }
+          };
+          if (typeof ResizeObserver === 'function') {
+            this.resizeObserver = new ResizeObserver((entries) => {
+              for (const entry of entries) {
+                const rect = entry.contentRect;
+                const width = rect?.width ?? rect?.inlineSize;
+                const height = rect?.height ?? rect?.blockSize;
+                if (width && height && typeof this.effect.resize === 'function') {
+                  this.effect.resize(width, height);
+                }
+              }
+            });
+            this.resizeObserver.observe(this.cell);
+          } else {
+            window.addEventListener('resize', applySize);
+            this.resizeCleanup = () => window.removeEventListener('resize', applySize);
+          }
+          applySize();
+        }
+
+        if (typeof this.effect.start === 'function') {
+          this.effect.start();
+        }
+      }
+
+      prime(timestampMs) {
+        this.ensureEffect();
+        if (!this.effect) return;
+        const timeMs = typeof timestampMs === 'number' ? timestampMs : performance.now();
+        const timeSeconds = timeMs / 1000;
+        if (typeof this.effect.tick === 'function') {
+          this.effect.tick(timeSeconds);
+        } else {
+          this.effect.update?.(timeSeconds);
+        }
+        if (typeof this.effect.render === 'function') {
+          const rect = this.cell.getBoundingClientRect();
+          this.effect.render(rect);
+        }
+      }
+
+      start() {
+        this.ensureEffect();
+        if (!this.effect || this.isActive) return;
+        this.isActive = true;
+        if (typeof this.effect.resume === 'function') {
+          this.effect.resume();
+        }
+        this.prime(performance.now());
+        this.rafId = requestAnimationFrame(this.loop);
+      }
+
+      loop = (timestamp) => {
+        if (!this.isActive) return;
+        const time = timestamp / 1000;
+        if (typeof this.effect.tick === 'function') {
+          this.effect.tick(time);
+        } else {
+          this.effect.update?.(time);
+          if (typeof this.effect.render === 'function') {
+            const rect = this.cell.getBoundingClientRect();
+            this.effect.render(rect);
+          }
+        }
+        this.rafId = requestAnimationFrame(this.loop);
+      };
+
+      stop({ fromScroll = false } = {}) {
+        if (!this.isActive) return;
+        this.isActive = false;
+        if (this.rafId !== null) {
+          cancelAnimationFrame(this.rafId);
+          this.rafId = null;
+        }
+        if (fromScroll) {
+          if (typeof this.effect?.pause === 'function') {
+            this.effect.pause();
+          }
+        } else if (typeof this.effect?.stop === 'function') {
+          this.effect.stop();
+        }
+      }
+
+      pauseForScroll() {
+        if (this.isActive) {
+          this.wasActiveBeforeScroll = true;
+          this.stop({ fromScroll: true });
+        }
+      }
+
+      resumeAfterScroll() {
+        if (this.wasActiveBeforeScroll) {
+          this.wasActiveBeforeScroll = false;
+          this.start();
+        }
+      }
+
+      dispose() {
+        this.stop();
+        this.resizeObserver?.disconnect();
+        this.resizeCleanup?.();
+        this.effect?.dispose?.();
+        this.effect = null;
+      }
+    }
+
+    const effectControllers = new Map();
+    const effectObserver = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        const controller = effectControllers.get(entry.target);
+        if (!controller) continue;
+        if (entry.isIntersecting) {
+          controller.start();
+        } else {
+          controller.stop();
+        }
+      }
+    }, { threshold: 0.2 });
+
+    sceneCells.forEach((cell) => {
+      const type = cell.dataset.effect;
+      const factory = EFFECTS[type];
+      if (!factory) return;
+      const controller = new CellEffectController(cell, factory);
+      effectControllers.set(cell, controller);
+      effectObserver.observe(cell);
+    });
+
+    function computeIntersectionRatio(rect, viewportWidth, viewportHeight) {
+      if (!rect || rect.width <= 0 || rect.height <= 0 || viewportWidth <= 0 || viewportHeight <= 0) {
+        return 0;
+      }
+      const intersectWidth = Math.max(0, Math.min(rect.right, viewportWidth) - Math.max(rect.left, 0));
+      const intersectHeight = Math.max(0, Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0));
+      const intersectArea = intersectWidth * intersectHeight;
+      if (intersectArea <= 0) return 0;
+      const totalArea = rect.width * rect.height;
+      if (totalArea <= 0) return 0;
+      return intersectArea / totalArea;
+    }
+
+    function scheduleIdleWork(cb) {
+      if (typeof window.requestIdleCallback === 'function') {
+        window.requestIdleCallback(cb, { timeout: 500 });
+      } else {
+        window.setTimeout(cb, 16);
+      }
+    }
+
+    const INITIAL_VISIBILITY_THRESHOLD = 0.2;
+    const viewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
+    const viewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+    const controllersList = Array.from(effectControllers.values());
+    const visibilityEntries = controllersList.map((controller) => {
+      const rect = controller.cell.getBoundingClientRect();
+      const ratio = computeIntersectionRatio(rect, viewportWidth, viewportHeight);
+      return { controller, ratio };
+    });
+
+    const initiallyVisible = visibilityEntries
+      .filter(entry => entry.ratio >= INITIAL_VISIBILITY_THRESHOLD)
+      .sort((a, b) => b.ratio - a.ratio);
+    const initiallyHidden = visibilityEntries
+      .filter(entry => entry.ratio < INITIAL_VISIBILITY_THRESHOLD)
+      .sort((a, b) => b.ratio - a.ratio);
+
+    if (initiallyVisible.length) {
+      window.requestAnimationFrame(() => {
+        initiallyVisible.forEach(({ controller }) => controller.start());
+      });
+    }
+
+    if (initiallyHidden.length) {
+      const warmupQueue = initiallyHidden.map(entry => entry.controller);
+      const warmupNext = () => {
+        if (!warmupQueue.length) return;
+        const controller = warmupQueue.shift();
+        controller.ensureEffect();
+        window.requestAnimationFrame((timestamp) => controller.prime(timestamp));
+        if (warmupQueue.length) {
+          scheduleIdleWork(warmupNext);
+        }
+      };
+      const launchWarmup = () => scheduleIdleWork(warmupNext);
+      if (initiallyVisible.length) {
+        window.requestAnimationFrame(() => {
+          window.requestAnimationFrame(launchWarmup);
+        });
+      } else {
+        window.requestAnimationFrame(launchWarmup);
+      }
+    }
+
+    let scrollResumeTimer = null;
+    const SCROLL_RESUME_DELAY = 160;
+    const pauseEffectsForScroll = () => {
+      effectControllers.forEach((controller) => controller.pauseForScroll());
+    };
+    const scheduleScrollResume = () => {
+      if (scrollResumeTimer) window.clearTimeout(scrollResumeTimer);
+      scrollResumeTimer = window.setTimeout(() => {
+        effectControllers.forEach((controller) => controller.resumeAfterScroll());
+      }, SCROLL_RESUME_DELAY);
+    };
+
+    window.addEventListener('scroll', () => {
+      pauseEffectsForScroll();
+      scheduleScrollResume();
+    }, { passive: true });
+
+    window.addEventListener('touchmove', () => {
+      pauseEffectsForScroll();
+      scheduleScrollResume();
+    }, { passive: true });
+
+    window.addEventListener('touchend', scheduleScrollResume, { passive: true });
 
     // ===== simple grid column focuser =====
     (function setupColumnFocus() {
@@ -5652,6 +6222,10 @@
         expandedArticle = cell;
         cell.classList.add('scene--detail-open');
         document.body.classList.add('scene-overlay-open');
+        if (infoPanel) {
+          infoPanel.classList.add(INFO_PANEL_HIDDEN_CLASS);
+          infoPanel.setAttribute('aria-hidden', 'true');
+        }
         if (DETAIL_TARGET_ID_SET.has(cell.id)) {
           hideSvgStrokesReverse();
         }
@@ -5662,6 +6236,10 @@
         expandedArticle.classList.remove('scene--detail-open');
         expandedArticle = null;
         document.body.classList.remove('scene-overlay-open');
+        if (infoPanel) {
+          infoPanel.classList.remove(INFO_PANEL_HIDDEN_CLASS);
+          infoPanel.removeAttribute('aria-hidden');
+        }
       }
 
       function applyFocus(cell, columnIndex, rowIndex) {
@@ -5801,81 +6379,6 @@
 
       measureBaseState();
     })();
-
-    let isRendering = false;
-    let lastManualRender = 0;
-
-    function renderFrame(now) {
-      if (isRendering) return false;
-      isRendering = true;
-      const timestamp = typeof now === 'number' ? now : performance.now();
-      const t = timestamp / 1000;
-      renderer.setScissorTest(true); renderer.clear();
-      try {
-        for (const cell of visible) {
-          const eff = effects.get(cell); if (!eff) continue;
-          const rect = cell.getBoundingClientRect(); if (rect.width <= 0 || rect.height <= 0) continue;
-          // AsciiEffect を使うセルは独自レンダリング（DOM重ね描き）
-          if (eff.render && eff._ascii) {
-            eff.update?.(t);
-            eff.render(rect);
-            continue;
-          }
-          // 画面内でクリップしたビューポート／シザー
-          const x = Math.max(0, Math.floor(rect.left));
-          const y = Math.max(0, Math.floor(innerHeight - rect.bottom));
-          const w = Math.max(0, Math.floor(Math.min(rect.right, innerWidth) - x));
-          const h = Math.max(0, Math.floor(Math.min(rect.bottom, innerHeight) - Math.max(rect.top, 0)));
-          if (w === 0 || h === 0) continue;
-          renderer.setViewport(x, y, w, h); renderer.setScissor(x, y, w, h);
-          // セル本来のサイズでアスペクトを固定し、部分表示分はViewOffsetでクロップ
-          const cellW = Math.max(1, Math.floor(rect.width));
-          const cellH = Math.max(1, Math.floor(rect.height));
-          eff.camera.aspect = cellW / cellH; eff.camera.updateProjectionMatrix();
-          const offsetXInCell = Math.max(0, -Math.floor(rect.left));
-          const offsetYInCell = Math.max(0, -Math.floor(rect.top));
-          if (eff.camera.setViewOffset) {
-            eff.camera.setViewOffset(cellW, cellH, offsetXInCell, offsetYInCell, w, h);
-          }
-          eff.update?.(t);
-          if (typeof eff.renderPost === 'function') {
-            eff.renderPost({
-              renderer,
-              viewportX: x,
-              viewportY: y,
-              viewportWidth: w,
-              viewportHeight: h,
-              time: t
-            });
-          } else {
-            renderer.render(eff.scene, eff.camera);
-          }
-          if (eff.camera.clearViewOffset) eff.camera.clearViewOffset();
-        }
-      } finally {
-        renderer.setScissorTest(false);
-        isRendering = false;
-      }
-      return true;
-    }
-
-    function render(now) {
-      renderFrame(now);
-      requestAnimationFrame(render);
-    }
-    requestAnimationFrame(render);
-
-    // Native scrolling can pause rAF (iOS Safari), so force redraws from scroll/touch events.
-    const forceRenderOnScroll = () => {
-      const now = performance.now();
-      if (now - lastManualRender < 16) return;
-      if (renderFrame(now)) lastManualRender = now;
-    };
-
-    window.addEventListener('scroll', forceRenderOnScroll, { passive: true });
-    window.addEventListener('touchstart', forceRenderOnScroll, { passive: true });
-    window.addEventListener('touchmove', forceRenderOnScroll, { passive: true });
-    window.addEventListener('touchend', forceRenderOnScroll, { passive: true });
 
     // === グリッド境界線を自動抽出して描く ===
     function buildGridStrokes({
