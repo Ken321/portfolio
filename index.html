@@ -952,6 +952,11 @@
         display: none;
       }
 
+      #scene-6 .cell-inner,
+      #scene-23 .cell-inner {
+        overflow-y: scroll;
+      }
+
       body.scene-overlay-open .grid5x3>.cell {
         height: auto;
         min-height: 0;
@@ -1110,7 +1115,8 @@
           Lifting CEO – You can juggle a curled-up version of the CEO right on top of the card.<br>
           Maze Game – A two-story maze appears above the card. By tilting the business card, you can roll the curled-up CEO through the maze to reach the goal.<br>
           It’s a lighthearted project exploring how AR can blend physical touch and humor — transforming a simple business card into an interactive playground.<br>
-          Built with: Unity, AR Foundation' data-link="https://x.com/321kn/status/1541271768639238144" data-link-label="Watch on x">
+          Built with: Unity, AR Foundation' data-link="https://x.com/321kn/status/1541271768639238144"
+          data-link-label="Watch on x">
 
         </article>
         <article id="scene-11" class="cell scene" data-effect="image" data-img="./img/haiti.png"
@@ -1591,6 +1597,19 @@
         return promise;
       };
     })();
+
+    function getSwipeTouchAction() {
+      if (typeof window === 'undefined') return 'none';
+      if (typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches) {
+        return 'pan-y';
+      }
+      if (typeof navigator !== 'undefined') {
+        const maxTouchPoints = navigator.maxTouchPoints || navigator.msMaxTouchPoints || 0;
+        if (maxTouchPoints > 0) return 'pan-y';
+      }
+      if ('ontouchstart' in window) return 'pan-y';
+      return 'none';
+    }
 
     // ===== effect factories =====
     function createTorus(cellEl) {
@@ -3805,7 +3824,10 @@
         hitLink.style.width = `${width}px`;
         hitLink.style.height = `${height}px`;
       };
-      const handleResize = () => syncButtonHit();
+      const handleResize = () => {
+        syncButtonHit();
+        applyViewportDragConfig();
+      };
       const resizeObserver = window.ResizeObserver
         ? new ResizeObserver(() => syncButtonHit())
         : null;
@@ -4054,6 +4076,8 @@
         }
       }
 
+      const baseDragConfig = { radius: 20, strength: 0.2 };
+      const mobileDragConfig = { radius: 34, strength: 0.32 };
       const conf = {
         width: 256,
         height: 256,
@@ -4062,9 +4086,40 @@
         gravity: -400,
         size: 1,
         stiffness: 12,
-        mouseRadius: 20,
-        mouseStrength: 0.2
+        mouseRadius: baseDragConfig.radius,
+        mouseStrength: baseDragConfig.strength
       };
+
+      const contactCurtainMedia = typeof window.matchMedia === 'function'
+        ? window.matchMedia('(max-width: 900px)')
+        : null;
+
+      const applyViewportDragConfig = () => {
+        const isMobileViewport = contactCurtainMedia
+          ? contactCurtainMedia.matches
+          : (window.innerWidth || 0) <= 900;
+        if (isMobileViewport) {
+          conf.mouseRadius = mobileDragConfig.radius;
+          conf.mouseStrength = mobileDragConfig.strength;
+        } else {
+          conf.mouseRadius = baseDragConfig.radius;
+          conf.mouseStrength = baseDragConfig.strength;
+        }
+      };
+      applyViewportDragConfig();
+
+      const detachViewportListener = (() => {
+        if (!contactCurtainMedia) return () => { };
+        if (typeof contactCurtainMedia.addEventListener === 'function') {
+          contactCurtainMedia.addEventListener('change', applyViewportDragConfig);
+          return () => contactCurtainMedia.removeEventListener('change', applyViewportDragConfig);
+        }
+        if (typeof contactCurtainMedia.addListener === 'function') {
+          contactCurtainMedia.addListener(applyViewportDragConfig);
+          return () => contactCurtainMedia.removeListener(applyViewportDragConfig);
+        }
+        return () => { };
+      })();
 
       const verlet = new SimpleVerlet(new Vec2(0, conf.gravity));
       const uCx = { value: 2 / conf.width };
@@ -4284,6 +4339,7 @@
           canvas.removeEventListener('pointermove', handlePointerMove);
           canvas.removeEventListener('pointerleave', handlePointerLeave);
           window.removeEventListener('resize', handleResize);
+          detachViewportListener();
           resizeObserver?.disconnect?.();
           setVisualHover(false);
           hitLink.remove();
@@ -4612,7 +4668,11 @@
       renderer.domElement.style.width = '100%';
       renderer.domElement.style.height = '100%';
       renderer.domElement.style.display = 'block';
-      renderer.domElement.style.touchAction = 'none';
+      const touchAction = getSwipeTouchAction();
+      renderer.domElement.style.touchAction = touchAction;
+      if (touchAction === 'pan-y') {
+        cellEl.style.touchAction = touchAction;
+      }
       cellEl.appendChild(renderer.domElement);
 
       let targetHover = 0;
@@ -5356,7 +5416,11 @@
       renderer.domElement.style.width = '100%';
       renderer.domElement.style.height = '100%';
       renderer.domElement.style.display = 'block';
-      renderer.domElement.style.touchAction = 'none';
+      const touchAction = getSwipeTouchAction();
+      renderer.domElement.style.touchAction = touchAction;
+      if (cellEl && touchAction === 'pan-y') {
+        cellEl.style.touchAction = touchAction;
+      }
 
       loader.load('./avatar.glb', (gltf) => {
         const root = gltf.scene;
