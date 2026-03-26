@@ -4992,195 +4992,499 @@
       const scene = new THREE.Scene();
       scene.background = new THREE.Color(0xdeefff);
       const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 100);
-      camera.position.set(0, 0.9, 4.6);
+      camera.position.set(0, 0, 3.5);
 
-      const controls = new OrbitControls(camera, localRenderer.domElement);
-      controls.enableDamping = false;
-      controls.enablePan = false;
-      controls.enableRotate = false;
-      controls.enableZoom = false;
+      // ── Utility ──────────────────────────────────────────────────────
+      function getSeedRandom(seed) {
+        let s = 0;
+        for (let i = 0; i < seed.length; i++) s = ((s << 5) - s + seed.charCodeAt(i)) | 0;
+        return () => { s = (s * 16807) % 2147483647; return (s & 0x7fffffff) / 0x7fffffff; };
+      }
+      function fit(v, a, b, c, d) { return c + (d - c) * Math.max(0, Math.min(1, (v - a) / (b - a))); }
+      const rng = getSeedRandom('balloonBody-25');
 
-      const hemi = new THREE.HemisphereLight(0xffffff, 0xc0d6ff, 1.35);
-      scene.add(hemi);
-      const dir = new THREE.DirectionalLight(0xffffff, 1.25);
-      dir.position.set(3, 4, 5);
-      dir.shadow = undefined;
-      scene.add(dir);
+      // ── Config ───────────────────────────────────────────────────────
+      const COLORS = ['#024b9e', '#146EF5', '#79afff'];
+      let colorIdx = 0;
+      const GRAVITY_FACTOR = 12;
+      const LETTER_SCALE = 1.8;
+      const N_SAMPLES = 48;
+      const SEP_THRESH = 0.55;
+      const SEP_POS_CORR = 0.03;
+      const REL_VEL_DEADZONE = 0.8;
+      const N_CORR_ITERS = 1;
+      const RESTITUTION = 0.0;
+      const INERTIA_K = 0.35;
+      const LINEAR_SLEEP = 0.3;
+      const ANGULAR_SLEEP = 0.2;
 
-      const mouse = new THREE.Vector2();
-      const mouseWorld = new THREE.Vector3(0, 0.2, 0); // projected point (for velocity tracking)
-      const mouseVel   = new THREE.Vector3(0, 0, 0);
-      const mouseRayOrigin = new THREE.Vector3();       // camera ray origin
-      const mouseRayDir    = new THREE.Vector3(0, 0, -1); // camera ray direction (normalised)
-      const raycaster = new THREE.Raycaster();
-      const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+      // ── Object data ─────────────────────────────────────────────────
+      const DATA = [];
+      function addBody(color, isRough, isColored, li) {
+        DATA.push({ color, isRough, isColored, letterIdx: li, radius: 1, density: 1, friction: 2, restitution: 0.8 });
+      }
+      // k letters
+      addBody('#024b9e',true,true,0); addBody('#024b9e',false,true,0);
+      addBody('#146EF5',true,true,0); addBody('#146EF5',false,true,0);
+      addBody('#79afff',true,true,0); addBody('#79afff',false,true,0); addBody('#024b9e',true,true,0);
+      // e letters
+      addBody('#146EF5',true,true,1); addBody('#146EF5',false,true,1);
+      addBody('#79afff',true,true,1); addBody('#79afff',false,true,1);
+      addBody('#024b9e',true,true,1); addBody('#024b9e',false,true,1); addBody('#146EF5',true,true,1);
+      // n letters
+      addBody('#79afff',true,true,2); addBody('#79afff',false,true,2);
+      addBody('#024b9e',true,true,2); addBody('#024b9e',false,true,2);
+      addBody('#146EF5',true,true,2); addBody('#146EF5',false,true,2); addBody('#79afff',true,true,2);
+
+      const N = DATA.length;
+      const NCNT = N - 1;
+
+      // ── Matcap texture ───────────────────────────────────────────────
+      function genMatcap(sz) {
+        const cv = document.createElement('canvas'); cv.width = cv.height = sz;
+        const ctx = cv.getContext('2d'), im = ctx.createImageData(sz, sz);
+        for (let y = 0; y < sz; y++) for (let x = 0; x < sz; x++) {
+          const u = (x / sz) * 2 - 1, v = (y / sz) * 2 - 1, dd = Math.sqrt(u * u + v * v), i = (y * sz + x) * 4;
+          if (dd > 1) { im.data[i] = im.data[i + 1] = im.data[i + 2] = 0; im.data[i + 3] = 255; continue; }
+          const nz = Math.sqrt(1 - dd * dd), nx = u, ny = -v;
+          const ll = Math.sqrt(.16 + .36 + .49), NdL = Math.max(0, (nx * .4 + ny * .6 + nz * .7) / ll);
+          const diff = .15 + .85 * Math.pow(NdL, .7);
+          const d2 = 2 * (nx * .4 / ll + ny * .6 / ll + nz * .7 / ll), rz = nz * d2 - .7 / ll;
+          const sp = Math.max(0, rz), fr = Math.pow(1 - nz, 4) * .15;
+          im.data[i] = Math.min(255, (diff + fr) * 255);
+          im.data[i + 1] = Math.min(255, (Math.pow(sp, 8) * .5 + fr * .5) * 255);
+          im.data[i + 2] = Math.min(255, (Math.pow(sp, 64) * .9 + Math.pow(sp, 8) * .15 + fr) * 255);
+          im.data[i + 3] = 255;
+        }
+        ctx.putImageData(im, 0, 0);
+        const t = new THREE.CanvasTexture(cv); t.minFilter = t.magFilter = THREE.LinearFilter; return t;
+      }
+      const matcapTex = genMatcap(256);
+
+      // ── Shaders ──────────────────────────────────────────────────────
+      const vertSh = `
+        uniform vec3 u_lightPosition;
+        uniform vec4 u_selfPositionRadius;
+        uniform vec4 u_selfRotation;
+        varying vec3 v_viewPosition, v_worldPosition, v_viewNormal;
+        varying float v_selfShadow;
+        vec3 qrot(vec3 v, vec4 q){return v+2.*cross(q.xyz,cross(q.xyz,v)+q.w*v);}
+        void main(){
+          vec4 mv = modelViewMatrix * vec4(position,1.);
+          gl_Position = projectionMatrix * mv;
+          vec3 wp = (modelMatrix*vec4(position,1.)).xyz;
+          vec4 iq = vec4(-u_selfRotation.xyz, u_selfRotation.w);
+          vec3 L = normalize(qrot((u_lightPosition-wp)/max(u_selfPositionRadius.w,.01),iq));
+          v_selfShadow = max(.3, dot(normalize(position),L)*.5+.5);
+          v_worldPosition = wp;
+          v_viewNormal = normalMatrix * normal;
+          v_viewPosition = -mv.xyz;
+        }`;
+
+      const fragSh = `
+        precision highp float;
+        varying vec3 v_viewNormal, v_viewPosition, v_worldPosition;
+        varying float v_selfShadow;
+        uniform vec4 u_nearPR[NCNT];
+        uniform vec3 u_nearCol[NCNT];
+        uniform float u_roughness;
+        uniform vec3 u_color;
+        uniform sampler2D u_matcap;
+        uniform vec3 u_lightPosition;
+        #define saturate(a) clamp(a,0.,1.)
+
+        vec2 neiAO(vec3 p, vec3 n, vec3 l, vec4 pr){
+          vec3 to=pr.xyz-p; float d=length(to), r=pr.w*1.2;
+          if(d>r*3.) return vec2(1.);
+          vec3 dir=to/max(d,.001);
+          float occ=saturate(dot(n,dir))*saturate(1.-d/(r*2.5)); occ*=occ;
+          float LdD=saturate(dot(l,dir))*saturate(1.-d/(r*2.)); LdD*=LdD;
+          return vec2(1.-.7*occ, 1.-.5*LdD);
+        }
+
+        vec3 invTD(vec3 d, mat4 m){return normalize((vec4(d,0.)*m).xyz);}
+
+        vec3 filmic(vec3 c){
+          c=max(vec3(0.),c-vec3(.004));
+          return(c*(6.2*c+.5))/(c*(6.2*c+1.7)+.06);
+        }
+
+        void main(){
+          float fd=gl_FrontFacing?1.:-1.;
+          vec3 vn=fd*normalize(v_viewNormal);
+          vec3 V=normalize(cameraPosition-v_worldPosition);
+          vec3 NN=invTD(vn,viewMatrix);
+          float rough=min(.9,u_roughness+dot(vec3(1.),fwidth(vn)));
+          vec3 L=normalize(u_lightPosition-v_worldPosition);
+          vec3 gi=vec3(1.); float ao=1.,sh=1.;
+          for(int i=0;i<NCNT;i++){
+            vec2 as=neiAO(v_worldPosition,NN,L,u_nearPR[i]);
+            ao*=as.x; sh*=as.y;
+            gi+=u_nearCol[i]*2.*(1.-as.x)/.7;
+          }
+          gi/=float(NCNT);
+          vec3 vd=normalize(v_viewPosition);
+          vec3 x=normalize(vec3(vd.z,0.,-vd.x)), y=cross(vd,x);
+          vec2 uv=vec2(dot(x,vn),dot(y,vn))*.5+.5;
+          vec3 mc=texture2D(u_matcap,uv).rgb;
+          vec3 mD=vec3(mc.r), mS=vec3(rough>.5?mc.g:mc.b);
+          mD=.25+.75*mD; sh=.6+.4*sh;
+          vec3 col=u_color*mD+mS;
+          col*=ao; col+=gi; col*=v_selfShadow; col*=sh;
+          gl_FragColor=vec4(filmic(col),1.);
+        }`;
+
+      // ── Physics body ─────────────────────────────────────────────────
+      class Body {
+        constructor(r, den, fri, rest) {
+          this.position0 = new THREE.Vector3((rng() - .5) * 8, (rng() - .5) * 8, (rng() - .5) * 4);
+          this.velocity0 = this.position0.clone().multiplyScalar(-2);
+          this.position = this.position0.clone();
+          this.velocity = this.velocity0.clone();
+          this.quaternion = new THREE.Quaternion();
+          this.gF = new THREE.Vector3(); this.gA = new THREE.Vector3();
+          this.radius = 1.05 * r; this.density = den; this.friction = fri; this.restitution = rest;
+          this.volume = Math.PI * this.radius * 1.333;
+          this.mass = this.volume * this.radius * this.radius * this.density;
+          this.inertia = this.mass * this.radius * this.radius * .4;
+          this.frictionTot = 0;
+          this.avx = 0; this.avy = 0; this.avz = 0;
+          this.localPts = null;
+          this.worldPts = null;
+          this.bsRadius = 1;
+        }
+        reset() { this.position.copy(this.position0); this.velocity.copy(this.velocity0); }
+        applyImpulse() {
+          this.gF.copy(this.position).negate().multiplyScalar(10);
+          this.gA.copy(this.gF);
+          this.gF.set(Math.random() - .5, Math.random() - .5, Math.random() - .5).multiplyScalar(80);
+          this.gA.add(this.gF).multiplyScalar(1 / this.mass);
+          this.velocity.negate().add(this.gA);
+        }
+        updateGravity(dt) {
+          this.gF.copy(this.position).negate().multiplyScalar(GRAVITY_FACTOR);
+          this.gA.copy(this.gF).multiplyScalar(1 / this.mass / (1 + this.frictionTot));
+          this.velocity.addScaledVector(this.gA, dt);
+          this.frictionTot *= .5;
+        }
+        updatePosition(dt) {
+          const spd = this.velocity.length();
+          if (spd < LINEAR_SLEEP) { this.velocity.multiplyScalar(0.1); }
+          this.position.addScaledVector(this.velocity, dt);
+          this.velocity.multiplyScalar(Math.pow(.1, dt));
+        }
+      }
+
+      const bodies = [];
+      for (let i = 0; i < N; i++) {
+        const d = DATA[i];
+        bodies.push(new Body(d.radius, d.density, d.friction, d.restitution));
+      }
+
+      // ── Mouse ────────────────────────────────────────────────────────
+      const mouseNDC = new THREE.Vector2(9999, 9999);
+      const _mouse = new THREE.Vector3(), _mousePrev = new THREE.Vector3(), _mousePF = new THREE.Vector3();
+      const _mouseBA = new THREE.Vector3();
       let canvasRect = localRenderer.domElement.getBoundingClientRect();
 
-      const LETTER_SCALE = 4.05;
-      const TARGET_CENTER = { x: 0, y: 0.2, z: 0 };
-
-      // ── Soft-force simulation parameters ─────────────────────────────
-      const SIM_SPRING_K      = 1.6;   // spring to center
-      const SIM_IDLE_R        = 0.6;   // dead-zone radius
-      const SIM_DAMP          = 3.5;   // linear damping
-      const SIM_SEP_THRESH    = 0.75;  // min vertex-to-vertex clearance (world units)
-      const SIM_SEP_F         = 8.0;   // contact force (reduced: impulse is primary)
-      const SIM_RESTITUTION   = 0.25;  // restitution coefficient (0=inelastic, 1=elastic)
-      const SIM_INERTIA_K     = 0.35;  // moment of inertia factor (sphere approx: I = k*m*r²)
-      const SIM_SEP_POS_CORR  = 0.8;   // position correction per frame (hard overlap constraint)
-      const N_CORRECTION_ITERS = 3;    // correction passes per frame (multi-body convergence)
-      const N_SAMPLE          = 48;    // surface sample points per letter
-      const SIM_MOUSE_R_MULT  = 1.3;   // mouse repulsion zone = body.radius * this
-      const SIM_MOUSE_F       = 16.0;  // radial push force (stationary cursor)
-      const SIM_MOUSE_VEL_F   = 32.0;  // velocity multiplier: fast sweep = strong launch
-      const SIM_MAX_SPEED   = 22.0;
-      const SIM_ANG_DAMP         = 0.84;  // angular decay per 60fps step
-      const SIM_ANG_GAIN         = 0.12;  // random angular noise (reduced — real torque handles most spin)
-      const SIM_MOUSE_TORQUE_F   = 3.5;   // mouse tangential-drag torque scale
-      // SIM_SEP_TORQUE_F removed: rigid body impulse now handles rotation naturally
-      const SIM_NOISE_F     = 0.05;              // organic drift noise
-      const SIM_CLICK_F     = 8.0;               // click burst delta-v
-      // ─────────────────────────────────────────────────────────────────
-
-      const palette = [0x024b9e, 0x217adf, 0x72b4ff];
-      const bodies  = []; // { mesh, vx, vy, vz, avx, avy, avz }
-
-      let ready = false;
-      let lastTime = null;
-      let hoverActive = false;
-      let currentWidth  = 1;
-      let currentHeight = 1;
-
-      const updateMouseWorld = (e) => {
-        if (!hoverActive) return;
+      const handlePointerMove = (e) => {
         canvasRect = localRenderer.domElement.getBoundingClientRect();
-        const w = Math.max(canvasRect.width,  1);
+        const w = Math.max(canvasRect.width, 1);
         const h = Math.max(canvasRect.height, 1);
-        mouse.x = ((e.clientX - canvasRect.left) / w) * 2 - 1;
-        mouse.y = -((e.clientY - canvasRect.top) / h) * 2 + 1;
-        const prevX = mouseWorld.x, prevY = mouseWorld.y;
-        raycaster.setFromCamera(mouse, camera);
-        // Store ray (origin + normalised direction) for depth-independent repulsion
-        mouseRayOrigin.copy(raycaster.ray.origin);
-        mouseRayDir.copy(raycaster.ray.direction); // Three.js already normalises this
-        // Project onto centre plane for velocity tracking only
-        raycaster.ray.intersectPlane(plane, mouseWorld);
-        mouseWorld.z = TARGET_CENTER.z;
-        // Exponential smoothing on velocity: responsive but jitter-free.
-        const rawVx = mouseWorld.x - prevX;
-        const rawVy = mouseWorld.y - prevY;
-        mouseVel.x = mouseVel.x * 0.3 + rawVx * 0.7;
-        mouseVel.y = mouseVel.y * 0.3 + rawVy * 0.7;
+        mouseNDC.x = ((e.clientX - canvasRect.left) / w) * 2 - 1;
+        mouseNDC.y = -((e.clientY - canvasRect.top) / h) * 2 + 1;
       };
-
-      const handlePointerEnter = (e) => {
-        hoverActive = true;
-        if (e) updateMouseWorld(e);
-      };
-      const handlePointerLeave = () => {
-        hoverActive = false;
-        mouseWorld.set(TARGET_CENTER.x, TARGET_CENTER.y, TARGET_CENTER.z);
-        mouseVel.set(0, 0, 0);
-      };
-
-      const handleClick = () => {
-        if (!ready || bodies.length === 0) return;
-        const ox = hoverActive ? mouseWorld.x : TARGET_CENTER.x;
-        const oy = hoverActive ? mouseWorld.y : TARGET_CENTER.y;
-        const oz = hoverActive ? mouseWorld.z : TARGET_CENTER.z;
-        for (const b of bodies) {
-          const dx = b.mesh.position.x - ox + (Math.random() - 0.5) * 0.5;
-          const dy = b.mesh.position.y - oy + (Math.random() - 0.5) * 0.5;
-          const dz = b.mesh.position.z - oz + (Math.random() - 0.5) * 0.5;
-          const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
-          b.vx += (dx / len) * SIM_CLICK_F;
-          b.vy += (dy / len) * SIM_CLICK_F;
-          b.vz += (dz / len) * SIM_CLICK_F;
+      const handleTouchMove = (e) => {
+        if (e.touches[0]) {
+          canvasRect = localRenderer.domElement.getBoundingClientRect();
+          const w = Math.max(canvasRect.width, 1);
+          const h = Math.max(canvasRect.height, 1);
+          mouseNDC.x = ((e.touches[0].clientX - canvasRect.left) / w) * 2 - 1;
+          mouseNDC.y = -((e.touches[0].clientY - canvasRect.top) / h) * 2 + 1;
         }
       };
+      const handlePointerLeave = () => { mouseNDC.set(9999, 9999); };
 
-      localRenderer.domElement.addEventListener('pointerenter', handlePointerEnter, { passive: true });
-      localRenderer.domElement.addEventListener('pointermove', updateMouseWorld, { passive: true });
+      localRenderer.domElement.addEventListener('pointermove', handlePointerMove, { passive: true });
+      localRenderer.domElement.addEventListener('touchmove', handleTouchMove, { passive: true });
       localRenderer.domElement.addEventListener('pointerleave', handlePointerLeave, { passive: true });
       localRenderer.domElement.addEventListener('pointercancel', handlePointerLeave, { passive: true });
-      cellEl.addEventListener('pointerenter', handlePointerEnter, { passive: true });
-      cellEl.addEventListener('pointerleave', handlePointerLeave, { passive: true });
-      cellEl.addEventListener('click', handleClick);
+
+      // ── Surface sampling helpers ─────────────────────────────────────
+      function sampleSurface(geo, nSamples) {
+        const src = geo.attributes.position.array;
+        const total = Math.floor(src.length / 3);
+        const step = Math.max(1, Math.floor(total / nSamples));
+        const pts = [];
+        for (let k = 0; k < total; k += step) {
+          pts.push(src[k * 3], src[k * 3 + 1], src[k * 3 + 2]);
+        }
+        return new Float32Array(pts);
+      }
+
+      function transformPoints(body, scale) {
+        const q = body.quaternion;
+        const qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+        const px = body.position.x, py = body.position.y, pz = body.position.z;
+        const lp = body.localPts, wp = body.worldPts;
+        const np = lp.length / 3;
+        for (let k = 0; k < np; k++) {
+          const lx = lp[k * 3] * scale, ly = lp[k * 3 + 1] * scale, lz = lp[k * 3 + 2] * scale;
+          const tx = 2 * (qy * lz - qz * ly), ty = 2 * (qz * lx - qx * lz), tz = 2 * (qx * ly - qy * lx);
+          wp[k * 3]     = lx + qw * tx + qy * tz - qz * ty + px;
+          wp[k * 3 + 1] = ly + qw * ty + qz * tx - qx * tz + py;
+          wp[k * 3 + 2] = lz + qw * tz + qx * ty - qy * tx + pz;
+        }
+      }
+
+      function closestVertexPair(wpA, wpB) {
+        const nA = wpA.length / 3, nB = wpB.length / 3;
+        let minD2 = Infinity, bx = 0, by = 0, bz = 0;
+        let cpAx = 0, cpAy = 0, cpAz = 0, cpBx = 0, cpBy = 0, cpBz = 0;
+        for (let a = 0; a < nA; a++) {
+          const ax = wpA[a * 3], ay = wpA[a * 3 + 1], az = wpA[a * 3 + 2];
+          for (let b2 = 0; b2 < nB; b2++) {
+            const dx = ax - wpB[b2 * 3], dy = ay - wpB[b2 * 3 + 1], dz = az - wpB[b2 * 3 + 2];
+            const d2 = dx * dx + dy * dy + dz * dz;
+            if (d2 < minD2) {
+              minD2 = d2; bx = dx; by = dy; bz = dz;
+              cpAx = ax; cpAy = ay; cpAz = az;
+              cpBx = wpB[b2 * 3]; cpBy = wpB[b2 * 3 + 1]; cpBz = wpB[b2 * 3 + 2];
+            }
+          }
+        }
+        return { minD2, bx, by, bz, cpAx, cpAy, cpAz, cpBx, cpBy, cpBz };
+      }
+
+      // ── Physics update ───────────────────────────────────────────────
+      const lightPos = new THREE.Vector3(2, 8, 12);
+      const _p1 = new THREE.Vector3(), _v1 = new THREE.Vector3(), _v0 = new THREE.Vector3();
+      const _q = new THREE.Quaternion();
+
+      function updatePhysics(dt) {
+        // Mouse projection
+        _p1.set(mouseNDC.x, mouseNDC.y, .5).unproject(camera);
+        _p1.sub(camera.position).normalize();
+        _p1.multiplyScalar(-camera.position.z / _p1.z);
+        _mouse.copy(camera.position).add(_p1);
+        _mousePF.copy(_mouse).sub(_mousePrev).multiplyScalar(.03 / Math.max(dt, .001));
+        _mouseBA.copy(_mouse).sub(camera.position);
+        const mbaLSq = _mouseBA.lengthSq();
+        _mousePrev.copy(_mouse);
+
+        // Gravity
+        for (let i = 0; i < N; i++) bodies[i].updateGravity(dt);
+
+        // Transform all surface points to world space
+        for (let i = 0; i < N; i++) {
+          if (bodies[i].localPts) transformPoints(bodies[i], LETTER_SCALE);
+        }
+
+        const thresh2 = SEP_THRESH * SEP_THRESH;
+
+        // Mesh-based collision detection
+        for (let i = 0; i < N; i++) {
+          const bA = bodies[i];
+          if (!bA.worldPts) continue;
+          for (let j = i + 1; j < N; j++) {
+            const bB = bodies[j];
+            if (!bB.worldPts) continue;
+
+            const cdx = bA.position.x - bB.position.x;
+            const cdy = bA.position.y - bB.position.y;
+            const cdz = bA.position.z - bB.position.z;
+            const broadR = bA.bsRadius + bB.bsRadius + SEP_THRESH;
+            if (cdx * cdx + cdy * cdy + cdz * cdz > broadR * broadR) continue;
+
+            const cp = closestVertexPair(bA.worldPts, bB.worldPts);
+            if (cp.minD2 >= thresh2) continue;
+
+            const d = Math.sqrt(cp.minD2);
+            const cLen2 = cdx * cdx + cdy * cdy + cdz * cdz;
+            let nx, ny, nz;
+            if (d < SEP_THRESH * .3 || cLen2 < .01) {
+              const cl = Math.sqrt(cLen2) || 1;
+              nx = cdx / cl; ny = cdy / cl; nz = cdz / cl;
+            } else {
+              nx = cp.bx / d; ny = cp.by / d; nz = cp.bz / d;
+            }
+
+            // Rigid-body impulse at contact point
+            const riX = cp.cpAx - bA.position.x, riY = cp.cpAy - bA.position.y, riZ = cp.cpAz - bA.position.z;
+            const rjX = cp.cpBx - bB.position.x, rjY = cp.cpBy - bB.position.y, rjZ = cp.cpBz - bB.position.z;
+
+            const vcAx = bA.velocity.x + (bA.avy * riZ - bA.avz * riY);
+            const vcAy = bA.velocity.y + (bA.avz * riX - bA.avx * riZ);
+            const vcAz = bA.velocity.z + (bA.avx * riY - bA.avy * riX);
+            const vcBx = bB.velocity.x + (bB.avy * rjZ - bB.avz * rjY);
+            const vcBy = bB.velocity.y + (bB.avz * rjX - bB.avx * rjZ);
+            const vcBz = bB.velocity.z + (bB.avx * rjY - bB.avy * rjX);
+            const relVn = (vcAx - vcBx) * nx + (vcAy - vcBy) * ny + (vcAz - vcBz) * nz;
+
+            if (relVn < -REL_VEL_DEADZONE) {
+              const Ii = INERTIA_K * bA.bsRadius * bA.bsRadius;
+              const Ij = INERTIA_K * bB.bsRadius * bB.bsRadius;
+
+              const riXnx = riY * nz - riZ * ny, riXny = riZ * nx - riX * nz, riXnz = riX * ny - riY * nx;
+              const rjXnx = rjY * nz - rjZ * ny, rjXny = rjZ * nx - rjX * nz, rjXnz = rjX * ny - rjY * nx;
+
+              const effMass = 1 / bA.mass + 1 / bB.mass
+                + (riXnx * riXnx + riXny * riXny + riXnz * riXnz) / Ii
+                + (rjXnx * rjXnx + rjXny * rjXny + rjXnz * rjXnz) / Ij;
+
+              const jn = -(1 + RESTITUTION) * relVn / effMass;
+
+              bA.velocity.x += jn * nx / bA.mass; bA.velocity.y += jn * ny / bA.mass; bA.velocity.z += jn * nz / bA.mass;
+              bB.velocity.x -= jn * nx / bB.mass; bB.velocity.y -= jn * ny / bB.mass; bB.velocity.z -= jn * nz / bB.mass;
+
+              bA.avx += (riY * (jn * nz) - riZ * (jn * ny)) / Ii;
+              bA.avy += (riZ * (jn * nx) - riX * (jn * nz)) / Ii;
+              bA.avz += (riX * (jn * ny) - riY * (jn * nx)) / Ii;
+              bB.avx -= (rjY * (jn * nz) - rjZ * (jn * ny)) / Ij;
+              bB.avy -= (rjZ * (jn * nx) - rjX * (jn * nz)) / Ij;
+              bB.avz -= (rjX * (jn * ny) - rjY * (jn * nx)) / Ij;
+            }
+
+            const corr = (SEP_THRESH - d) * SEP_POS_CORR * 0.5;
+            bA.position.x += nx * corr; bA.position.y += ny * corr; bA.position.z += nz * corr;
+            bB.position.x -= nx * corr; bB.position.y -= ny * corr; bB.position.z -= nz * corr;
+          }
+        }
+
+        // Position correction iterations
+        for (let iter = 0; iter < N_CORR_ITERS; iter++) {
+          for (let i = 0; i < N; i++) if (bodies[i].localPts) transformPoints(bodies[i], LETTER_SCALE);
+          for (let i = 0; i < N; i++) {
+            const bA = bodies[i]; if (!bA.worldPts) continue;
+            for (let j = i + 1; j < N; j++) {
+              const bB = bodies[j]; if (!bB.worldPts) continue;
+              const cdx = bA.position.x - bB.position.x, cdy = bA.position.y - bB.position.y, cdz = bA.position.z - bB.position.z;
+              const bR = bA.bsRadius + bB.bsRadius + SEP_THRESH;
+              if (cdx * cdx + cdy * cdy + cdz * cdz > bR * bR) continue;
+              const cp = closestVertexPair(bA.worldPts, bB.worldPts);
+              if (cp.minD2 >= thresh2) continue;
+              const d = Math.sqrt(cp.minD2);
+              const cl2 = cdx * cdx + cdy * cdy + cdz * cdz;
+              let nx, ny, nz;
+              if (d < SEP_THRESH * .3 || cl2 < .01) { const cl = Math.sqrt(cl2) || 1; nx = cdx / cl; ny = cdy / cl; nz = cdz / cl; }
+              else { nx = cp.bx / d; ny = cp.by / d; nz = cp.bz / d; }
+              const co = (SEP_THRESH - d) * SEP_POS_CORR * 0.5;
+              bA.position.x += nx * co; bA.position.y += ny * co; bA.position.z += nz * co;
+              bB.position.x -= nx * co; bB.position.y -= ny * co; bB.position.z -= nz * co;
+            }
+          }
+        }
+
+        // Mouse repulsion (ray-based)
+        for (let a = 0; a < N; a++) {
+          const bA = bodies[a];
+          _v0.copy(bA.position).sub(camera.position);
+          let c = _v0.dot(_mouseBA) / mbaLSq;
+          c = _v0.sub(_v1.copy(_mouseBA).multiplyScalar(c)).length() - bA.bsRadius - .025;
+          if (c < 0) {
+            _v0.copy(bA.position).sub(camera.position).cross(_mouseBA).normalize();
+            _v1.copy(_mouseBA).cross(_v0).normalize();
+            bA.position.sub(_v1.clone().multiplyScalar(.03 * c));
+            _v1.multiplyScalar(-.03 / Math.max(dt, .001));
+            bA.velocity.add(_v1).add(_mousePF);
+          }
+
+          // Orbital swirl
+          let u = bA.position.length();
+          if (u > 0) {
+            _v0.set(1, 1, 1).normalize();
+            let p = 1 - Math.abs(_v0.dot(_v1.copy(bA.position).normalize()));
+            p *= dt * fit(u, 0, 2, 0, 1) * .5 * (a % 2 * 2 - 1);
+            _q.setFromAxisAngle(_v0, p);
+            _v1.copy(bA.position).applyQuaternion(_q).sub(_v0.copy(bA.position));
+            bA.velocity.add(_v1);
+          }
+
+          // Angular velocity decay
+          const angDamp = Math.pow(0.3, dt * 60);
+          bA.avx *= angDamp; bA.avy *= angDamp; bA.avz *= angDamp;
+          const avSpd = Math.sqrt(bA.avx * bA.avx + bA.avy * bA.avy + bA.avz * bA.avz);
+          if (avSpd < ANGULAR_SLEEP) { bA.avx = 0; bA.avy = 0; bA.avz = 0; }
+
+          // Apply angular velocity to quaternion
+          const av = Math.sqrt(bA.avx * bA.avx + bA.avy * bA.avy + bA.avz * bA.avz);
+          if (av > 0.001) {
+            _v0.set(bA.avx / av, bA.avy / av, bA.avz / av);
+            _q.setFromAxisAngle(_v0, av * dt);
+            bA.quaternion.premultiply(_q);
+            bA.quaternion.normalize();
+          }
+
+          bA.updatePosition(dt);
+        }
+      }
+
+      // ── Scene setup ──────────────────────────────────────────────────
+      const balloonList = [];
+      const sortedList = [];
+      let ready = false;
+      let lastTime = null;
+      let currentWidth = 1;
+      let currentHeight = 1;
 
       const init = async () => {
         try {
-          const font = await getHelvetikerRegular();
-
-          const makeTextGeo = (char) => new TextGeometry(char, {
-            font,
-            size: 0.8,
-            depth: 0.28,
-            curveSegments: 28,
-            bevelEnabled: true,
-            bevelThickness: 0.05,
-            bevelSize: 0.03,
-            bevelSegments: 8
-          }).center();
-
-          const geoK = makeTextGeo('k');
-          const geoE = makeTextGeo('e');
-          const geoN = makeTextGeo('n');
-          const geos = [geoK, geoE, geoN];
-
-          // Bounding sphere radius (for mouse repulsion broad-phase)
-          const radii = geos.map(geo => {
-            geo.computeBoundingSphere();
-            return (geo.boundingSphere?.radius ?? 0.55) * LETTER_SCALE;
+          const fontLoader = new FontLoader();
+          const font = await new Promise((resolve, reject) => {
+            fontLoader.load(
+              'https://unpkg.com/three@0.168.0/examples/fonts/helvetiker_bold.typeface.json',
+              resolve, undefined, reject
+            );
           });
 
-          // Sample N surface points from geometry vertices (local space, pre-scale)
-          // Concave regions (e.g. the indent in 'k') have no vertices → other
-          // letters can naturally fit into those gaps during simulation.
-          const samplePoints = (geo) => {
-            const src   = geo.attributes.position.array;
-            const total = Math.floor(src.length / 3);
-            const step  = Math.max(1, Math.floor(total / N_SAMPLE));
-            const pts   = [];
-            for (let k = 0; k < total; k += step) {
-              pts.push(src[k * 3], src[k * 3 + 1], src[k * 3 + 2]);
-            }
-            return new Float32Array(pts);
-          };
-
-          const localPts = geos.map(samplePoints);
-
-          const count = 6; // 2 of each letter
-          for (let i = 0; i < count; i++) {
-            const idx   = i % 3;
-            const lp    = localPts[idx];
-            const mesh  = new THREE.Mesh(
-              geos[idx],
-              new THREE.MeshStandardMaterial({ color: palette[idx], metalness: 0.1, roughness: 0.35 })
-            );
-            mesh.position.set(
-              (Math.random() - 0.5) * 9,
-              (Math.random() - 0.5) * 6,
-              (Math.random() - 0.5) * 4
-            );
-            mesh.rotation.set(
-              Math.random() * Math.PI,
-              Math.random() * Math.PI,
-              Math.random() * Math.PI
-            );
-            mesh.scale.setScalar(LETTER_SCALE);
-            scene.add(mesh);
-            bodies.push({
-              mesh,
-              radius:      radii[idx],          // bounding-sphere radius (world units)
-              localPoints: lp,                  // sampled vertices in local space
-              worldPoints: new Float32Array(lp.length), // pre-alloc, filled each frame
-              vx:  (Math.random() - 0.5) * 0.5,
-              vy:  (Math.random() - 0.5) * 0.5,
-              vz:  (Math.random() - 0.5) * 0.2,
-              avx: (Math.random() - 0.5) * 1.0,
-              avy: (Math.random() - 0.5) * 1.0,
-              avz: (Math.random() - 0.5) * 1.0,
+          function makeGeo(ch) {
+            const g = new TextGeometry(ch, {
+              font, size: .7, height: .25, curveSegments: 16,
+              bevelEnabled: true, bevelThickness: .04, bevelSize: .03, bevelSegments: 4
             });
+            g.center(); g.computeBoundingSphere();
+            return g;
+          }
+          const geos = [makeGeo('k'), makeGeo('e'), makeGeo('n')];
+          const localPtsPerGeo = geos.map(g => sampleSurface(g, N_SAMPLES));
+          const bsRadii = geos.map(g => (g.boundingSphere?.radius ?? .55) * LETTER_SCALE);
+
+          for (let i = 0; i < N; i++) {
+            const d = DATA[i], geo = geos[d.letterIdx];
+            const selfPR = new THREE.Vector4(0, 0, 0, d.radius);
+            const nearPR = [], nearCol = [];
+            for (let k = 0; k < NCNT; k++) { nearPR.push(new THREE.Vector4()); nearCol.push(new THREE.Color()); }
+
+            const mat = new THREE.ShaderMaterial({
+              uniforms: {
+                u_color: { value: new THREE.Color(d.color) },
+                u_roughness: { value: d.isRough ? .8 : .1 },
+                u_matcap: { value: matcapTex },
+                u_lightPosition: { value: lightPos },
+                u_selfPositionRadius: { value: selfPR },
+                u_selfRotation: { value: new THREE.Quaternion() },
+                u_nearPR: { value: nearPR },
+                u_nearCol: { value: nearCol },
+              },
+              vertexShader: vertSh, fragmentShader: fragSh,
+              extensions: { derivatives: true },
+              defines: { NCNT: NCNT },
+            });
+
+            const mesh = new THREE.Mesh(geo, mat);
+            mesh.scale.setScalar(LETTER_SCALE * d.radius);
+            mesh.frustumCulled = false;
+            scene.add(mesh);
+
+            bodies[i].localPts = localPtsPerGeo[d.letterIdx];
+            bodies[i].worldPts = new Float32Array(bodies[i].localPts.length);
+            bodies[i].bsRadius = bsRadii[d.letterIdx] * d.radius;
+
+            balloonList.push({
+              mesh, selfPR, color: d.color, isColored: d.isColored,
+              radius: d.radius, distance2: 0, distanceFromCamera: 0,
+            });
+            sortedList.push(balloonList[i]);
           }
 
           ready = true;
@@ -5191,318 +5495,58 @@
 
       init();
 
-      // ── Per-frame soft-force simulation ──────────────────────────────
-      const simulate = (dt) => {
-        const safeDt = Math.min(dt, 1 / 30);
-        const n      = bodies.length;
-        const sepX   = new Float32Array(n);
-        const sepY   = new Float32Array(n);
-        const sepZ   = new Float32Array(n);
-
-        // ── Step 1: transform all sample points to world space ──────────
-        // Rotation formula: v' = v + 2w(q×v) + 2(q×(q×v))
-        // simplified: t = 2*(q.xyz × v),  v' = v + w*t + q.xyz×t
-        for (let i = 0; i < n; i++) {
-          const b  = bodies[i];
-          const q  = b.mesh.quaternion;
-          const qx = q.x, qy = q.y, qz = q.z, qw = q.w;
-          const { x: px, y: py, z: pz } = b.mesh.position;
-          const lp = b.localPoints;
-          const wp = b.worldPoints;
-          const np = lp.length / 3;
-          for (let k = 0; k < np; k++) {
-            const lx = lp[k*3]   * LETTER_SCALE;
-            const ly = lp[k*3+1] * LETTER_SCALE;
-            const lz = lp[k*3+2] * LETTER_SCALE;
-            const tx = 2*(qy*lz - qz*ly);
-            const ty = 2*(qz*lx - qx*lz);
-            const tz = 2*(qx*ly - qy*lx);
-            wp[k*3]   = lx + qw*tx + qy*tz - qz*ty + px;
-            wp[k*3+1] = ly + qw*ty + qz*tx - qx*tz + py;
-            wp[k*3+2] = lz + qw*tz + qx*ty - qy*tx + pz;
-          }
-        }
-
-        // ── Step 2: pairwise vertex-based separation ─────────────────────
-        // For each pair, find the closest vertex pair across both letters.
-        // Concave regions (e.g. the indent in 'k') have no vertices, so
-        // another letter can fit into that gap without triggering separation.
-        const thresh2 = SIM_SEP_THRESH * SIM_SEP_THRESH;
-
-        for (let i = 0; i < n; i++) {
-          for (let j = i + 1; j < n; j++) {
-            // Broad-phase: skip if bounding spheres are clearly far apart
-            const ci = bodies[i].mesh.position, cj = bodies[j].mesh.position;
-            const cdx = ci.x-cj.x, cdy = ci.y-cj.y, cdz = ci.z-cj.z;
-            const broadR = bodies[i].radius + bodies[j].radius + SIM_SEP_THRESH;
-            if (cdx*cdx + cdy*cdy + cdz*cdz > broadR * broadR) continue;
-
-            // Narrow-phase: find minimum vertex-to-vertex distance
-            const wpi = bodies[i].worldPoints;
-            const wpj = bodies[j].worldPoints;
-            const npi = wpi.length / 3;
-            const npj = wpj.length / 3;
-            let minD2 = Infinity, bestDx = 0, bestDy = 0, bestDz = 0;
-            let cpix = 0, cpiy = 0, cpiz = 0; // contact vertex on body i
-            let cpjx = 0, cpjy = 0, cpjz = 0; // contact vertex on body j
-            for (let a = 0; a < npi; a++) {
-              const ax = wpi[a*3], ay = wpi[a*3+1], az = wpi[a*3+2];
-              for (let b2 = 0; b2 < npj; b2++) {
-                const bx = wpj[b2*3], by = wpj[b2*3+1], bz = wpj[b2*3+2];
-                const dx = ax - bx, dy = ay - by, dz = az - bz;
-                const d2 = dx*dx + dy*dy + dz*dz;
-                if (d2 < minD2) {
-                  minD2 = d2; bestDx = dx; bestDy = dy; bestDz = dz;
-                  cpix = ax; cpiy = ay; cpiz = az;
-                  cpjx = bx; cpjy = by; cpjz = bz;
-                }
-              }
-            }
-
-            if (minD2 < thresh2) {
-              const d = Math.sqrt(minD2);
-
-              // Contact normal: vertex direction for surface contact (allows concave fitting);
-              // fall back to centre-to-centre for deep penetration where vertex dir is unreliable.
-              const cLen2 = cdx*cdx + cdy*cdy + cdz*cdz;
-              let nx, ny, nz;
-              if (d < SIM_SEP_THRESH * 0.3 || cLen2 < 0.01) {
-                const cLen = Math.sqrt(cLen2) || 1;
-                nx = cdx/cLen; ny = cdy/cLen; nz = cdz/cLen;
-              } else {
-                nx = bestDx/d; ny = bestDy/d; nz = bestDz/d;
-              }
-
-              const bi = bodies[i], bj = bodies[j];
-
-              // ── Rigid body impulse at contact point ─────────────────────────
-              // Lever arms from centre of mass to contact vertex
-              const riX = cpix-ci.x, riY = cpiy-ci.y, riZ = cpiz-ci.z;
-              const rjX = cpjx-cj.x, rjY = cpjy-cj.y, rjZ = cpjz-cj.z;
-
-              // Relative velocity at contact point: v_contact = v_cm + ω × r
-              const vcix = bi.vx + (bi.avy*riZ - bi.avz*riY);
-              const vciy = bi.vy + (bi.avz*riX - bi.avx*riZ);
-              const vciz = bi.vz + (bi.avx*riY - bi.avy*riX);
-              const vcjx = bj.vx + (bj.avy*rjZ - bj.avz*rjY);
-              const vcjy = bj.vy + (bj.avz*rjX - bj.avx*rjZ);
-              const vcjz = bj.vz + (bj.avx*rjY - bj.avy*rjX);
-              const relVn = (vcix-vcjx)*nx + (vciy-vcjy)*ny + (vciz-vcjz)*nz;
-
-              if (relVn < 0) {
-                // Moment of inertia (sphere approx): I = k·m·r²  (m=1)
-                const Ii = SIM_INERTIA_K * bi.radius * bi.radius;
-                const Ij = SIM_INERTIA_K * bj.radius * bj.radius;
-
-                // ri×n, rj×n — used for angular coupling in effective mass
-                const riXnx=riY*nz-riZ*ny, riXny=riZ*nx-riX*nz, riXnz=riX*ny-riY*nx;
-                const rjXnx=rjY*nz-rjZ*ny, rjXny=rjZ*nx-rjX*nz, rjXnz=rjX*ny-rjY*nx;
-
-                // Effective mass = 1/mi + 1/mj + (ri×n)²/Ii + (rj×n)²/Ij
-                // Large off-centre lever → large denom → small impulse → energy goes to rotation
-                const effMass = 2
-                  + (riXnx*riXnx + riXny*riXny + riXnz*riXnz) / Ii
-                  + (rjXnx*rjXnx + rjXny*rjXny + rjXnz*rjXnz) / Ij;
-
-                const jn = -(1 + SIM_RESTITUTION) * relVn / effMass;
-
-                // Linear velocity change (mass = 1 each)
-                bi.vx += jn*nx; bi.vy += jn*ny; bi.vz += jn*nz;
-                bj.vx -= jn*nx; bj.vy -= jn*ny; bj.vz -= jn*nz;
-
-                // Angular velocity change: Δω = (r × j·n) / I
-                bi.avx += (riY*(jn*nz) - riZ*(jn*ny)) / Ii;
-                bi.avy += (riZ*(jn*nx) - riX*(jn*nz)) / Ii;
-                bi.avz += (riX*(jn*ny) - riY*(jn*nx)) / Ii;
-                bj.avx -= (rjY*(jn*nz) - rjZ*(jn*ny)) / Ij;
-                bj.avy -= (rjZ*(jn*nx) - rjX*(jn*nz)) / Ij;
-                bj.avz -= (rjX*(jn*ny) - rjY*(jn*nx)) / Ij;
-              }
-
-              // ── Contact force (prevents spring from pushing bodies together) ──
-              const pen = (SIM_SEP_THRESH - d) / SIM_SEP_THRESH;
-              const f   = pen * SIM_SEP_F;
-              sepX[i] += nx*f; sepY[i] += ny*f; sepZ[i] += nz*f;
-              sepX[j] -= nx*f; sepY[j] -= ny*f; sepZ[j] -= nz*f;
-
-              // ── Position correction (hard constraint: no overlap) ────────────
-              const corr = (SIM_SEP_THRESH - d) * SIM_SEP_POS_CORR;
-              ci.x += nx*corr; ci.y += ny*corr; ci.z += nz*corr;
-              cj.x -= nx*corr; cj.y -= ny*corr; cj.z -= nz*corr;
-            }
-          }
-        }
-
-        const mouseSpd = mouseVel.length();
-        const dampFac  = Math.exp(-SIM_DAMP * safeDt);
-        const angDamp  = Math.pow(SIM_ANG_DAMP, safeDt * 60);
-
-        for (let i = 0; i < n; i++) {
-          const b  = bodies[i];
-          const px = b.mesh.position.x;
-          const py = b.mesh.position.y;
-          const pz = b.mesh.position.z;
-
-          let ax = sepX[i], ay = sepY[i], az = sepZ[i];
-
-          // Spring attraction toward center
-          const toCx = TARGET_CENTER.x - px;
-          const toCy = TARGET_CENTER.y - py;
-          const toCz = TARGET_CENTER.z - pz;
-          const distC = Math.sqrt(toCx * toCx + toCy * toCy + toCz * toCz);
-          if (distC > SIM_IDLE_R) {
-            const sf = (distC - SIM_IDLE_R) * SIM_SPRING_K / distC;
-            ax += toCx * sf; ay += toCy * sf; az += toCz * sf;
-          }
-
-          // Mouse interaction — ray-based repulsion (depth-independent).
-          // Treats the mouse as an infinite rod from the camera through the cursor.
-          // Every object reacts regardless of its Z depth; repulsion is perpendicular
-          // to the ray, so objects are pushed outward from the ray axis.
-          if (hoverActive) {
-            const mouseR = b.radius * SIM_MOUSE_R_MULT;
-            // Project body centre onto mouse ray: t = dot(P-O, D)
-            const tax = px - mouseRayOrigin.x;
-            const tay = py - mouseRayOrigin.y;
-            const taz = pz - mouseRayOrigin.z;
-            const tProj = tax*mouseRayDir.x + tay*mouseRayDir.y + taz*mouseRayDir.z;
-            // Closest point on ray to body centre
-            const cx = mouseRayOrigin.x + mouseRayDir.x * tProj;
-            const cy = mouseRayOrigin.y + mouseRayDir.y * tProj;
-            const cz = mouseRayOrigin.z + mouseRayDir.z * tProj;
-            // Perpendicular vector from ray to body (repulsion direction)
-            const rx = px - cx, ry = py - cy, rz = pz - cz;
-            const rd2 = rx*rx + ry*ry + rz*rz;
-            if (rd2 < mouseR * mouseR && rd2 > 1e-9) {
-              const rd = Math.sqrt(rd2);
-              // Smoothstep falloff
-              const tv = 1 - rd / mouseR;
-              const falloff = tv * tv * (3 - 2 * tv);
-              // Velocity-scaled radial force: fast sweep = strong launch
-              const strength = SIM_MOUSE_F * (1 + mouseSpd * SIM_MOUSE_VEL_F) * falloff;
-              const rnx = rx / rd, rny = ry / rd, rnz = rz / rd; // unit outward normal
-              ax += rnx * strength;
-              ay += rny * strength;
-              az += rnz * strength;
-
-              // Torque from tangential "scratch" component of mouse sweep.
-              // A pure radial force through the centre creates no torque; torque comes
-              // from the component of mouse velocity tangent to the body surface.
-              // τ = -(n × mt) * R * scale,  where mt = mouseVel − (mouseVel·n)n
-              if (mouseSpd > 0.0005) {
-                const mvx = mouseVel.x / mouseSpd, mvy = mouseVel.y / mouseSpd;
-                const dot = mvx * rnx + mvy * rny; // mouseVel · normal (z=0 for mouseVel)
-                const mtx = mvx - dot * rnx;
-                const mty = mvy - dot * rny;
-                const mtz =     - dot * rnz;
-                // -(n × mt) scaled by radius and sweep strength
-                const ts = mouseSpd * SIM_MOUSE_TORQUE_F * falloff * b.radius;
-                b.avx += (rnz * mty - rny * mtz) * ts;
-                b.avy += (rnx * mtz - rnz * mtx) * ts;
-                b.avz += (rny * mtx - rnx * mty) * ts;
-              }
-            }
-          }
-
-          // Organic drift noise
-          ax += (Math.random() - 0.5) * SIM_NOISE_F;
-          ay += (Math.random() - 0.5) * SIM_NOISE_F;
-          az += (Math.random() - 0.5) * SIM_NOISE_F * 0.3;
-
-          // Semi-implicit Euler + exponential damping
-          b.vx = (b.vx + ax * safeDt) * dampFac;
-          b.vy = (b.vy + ay * safeDt) * dampFac;
-          b.vz = (b.vz + az * safeDt) * dampFac;
-
-          // Speed cap
-          const spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy + b.vz * b.vz);
-          if (spd > SIM_MAX_SPEED) {
-            const s = SIM_MAX_SPEED / spd;
-            b.vx *= s; b.vy *= s; b.vz *= s;
-          }
-
-          // Position update
-          b.mesh.position.x += b.vx * safeDt;
-          b.mesh.position.y += b.vy * safeDt;
-          b.mesh.position.z += b.vz * safeDt;
-
-          // Angular velocity: decays, driven by linear speed
-          b.avx *= angDamp; b.avy *= angDamp; b.avz *= angDamp;
-          if (spd > 0.05) {
-            const gain = spd * SIM_ANG_GAIN * safeDt;
-            b.avx += (Math.random() - 0.5) * gain;
-            b.avy += (Math.random() - 0.5) * gain;
-            b.avz += (Math.random() - 0.5) * gain;
-          }
-          b.mesh.rotation.x += b.avx * safeDt;
-          b.mesh.rotation.y += b.avy * safeDt;
-          b.mesh.rotation.z += b.avz * safeDt;
-        }
-
-        // ── Position correction iterations (hard overlap constraint) ────────
-        // Multiple passes converge multi-body conflicts: residual = (1-POS_CORR)^N_ITERS
-        for (let iter = 0; iter < N_CORRECTION_ITERS; iter++) {
-          // Refresh world-space vertex positions using corrected centres
-          for (let i = 0; i < n; i++) {
-            const b = bodies[i];
-            const q = b.mesh.quaternion;
-            const qx=q.x, qy=q.y, qz=q.z, qw=q.w;
-            const {x:px, y:py, z:pz} = b.mesh.position;
-            const lp = b.localPoints, wp = b.worldPoints, np = lp.length/3;
-            for (let k=0; k<np; k++) {
-              const lx=lp[k*3]*LETTER_SCALE, ly=lp[k*3+1]*LETTER_SCALE, lz=lp[k*3+2]*LETTER_SCALE;
-              const tx=2*(qy*lz-qz*ly), ty=2*(qz*lx-qx*lz), tz=2*(qx*ly-qy*lx);
-              wp[k*3]  =lx+qw*tx+qy*tz-qz*ty+px;
-              wp[k*3+1]=ly+qw*ty+qz*tx-qx*tz+py;
-              wp[k*3+2]=lz+qw*tz+qx*ty-qy*tx+pz;
-            }
-          }
-          // Position-only correction pass (no velocity changes)
-          for (let i = 0; i < n; i++) {
-            for (let j = i+1; j < n; j++) {
-              const ci = bodies[i].mesh.position, cj = bodies[j].mesh.position;
-              const cdx=ci.x-cj.x, cdy=ci.y-cj.y, cdz=ci.z-cj.z;
-              const bR = bodies[i].radius + bodies[j].radius + SIM_SEP_THRESH;
-              if (cdx*cdx+cdy*cdy+cdz*cdz > bR*bR) continue;
-              const wpi=bodies[i].worldPoints, wpj=bodies[j].worldPoints;
-              const npi=wpi.length/3, npj=wpj.length/3;
-              let mD2=Infinity, bDx=0, bDy=0, bDz=0;
-              for (let a=0; a<npi; a++) {
-                const ax=wpi[a*3], ay=wpi[a*3+1], az=wpi[a*3+2];
-                for (let b2=0; b2<npj; b2++) {
-                  const dx=ax-wpj[b2*3], dy=ay-wpj[b2*3+1], dz=az-wpj[b2*3+2];
-                  const d2=dx*dx+dy*dy+dz*dz;
-                  if (d2<mD2){mD2=d2;bDx=dx;bDy=dy;bDz=dz;}
-                }
-              }
-              if (mD2 < thresh2) {
-                const d = Math.sqrt(mD2);
-                const cLen2=cdx*cdx+cdy*cdy+cdz*cdz;
-                let nx, ny, nz;
-                if (d < SIM_SEP_THRESH*0.3 || cLen2 < 0.01) {
-                  const cLen=Math.sqrt(cLen2)||1;
-                  nx=cdx/cLen; ny=cdy/cLen; nz=cdz/cLen;
-                } else { nx=bDx/d; ny=bDy/d; nz=bDz/d; }
-                const corr = (SIM_SEP_THRESH - d) * SIM_SEP_POS_CORR;
-                ci.x+=nx*corr; ci.y+=ny*corr; ci.z+=nz*corr;
-                cj.x-=nx*corr; cj.y-=ny*corr; cj.z-=nz*corr;
-              }
-            }
-          }
-        }
-        // ─────────────────────────────────────────────────────────────────────
-
-        mouseVel.multiplyScalar(0.82); // decay mouse velocity each simulate() tick
+      // ── Click handler: color cycle + explode ─────────────────────────
+      const handleClick = () => {
+        if (!ready) return;
+        colorIdx = (colorIdx + 1) % COLORS.length;
+        const nc = COLORS[colorIdx];
+        for (const b of balloonList) if (b.isColored) b.color = nc;
+        bodies.forEach(b => b.applyImpulse());
       };
+      cellEl.addEventListener('click', handleClick);
+
+      // ── Sorting helper ───────────────────────────────────────────────
+      const _sv = new THREE.Vector3();
+      function updateSorting() {
+        for (let i = 0; i < N; i++) {
+          const self = balloonList[i];
+          for (let j = 0; j < N; j++) {
+            const o = sortedList[j];
+            o.distance2 = self === o ? 0 : self.mesh.position.distanceToSquared(o.mesh.position);
+          }
+          sortedList.sort((a, b) => a.distance2 - b.distance2);
+          self.mesh.material.uniforms.u_selfRotation.value.copy(self.mesh.quaternion);
+          for (let k = 0; k < NCNT; k++) {
+            const nb = sortedList[k + 1];
+            self.mesh.material.uniforms.u_nearPR.value[k].set(nb.mesh.position.x, nb.mesh.position.y, nb.mesh.position.z, nb.mesh.scale.x);
+            self.mesh.material.uniforms.u_nearCol.value[k].set(nb.color);
+          }
+          self.mesh.getWorldPosition(_sv);
+          _sv.applyMatrix4(camera.matrixWorldInverse);
+          self.distanceFromCamera = -_sv.z;
+        }
+        sortedList.sort((a, b) => b.distanceFromCamera - a.distanceFromCamera);
+        for (let i = 0; i < N; i++) sortedList[i].mesh.renderOrder = i;
+      }
 
       return {
         update(time) {
           if (!ready) return;
-          if (lastTime === null) { lastTime = time; controls.update(); return; }
-          const dt = Math.min(0.1, Math.max(0, time - lastTime));
+          if (lastTime === null) { lastTime = time; return; }
+          const dt = Math.min(0.05, Math.max(0, time - lastTime));
           lastTime = time;
-          simulate(dt);
-          controls.update();
+          if (dt <= 0) return;
+
+          updatePhysics(dt);
+
+          for (let i = 0; i < N; i++) {
+            const b = bodies[i], bl = balloonList[i];
+            bl.mesh.position.copy(b.position);
+            bl.mesh.quaternion.copy(b.quaternion);
+            bl.selfPR.set(b.position.x, b.position.y, b.position.z, bl.radius);
+            bl.mesh.material.uniforms.u_color.value.set(bl.color);
+          }
+          updateSorting();
         },
         render(rect) {
           const w = Math.max(1, Math.floor(rect?.width || 1));
