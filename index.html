@@ -11,43 +11,37 @@
     href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;700&display=swap"
     rel="stylesheet">
   <style>
-    /* page全体にSVGオーバーレイを敷くため */
+    /* page全体のレイアウト */
     .page {
       position: relative;
-    }
-
-    /* ストローク層 */
-    .svg-strokes {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      pointer-events: none;
-      z-index: 1;
-      /* ラベル(.scene .label)より下/上は必要に応じて */
-    }
-
-    .svg-strokes path {
-      fill: none;
-      stroke: rgba(2, 75, 158, .45);
-      stroke-width: 1;
-      vector-effect: non-scaling-stroke;
-      /* 常に1px */
-      animation-name: draw-stroke;
-      animation-timing-function: ease;
-      animation-fill-mode: forwards;
-    }
-
-    @keyframes draw-stroke {
-      to {
-        stroke-dashoffset: 0;
-      }
     }
 
     /* ラベルは線の上に出したい場合 */
     .scene .label {
       z-index: 2;
     }
+
+    /* CSS grid lines (Dropbox-style: scaleX/Y transform) */
+    .grid-line {
+      position: absolute;
+      pointer-events: none;
+      z-index: 2;
+      background: rgba(2, 75, 158, 0.45);
+    }
+    .grid-line--v {
+      width: 1px;
+      transform-origin: top center;
+      transform: scaleY(0);
+      transition: transform 2.5s cubic-bezier(.5,0,0,1);
+    }
+    .grid-line--h {
+      height: 1px;
+      transform-origin: left center;
+      transform: scaleX(0);
+      transition: transform 2.5s cubic-bezier(.5,0,0,1);
+    }
+    .grid-line--visible.grid-line--v { transform: scaleY(1); }
+    .grid-line--visible.grid-line--h { transform: scaleX(1); }
 
     :root {
       --bg: #deefff;
@@ -62,10 +56,10 @@
       /* アクセント */
       --subtle: #79afff;
       /* 薄め */
-      --grid-gap: 0px;
+      --grid-gap: 1px;
       /* セル境界（WFC風の1pxリズム） */
       --cell-pad: 0;
-      --radius: 14px;
+      --radius: 0px;
       --mobile-header-height: 68px;
       --mobile-row-height: calc((100dvh - var(--mobile-header-height)) / 3);
     }
@@ -80,6 +74,7 @@
     }
 
     html {
+      font-size: 14px;
       scroll-behavior: smooth;
     }
 
@@ -108,6 +103,31 @@
     .sidebar {
       width: 20%;
       background: #deefff;
+      position: relative;
+    }
+
+    /* Sidebar right border — same draw-in animation as grid lines */
+    .sidebar::after {
+      content: '';
+      position: absolute;
+      right: 0; top: 0; bottom: 0;
+      width: 1px;
+      background: rgba(2, 75, 158, 0.45);
+      transform-origin: top center;
+      transform: scaleY(0);
+      transition: transform 2.5s cubic-bezier(.5,0,0,1);
+      z-index: 1;
+    }
+    body.lines-ready .sidebar::after {
+      transform: scaleY(1);
+    }
+
+    /* #top and #scene-21: cover internal grid lines with higher z-index */
+    #top {
+      z-index: 3;
+    }
+    #scene-21 {
+      z-index: 3;
     }
 
     .sidebar__inner {
@@ -283,6 +303,52 @@
       background: rgba(2, 75, 158, .1)
     }
 
+    .lang-switcher {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 16px;
+    }
+
+    .lang-sep {
+      color: var(--muted);
+      font-size: 0.9rem;
+      opacity: 0.5;
+    }
+
+    .lang-btn {
+      appearance: none;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      color: var(--muted);
+      padding: 4px 6px;
+      border-radius: 4px;
+      letter-spacing: 0.03em;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .lang-btn:hover {
+      color: #024b9e;
+      background: rgba(2, 75, 158, .08);
+    }
+
+    .lang-btn--active {
+      color: #024b9e;
+      font-weight: 700;
+    }
+
+    .lang-switcher--drawer {
+      padding: 0;
+      margin-top: 8px;
+    }
+
+    .lang-switcher--drawer .lang-btn {
+      font-size: 1rem;
+    }
+
     .main {
       width: 80%;
       position: relative;
@@ -298,7 +364,8 @@
       grid-template-rows: repeat(3, calc(100vh / 3));
       grid-auto-rows: calc(100vh / 3);
       transition: none;
-      /* 追加行も同じ高さに */
+      position: relative;
+      /* CSS grid-lineの起点, 追加行も同じ高さに */
     }
 
     .cell {
@@ -309,7 +376,7 @@
       min-width: 0;
       min-height: 0;
       overflow: hidden;
-      transition: box-shadow 0.5s ease, border-radius 0.5s ease, background 0.5s ease,
+      transition: box-shadow 0.5s ease, background 0.5s ease,
         transform 3s cubic-bezier(.22, .8, .25, 1);
     }
 
@@ -339,13 +406,43 @@
       text-transform: uppercase;
     }
 
+    #scene-6 .cell-inner_title,
+    #scene-23 .cell-inner_title {
+      text-transform: none;
+    }
+
     .cell-inner_description {
       color: var(--muted);
       line-height: 1.6;
       letter-spacing: 0.1em;
     }
 
+    .contact-x-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5em;
+      margin-top: 1.2em;
+      padding: 0 1.4em;
+      height: 48px;
+      background: var(--text);
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      border-radius: 9999px;
+      transition: opacity 0.2s ease;
+    }
 
+    .contact-x-btn:hover {
+      opacity: 0.75;
+    }
+
+    .contact-x-btn__icon {
+      width: 1.1em;
+      height: 1.1em;
+      flex-shrink: 0;
+    }
 
     /* ヒーロー：左から3・上から3（=3col×3row 結合） */
     .hero {
@@ -377,7 +474,7 @@
 
     .lead {
       color: var(--muted);
-      font-size: 1.1rem;
+      font-size: 1rem;
       line-height: 1.5;
       letter-spacing: 0.3em;
     }
@@ -392,20 +489,26 @@
       padding: 0;
       overflow: hidden;
       position: relative;
-      transition: border-radius 0.5s ease, box-shadow 0.5s ease, transform 0.5s cubic-bezier(.22, .8, .25, 1),
-        opacity 0.5s ease;
+      transition: transform 0.5s cubic-bezier(.22, .8, .25, 1), opacity 0.5s ease;
       will-change: transform, opacity;
-      transform: translate3d(0, 0, 0);
+    }
+
+    .scene > canvas,
+    .scene > .ascii-effect,
+    .scene > iframe {
+      transition: transform 0.5s cubic-bezier(.22, .8, .25, 1);
+    }
+
+    .scene:hover:not(.scene--detail-open):not(.scene--opening) > canvas,
+    .scene:hover:not(.scene--detail-open):not(.scene--opening) > .ascii-effect,
+    .scene:hover:not(.scene--detail-open):not(.scene--opening) > iframe {
+      transform: scale(1.015) translate3d(0, 0, 0);
     }
 
     .scene--expandable {
       cursor: pointer;
     }
 
-    .scene--floating {
-      box-shadow: 0 28px 60px rgba(2, 75, 158, .22);
-      border-radius: calc(var(--radius) * 1.2);
-    }
 
     .scene--expanded {
       border-radius: 0;
@@ -415,6 +518,20 @@
 
     .scene.scene--detail-open {
       z-index: 60;
+      border-radius: 0;
+    }
+
+    /* Expanding cell: hidden while tile-hero overlay is active */
+    .cell--expanding {
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
+
+    /* Dim all other cells while one is expanded */
+    body.scene-overlay-open .cell:not(.cell--expanding) {
+      opacity: 0.15;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
     }
 
     .scene::before {
@@ -476,48 +593,108 @@
       gap: clamp(16px, 3vw, 28px);
     }
 
-    .scene__detail-overlay {
+    /* ===== Inner Grid (shown inside expanded tile-hero) ===== */
+    @keyframes bentoSlideIn {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .inner-grid {
       position: absolute;
       inset: 0;
-      padding: clamp(24px, 6vw, 96px);
-      display: flex;
-      flex-direction: column;
-      gap: clamp(16px, 3vw, 32px);
-      background: transparent;
-      color: #024b9e;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
       opacity: 0;
       pointer-events: none;
-      transform: translateY(24px);
-      transition: opacity 0.4s ease, transform 0.4s ease;
-      overflow: auto;
-      z-index: 210;
+      transition: opacity 0.3s ease;
     }
-
-    .scene__detail-overlay::-webkit-scrollbar {
-      width: 10px;
-    }
-
-    .scene__detail-overlay::-webkit-scrollbar-thumb {
-      background: rgba(2, 75, 158, 0.25);
-      border-radius: 999px;
-    }
-
-    .scene--detail-open .scene__detail-overlay {
+    .inner-grid--visible {
       opacity: 1;
       pointer-events: auto;
-      transform: translateY(0);
     }
-
-    .scene__detail-body {
+    .inner-grid__visual {
+      position: relative;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .inner-grid__img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .inner-grid__content {
+      padding: clamp(32px, 6vw, 80px);
       display: flex;
       flex-direction: column;
       gap: clamp(12px, 2vw, 20px);
-      width: 100%;
-      height: 100%;
+      justify-content: center;
+      overflow-y: auto;
+      color: var(--text);
     }
+    .inner-grid__meta {
+      font-size: clamp(11px, 1.2vw, 13px);
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      opacity: 0.55;
+    }
+    .inner-grid__title {
+      margin: 0;
+      font-size: clamp(22px, 3.6vw, 44px);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+    }
+    .inner-grid__text {
+      margin: 0;
+      font-size: clamp(13px, 1.5vw, 15px);
+      line-height: 1.7;
+      opacity: 0.8;
+    }
+    .inner-grid__actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .inner-grid__link, .inner-grid__close {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.6rem 1.6rem;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: clamp(11px, 1.3vw, 13px);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .inner-grid__link {
+      background: #024b9e;
+      color: #fff;
+      text-decoration: none;
+      box-shadow: 0 10px 24px rgba(2, 75, 158, 0.32);
+    }
+    .inner-grid__link:hover { transform: translateY(-2px); background: #146ef5; box-shadow: 0 14px 32px rgba(20,110,245,0.35); }
+    .inner-grid__close {
+      background: rgba(255,255,255,0.9);
+      color: #024b9e;
+      box-shadow: 0 6px 16px rgba(2, 75, 158, 0.12);
+    }
+    .inner-grid__close:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(2,75,158,0.2); }
 
-    .scene--detail-open .scene__detail-body {
-      height: auto;
+    /* Stagger reveal */
+    .inner-grid--visible .inner-grid__meta    { animation: bentoSlideIn 0.4s cubic-bezier(.22,.8,.25,1) 0.05s both; }
+    .inner-grid--visible .inner-grid__title   { animation: bentoSlideIn 0.4s cubic-bezier(.22,.8,.25,1) 0.15s both; }
+    .inner-grid--visible .inner-grid__text    { animation: bentoSlideIn 0.4s cubic-bezier(.22,.8,.25,1) 0.25s both; }
+    .inner-grid--visible .inner-grid__actions { animation: bentoSlideIn 0.4s cubic-bezier(.22,.8,.25,1) 0.35s both; }
+
+    /* Legacy detail overlay (kept for compatibility, no longer primary) */
+    .scene__detail-overlay {
+      position: absolute; inset: 0; opacity: 0; pointer-events: none;
     }
 
     .scene__detail-title {
@@ -940,15 +1117,7 @@
         min-height: calc(var(--mobile-row-height) * 2);
       }
 
-      #contact {
-        grid-column: 1 / span 3;
-        grid-row: 13;
-        /* ★ 11から13に変更 */
-        height: var(--mobile-row-height);
-        min-height: var(--mobile-row-height);
-      }
-
-      #scene-4 {
+#scene-4 {
         display: none;
       }
 
@@ -963,36 +1132,21 @@
       }
 
       body.scene-overlay-open #scene-21,
-      body.scene-overlay-open #scene-23,
-      body.scene-overlay-open #contact {
+      body.scene-overlay-open #scene-23 {
         height: auto;
         min-height: 0;
       }
 
-      body.scene-overlay-open .scene--detail-open .scene__detail-overlay {
-        position: fixed;
+      /* Mobile inner-grid: stack vertically */
+      .inner-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 40% 1fr;
         top: var(--mobile-header-height);
-        left: 0;
-        right: 0;
-        bottom: 0;
-        padding: 32px clamp(18px, 6vw, 36px) calc(32px + env(safe-area-inset-bottom));
-        margin: 0;
-        max-width: 100%;
-        color: #deefff;
-        overflow-y: auto;
+        height: calc(100% - var(--mobile-header-height));
       }
-
-      body.scene-overlay-open .scene--detail-open .scene__detail-title,
-      body.scene-overlay-open .scene--detail-open .scene__detail-text {
-        color: #024b9e;
-      }
-
-      body.scene-overlay-open .scene--detail-open .scene__detail-text {
-        /* color: rgba(222, 239, 255, 0.9); */
-      }
-
-      body.scene-overlay-open .scene--detail-open .scene__detail-body {
-        padding-top: 0;
+      .inner-grid__content {
+        padding: 24px clamp(18px, 5vw, 32px) calc(24px + env(safe-area-inset-bottom));
+        justify-content: flex-start;
       }
     }
   </style>
@@ -1024,7 +1178,11 @@
     <div class="mobile-drawer__panel" id="mobile-drawer-panel">
       <a class="mobile-drawer__link" href="#top">Top</a>
       <a class="mobile-drawer__link" href="#scene-23">About</a>
-      <a class="mobile-drawer__link" href="#contact">Contact</a>
+      <div class="lang-switcher lang-switcher--drawer">
+        <button class="lang-btn lang-btn--active" data-lang="ja">日本語</button>
+        <span class="lang-sep">/</span>
+        <button class="lang-btn" data-lang="en">English</button>
+      </div>
     </div>
   </nav>
 
@@ -1036,8 +1194,12 @@
         <nav class="nav" aria-label="ページ内リンク">
           <a href="#top">Top</a>
           <a href="#scene-23">About</a>
-          <a href="#contact">Contact</a>
         </nav>
+        <div class="lang-switcher">
+          <button class="lang-btn lang-btn--active" data-lang="ja">日本語</button>
+          <span class="lang-sep">/</span>
+          <button class="lang-btn" data-lang="en">English</button>
+        </div>
       </div>
     </aside>
 
@@ -1048,8 +1210,7 @@
         <header id="top" class="cell hero">
           <div class="kicker">PORTFOLIO</div>
           <h1 class="h1"><span>321ken</span><br>UI/UX Designer & Frontend Engineer</h1>
-          <p class="lead">Seamlessly transitioning between design and coding, I transform ideas into products.<br>
-            As an amateur, I explore the possibilities of UI/UX in AR.</p>
+          <p class="lead" data-i18n="lead">アマチュアとしてAR作品を作ってます。ARならではのUI、ゲーム性、アフォーダンスみたいなものに興味があります。似たような興味を持つ人がいたら、ぜひ一緒になにか作りましょう。</p>
         </header>
 
         <!-- 明示配置：r1, r2（右2列）＋ r3 は右2列を結合して1セル -->
@@ -1065,20 +1226,52 @@
         <article id="scene-6" class="cell merge-r4-left12">
           <div class="cell-inner">
             <h2 class="cell-inner_title">What I made</h2>
-            <p class="cell-inner_description">
-              I've primarily built Web AR using 8th Wall. I previously developed iOS AR apps using Unity, but I've
-              mostly forgotten how.
-            </p>
+            <p class="cell-inner_description" data-i18n-html="what-i-made-desc">主に8th Wallを使ってWeb ARを作ってきましたが、8th Wallがああなってしまったので、今後どうしようか迷い中。ARグラスが出てきた時に使える技術が良いと思うけど、Vision Proを買うようなお金もないし、、、</p>
           </div>
         </article>
         <!-- 4行目 右3セル -->
+        <article id="scene-8" class="cell scene" data-effect="image" data-img="./img/bugssymphony.jpg"
+          data-title="Bugs Symphony" data-description='When the game starts, butterflies and dragonflies appear perched on the ground. As you approach them, they take flight and flee — that "flee on approach" behavior in AR was the whole concept behind this game.<br><br>
+          The flocking motion after takeoff is calculated using the Boids algorithm via GPUComputationRenderer. I love Boids for the way pure computation produces something that feels genuinely organic.<br>
+          The target bugs emit sound via PositionalAudio, so with headphones you can pinpoint their location by ear alone — you could play with your eyes closed just by following the direction of the sound. Since AR is inherently spatial, I wanted to use sound directionality not as background music, but as the core of gameplay itself.<br><br>
+          ※ This was originally a location-based game created for 8thwall&#39;s <a href="https://www.8thwall.com/blog/post/172638605886/meet-the-winners-explore-together-challenge" target="_blank" rel="noopener noreferrer">Explore Together Challenge</a>, but after 8thwall shut down, I reworked it so it can be played anywhere.'
+          data-description-ja='ゲームを始めると、蝶やトンボが地面に止まった状態で現れます。近づくと飛び立って逃げていく——この「近づいたら逃げる」をARでやりたくて作ったゲームです。<br><br>
+          飛び立ったあとの群れの動きは、GPUComputationRendererを介したBoidsアルゴリズムで計算しています。計算だけで有機的な動きが出るので、Boidsは好きです。<br>
+          ターゲットの虫はPositionalAudioで音を発しているので、ヘッドフォンをつければ耳だけで居場所を特定できます。音の方向を頼りに、目を閉じたままでもプレイできるくらいです。ARゲームは本質的に空間的なものなので、音の方向性をBGMではなくゲームプレイの核に使いたいと考えて、こういう形にしました。<br><br>
+          ※ もともと8thwallのExplore Together Challenge向けに作った位置情報ベースのゲームでしたが、8thwall終了に伴い、どこでも遊べる形に変更しています。' data-link="https://bugs-symphony.vercel.app/"
+          data-link-label="Play">
+        </article>
+        <article id="scene-12" class="cell scene" data-effect="image" data-img="./img/block-breaker.png" data-title="Block Breaker AR"
+          data-description='A game exploring what classic breakout looks like in AR. Since AR glasses and HMDs aren&apos;t accessible to me, I&apos;m doing AR on a smartphone — so I wanted to push what&apos;s uniquely possible with that format.<br><br>
+          A phone is a window into AR space, but in this game it&apos;s also a racket. You physically bounce the ball off the phone itself. Going 3D made it absurdly difficult, but that&apos;s part of the charm.'
+          data-description-ja='懐かしのブロック崩しをARにするならどうなるかを考えたゲーム。ARグラスやHMDがないのでスマホでARをやってるわけですが、スマホのARならではというのをできないかと思って作ってみました。<br><br>
+          スマホはAR空間を見るための窓でもありますが、このゲームではラケットでもあります。スマホ自体にボールを跳ね返らせるわけです。３Dになったこともあり、異常に難しくなってしまいましたが、、、、'
+          data-link="https://breakout-ar.vercel.app/" data-link-label="Play">
+
+        </article>
+        <article id="scene-13" class="cell scene" data-effect="image" data-img="./img/drive-the-earth.png"
+          data-title="Drive The Earth"
+          data-description='A game using Sky Effect, 8thwall&apos;s signature feature for projecting AR into the sky.<br><br>
+          A planet is on a collision course with Earth, and a million-horsepower robot picks it up and runs. In hindsight, the sense of actually carrying the Earth doesn&apos;t quite come through — but that&apos;s how it goes.'
+          data-description-ja='空にARを映すという8thwallの代名詞的なSky Effectという機能を使ったゲーム。<br><br>
+          惑星が地球にぶつかりそうになっていて、１００万馬力のロボットが地球を運んで逃げるという設定のゲーム。作ってみてなんですが、さすがに地球を運んでる感は出ないです。'
+          data-link="https://ken321.github.io/drive-the-earth/" data-link-label="Play">
+
+        </article>
+
+        <!-- 5行目 全5セル（What I madeの下） -->
         <article id="scene-7" class="cell scene" data-effect="image" data-img="./img/tenori_friends.png"
           data-title="TENORI Friends" data-description='This project imagines what communication platforms like Slack or LINE might look like in AR.<br>
           Your connected friend appears as a tiny avatar wandering around a miniature room. Even when your friend isn’t online, the avatar might still talk about the weather in their location (I originally wanted it to display their latest posts from X as well). When they log in, you can chat through their avatar — ideally, I wanted to enable voice conversations too.<br>
           
           Since it’s built with 8th Wall, no download is required. Real-time synchronization between connected users is handled using 8th Wall’s Shared AR Module.<br>
           Because I’m using the Starter plan, there’s a UX limitation: users can’t directly open the experience from the invitation QR code. Oddly enough, opening the same QR code twice seems to make it work.<br>
-          Built with: 8th Wall (A-Frame)' data-link="https://youtu.be/-SKVXbq8gUs?si=SsdnsV43orP-6hph"
+          Built with: 8th Wall (A-Frame)'
+          data-description-ja='SlackやLINEのようなコミュニケーションプラットフォームをARで実現したらどうなるか、をテーマにしたプロジェクトです。<br>
+          つながった友人がミニチュアの部屋を歩き回る小さなアバターとして現れます。友人がオフラインの時でも、アバターがその場所の天気を話してくれます（本当はXの最新投稿も表示したかった）。ログインするとアバターを通してチャットでき、理想的には音声通話も実現したかったです。<br>
+          8th Wallで作っているのでダウンロード不要。接続ユーザー間のリアルタイム同期は8th WallのShared AR Moduleを使っています。<br>
+          Starterプランを使っているため、招待QRコードから直接体験を開けないというUXの制限があります。同じQRコードを2回開くと動くらしいのですが、なんとも微妙な仕様です。<br>
+          使用技術: 8th Wall (A-Frame)' data-link="https://youtu.be/-SKVXbq8gUs?si=SsdnsV43orP-6hph"
           data-link-label="Watch on YouTube">
           <!-- <div class="scene__detail-template">
             <h3>TENORI Friends</h3>
@@ -1086,37 +1279,18 @@
             <a href="https://youtu.be/-SKVXbq8gUs?si=SsdnsV43orP-6hph" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
           </div> -->
         </article>
-        <article id="scene-8" class="cell scene" data-effect="image" data-img="./img/bugssymphony.jpg"
-          data-title="Bugs Symphony" data-description='A location-based AR game created for <a href="https://www.8thwall.com/blog/post/172638605886/meet-the-winners-explore-together-challenge" target="_blank" rel="noopener noreferrer">The Explore Together Challenge</a>.
-          The goal is to complete a symphony by collecting special musical bugs scattered around the world.<br><br>
-          You can play it anywhere that supports Niantic VPS Wayspots — by retrieving the 3D mesh of the location, butterflies and dragonflies appear perched across the ground and walls. As you approach them, they flutter away. Their flocking behavior is calculated using the Boids algorithm via GPUComputationRenderer.<br>
-          The special target bugs emit sounds using PositionalAudio, so with headphones, you can locate them by ear — you could almost play with your eyes closed by following the direction of the sound.<br>
-          Since AR games are inherently spatial, I wanted to explore how sound direction could be used as an essential part of gameplay rather than just a background element.<br>
-          I personally thought it was a masterpiece — but it ended up as a Nature Navigator Prize Winner.<br>
-          Built with: 8th Wall (Three.js)' data-link="https://www.8thwall.com/bench/location-based-ar"
+        <article id="scene-14" class="cell scene" data-effect="image" data-img="./img/light_bird.png"
+          data-title="Light Birds" data-description='An AR experience where glowing birds flock and gather around your fingertips.<br>
+          Before creating BUGS SYMPHONY, I wanted to experiment with GPUComputationRenderer, so I built this piece as a technical exploration.<br>
+          The flocking behavior is driven by the Boids algorithm, computed entirely on the GPU.<br>
+          By feeding the hand mesh captured from AR into the same computation, the interaction became dramatically more responsive and lifelike — as if the birds truly sensed and reacted to your movements in real space.<br>
+          Built with: 8th Wall (Three.js)'
+          data-description-ja='手の指先に向かって光り輝く鳥たちが群れ集まるAR体験です。<br>
+          BUGS SYMPHONYを制作する前に、GPUComputationRendererを試してみたくて技術的な探求として制作しました。<br>
+          群れの動きはBoidsアルゴリズムによってGPU上で完全に計算されています。<br>
+          ARで取得したハンドメッシュを同じ計算に入力することで、インタラクションが劇的にレスポンシブでリアルになり、まるで鳥たちが現実空間のあなたの動きを感知して反応しているかのようです。<br>
+          使用技術: 8th Wall (Three.js)' data-link="https://www.8thwall.com/bench/gpgpu-postprocess-example"
           data-link-label="Launch on 8th Wall">
-        </article>
-        <article id="scene-9" class="cell scene" data-effect="image" data-img="./img/kamizumo.png"
-          data-title="AR Kami-Zumo" data-description='This project reimagines “Kami Sumo,” a traditional Japanese tabletop wrestling game, in augmented reality.<br>
-          When you tap the virtual buttons placed on a real table, paper-like sumo wrestlers shake and move as if reacting to the table itself being hit. This makes the experience surprisingly tactile and physically believable for AR.<br>
-          Most AR interfaces tend to rely on floating virtual buttons in space — something you tap with no physical feedback. Personally, I find that lack of touch very unsatisfying. By projecting UI onto real surfaces, at least you can feel the object beneath it. That simple contact adds a sense of reality and usability that purely virtual interfaces often lack.<br>
-          It’s like typing on an invisible keyboard in the air versus one projected onto your desk — the latter feels almost real.<br>
-          This was actually my very first AR project. Despite being just a small game, it ended up weighing a hefty 500 MB… a big flaw, but also a good lesson.<br>
-          Built with: Unity, AR Foundation, MediaPipe (MediaPipeUnityPlugin)'
-          data-link="https://youtu.be/nF4E8MjyVu8?si=C9Tpxh7yzLl8rq2K" data-link-label="Watch on YouTube">
-
-        </article>
-
-        <!-- 5行目 全5セル（What I madeの下） -->
-        <article id="scene-10" class="cell scene" data-effect="image" data-img="./img/meishi.png"
-          data-title="AR Business Card" data-description='I work as a UI/UX designer at a company called Bench, and this project turns my business card into an AR mini-game.<br>
-          By using image tracking, the experience gives the illusion that the AR elements physically interact with the real card itself. There are three playful modes:<br>
-          Greeting CEO – Our CEO appears standing on the card and greets you. Tilt the card, and he loses balance and falls off.<br>
-          Lifting CEO – You can juggle a curled-up version of the CEO right on top of the card.<br>
-          Maze Game – A two-story maze appears above the card. By tilting the business card, you can roll the curled-up CEO through the maze to reach the goal.<br>
-          It’s a lighthearted project exploring how AR can blend physical touch and humor — transforming a simple business card into an interactive playground.<br>
-          Built with: Unity, AR Foundation' data-link="https://x.com/321kn/status/1541271768639238144"
-          data-link-label="Watch on x">
 
         </article>
         <article id="scene-11" class="cell scene" data-effect="image" data-img="./img/haiti.png"
@@ -1125,38 +1299,48 @@
           As you push through the screens and move forward, the experience invites you to feel as if you’re walking into the story itself.<br>
           While you read and explore, hibiscus flowers — which bloom abundantly in Haiti — begin to blossom at your feet.<br>
           When you finish viewing all of the content, hibiscus petals gently fall from the sky, symbolizing hope and renewal.<br>
-          Built with: 8th Wall (Three.js)' data-link="https://www.8thwall.com/bench/hope-for-haiti-challenge"
-          data-link-label="Open on 8th Wall">
-
-        </article>
-        <article id="scene-12" class="cell scene" data-effect="image" data-img="./img/nanach.png" data-title="NanAR"
-          data-description='An AR experience created with 8th Wall, designed for Bench’s engineering team business cards.<br>
-          I’ve always loved the idea of “portals” in AR — looking into another world through a window in reality.<br>
-          In this project, the business card itself becomes that portal, and an avatar emerges from it to introduce themselves.<br>
-          By rolling a virtual die, you trigger the avatar to answer a question corresponding to the number that appears.<br>
-          Each roll leads to a slightly different self-introduction, making the experience playful and personal — like a tiny conversation through another dimension.<br>
-          Built with: 8th Wall (Three.js)' data-link="https://www.8thwall.com/bench/nanar"
-          data-link-label="Open on 8th Wall">
-
-        </article>
-        <article id="scene-13" class="cell scene" data-effect="image" data-img="./img/pyisic-simulation.png"
-          data-title="Physics Simulation" data-description='A custom 8th Wall module created for <a href="https://www.8thwall.com/blog/post/125806910635/meet-the-winners-of-the-modules-challenge" target="_blank" rel="noopener noreferrer">The Modules Challenge</a>.<br>
-          This module integrates Ammo.js into 8th Wall in a way that makes it easier to use within AR projects.<br>
-          It enables soft-body physics simulations and detailed constraint control, expanding the expressive possibilities of real-world physics in augmented reality.<br>
-          I believe this opened up new ways to blend physical realism with interactive AR experiences — a foundation for more tactile and believable virtual worlds.<br>
-          The project was awarded the Grand Prize.<br>
           Built with: 8th Wall (Three.js)'
-          data-link="https://www.8thwall.com/bench/physics-simmulation-in-threejs-sample"
-          data-link-label="Launch on 8th Wall">
+          data-description-ja='<a href="https://www.8thwall.com/blog/post/145396566051/meet-the-winners-8thwall-hopeforhaiti" target="_blank" rel="noopener noreferrer">8th Wall × Hope for Haiti Challenge</a>のために制作したAR体験です。<br>
+          ユーザーの目の前には、ハイチに関する情報や動画を映す半透明のスクリーンが浮かんでいます。<br>
+          スクリーンをくぐり抜けながら前に進むことで、まるでその物語の中に入り込んでいくような感覚を覚えます。<br>
+          読んで探索していると、ハイチに豊かに咲くハイビスカスの花が足元で咲き始めます。<br>
+          すべてのコンテンツを見終えると、希望と再生の象徴として、ハイビスカスの花びらが空から舞い落ちてきます。<br>
+          使用技術: 8th Wall (Three.js)' data-link="https://www.8thwall.com/bench/hope-for-haiti-challenge"
+          data-link-label="Open on 8th Wall">
 
         </article>
-        <article id="scene-14" class="cell scene" data-effect="image" data-img="./img/light_bird.png"
-          data-title="Light Birds" data-description='An AR experience where glowing birds flock and gather around your fingertips.<br>
-          Before creating BUGS SYMPHONY, I wanted to experiment with GPUComputationRenderer, so I built this piece as a technical exploration.<br>
-          The flocking behavior is driven by the Boids algorithm, computed entirely on the GPU.<br>
-          By feeding the hand mesh captured from AR into the same computation, the interaction became dramatically more responsive and lifelike — as if the birds truly sensed and reacted to your movements in real space.<br>
-          Built with: 8th Wall (Three.js)' data-link="https://www.8thwall.com/bench/gpgpu-postprocess-example"
-          data-link-label="Launch on 8th Wall">
+        <article id="scene-10" class="cell scene" data-effect="image" data-img="./img/meishi.png"
+          data-title="AR Business Card" data-description='I work as a UI/UX designer at a company called Bench, and this project turns my business card into an AR mini-game.<br>
+          By using image tracking, the experience gives the illusion that the AR elements physically interact with the real card itself. There are three playful modes:<br>
+          Greeting CEO – Our CEO appears standing on the card and greets you. Tilt the card, and he loses balance and falls off.<br>
+          Lifting CEO – You can juggle a curled-up version of the CEO right on top of the card.<br>
+          Maze Game – A two-story maze appears above the card. By tilting the business card, you can roll the curled-up CEO through the maze to reach the goal.<br>
+          It’s a lighthearted project exploring how AR can blend physical touch and humor — transforming a simple business card into an interactive playground.<br>
+          Built with: Unity, AR Foundation'
+          data-description-ja='Benchというデザイン会社でUI/UXデザイナーとして働いており、このプロジェクトは自分の名刺をARミニゲームに変えるものです。<br>
+          画像トラッキングを使うことで、AR要素が名刺そのものと物理的にインタラクトしているかのような錯覚を生み出しています。遊び心あふれる3つのモードがあります：<br>
+          CEO挨拶 – 社長が名刺の上に立って挨拶します。名刺を傾けると、バランスを崩して落ちていきます。<br>
+          CEO持ち上げ – 丸まった社長を名刺の上でジャグリングできます。<br>
+          迷路ゲーム – 名刺の上に2階建ての迷路が出現。名刺を傾けて丸まった社長をゴールまで転がします。<br>
+          ARで物理的な触覚感とユーモアを融合できるかを探ったプロジェクトで、シンプルな名刺をインタラクティブな遊び場に変えています。<br>
+          使用技術: Unity、AR Foundation' data-link="https://x.com/321kn/status/1541271768639238144"
+          data-link-label="Watch on x">
+
+        </article>
+        <article id="scene-9" class="cell scene" data-effect="image" data-img="./img/kamizumo.png"
+          data-title="AR Kami-Zumo" data-description='This project reimagines "Kami Sumo," a traditional Japanese tabletop wrestling game, in augmented reality.<br>
+          When you tap the virtual buttons placed on a real table, paper-like sumo wrestlers shake and move as if reacting to the table itself being hit. This makes the experience surprisingly tactile and physically believable for AR.<br>
+          Most AR interfaces tend to rely on floating virtual buttons in space — something you tap with no physical feedback. Personally, I find that lack of touch very unsatisfying. By projecting UI onto real surfaces, at least you can feel the object beneath it. That simple contact adds a sense of reality and usability that purely virtual interfaces often lack.<br>
+          It’s like typing on an invisible keyboard in the air versus one projected onto your desk — the latter feels almost real.<br>
+          This was actually my very first AR project. Despite being just a small game, it ended up weighing a hefty 500 MB… a big flaw, but also a good lesson.<br>
+          Built with: Unity, AR Foundation, MediaPipe (MediaPipeUnityPlugin)'
+          data-description-ja='日本の伝統的なテーブルゲーム「紙相撲」をARで再解釈したプロジェクトです。<br>
+          実際のテーブルに投影された仮想ボタンをタップすると、紙製の力士がテーブルを叩いたかのように揺れて動きます。これにより、ARとしては驚くほど触覚的でリアルな体験になっています。<br>
+          多くのARインターフェースは空中に浮かんだ仮想ボタンに頼りがちで、触っても何の感触もありません。個人的にはそのリアリティのなさが気になります。UIをリアルな面に投影することで、少なくともその下にある物体を感じることができます。その小さな接触感が、純粋な仮想インターフェースにはない現実感と使いやすさを生み出します。<br>
+          空中の見えないキーボードでタイピングするのと、デスクに投影されたキーボードでタイピングするのとでは、後者の方がほぼリアルに感じられるのと同じです。<br>
+          実はこれが私の初めてのARプロジェクト。小さなゲームなのに500MB超という重さになってしまったのが大きな反省点でしたが、良い学びになりました。<br>
+          使用技術: Unity、AR Foundation、MediaPipe (MediaPipeUnityPlugin)'
+          data-link="https://youtu.be/nF4E8MjyVu8?si=C9Tpxh7yzLl8rq2K" data-link-label="Watch on YouTube">
 
         </article>
 
@@ -1166,20 +1350,15 @@
         <article id="scene-23" class="cell merge-r5-right345" style="overflow:hidden;">
           <div class="cell-inner">
             <h2 class="cell-inner_title">About</h2>
-            <p class="cell-inner_description">
-              I work as a designer at Bench Inc., where I’m mainly responsible for UI/UX design of business systems.<br>
-              As an amateur creator, I’ve produced several AR projects and have won multiple awards in 8th Wall’s
-              challenges.<br>
-              <br>
-              I enjoy thinking across different domains—how AR can improve the world, what UI design in AR should look
-              like, and what’s
-              technically possible at AR development.
-            </p>
+            <p class="cell-inner_description" data-i18n-html="about-desc">私はBench Inc.でデザイナーとして働いており、主に業務システムのUI/UXデザインを担当しています。<br>アマチュアのARクリエイターとして、これまでにいくつかのARプロジェクトを手掛け、かつての8th Wallのチャレンジでは複数の賞を受賞しました。</p>
+            <a href="https://x.com/321kn" target="_blank" rel="noopener noreferrer" class="contact-x-btn">
+              Contact in
+              <svg class="contact-x-btn__icon" viewBox="0 0 24 24" aria-label="X" fill="currentColor">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.747l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+              </svg>
+            </a>
           </div>
         </article>
-
-        <!-- About / Contact セクション（全幅セル） -->
-        <article id="contact" class="cell scene section" data-effect="contactCurtain"></article>
 
       </section>
     </main>
@@ -1984,11 +2163,11 @@
       if (!cellEl) return null;
 
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
-      renderer.outputColorSpace = THREE.SRGBColorSpace;
-      renderer.toneMapping = THREE.NoToneMapping;
+      renderer.outputColorSpace  = THREE.SRGBColorSpace;
+      renderer.toneMapping       = THREE.NoToneMapping;
       renderer.setClearColor(0xdeefff, 0);
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-      renderer.domElement.style.width = '100%';
+      renderer.domElement.style.width  = '100%';
       renderer.domElement.style.height = '100%';
       renderer.domElement.style.display = 'block';
       renderer.domElement.style.touchAction = 'none';
@@ -2007,16 +2186,26 @@
       const line = new THREE.Line(geo, material);
       scene.add(line);
 
-      const updateWave = (t) => {
-        const p = geo.attributes.position.array;
-        for (let i = 0; i < COUNT; i++) {
-          const x = (i / (COUNT - 1)) * 4 - 2;
-          p[i * 3] = x;
-          p[i * 3 + 1] = Math.sin(x * 2 + t * 2) * 0.4;
-          p[i * 3 + 2] = 0;
-        }
-        geo.attributes.position.needsUpdate = true;
-      };
+      // mouseX: wave-space X coordinate of cursor (-2 to 2)
+      let mouseX = 0;
+      let hoverAlpha = 0; // 0 = calm, 1 = fully excited
+      let prevTime = -1;
+
+      const canvas = renderer.domElement;
+
+      canvas.addEventListener('mousemove', (e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = ((e.clientX - rect.left) / rect.width) * 4 - 2;
+        hoverAlpha = 1;
+      });
+      canvas.addEventListener('mouseleave', () => { hoverAlpha = 0; });
+      canvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        mouseX = ((e.touches[0].clientX - rect.left) / rect.width) * 4 - 2;
+        hoverAlpha = 1;
+      }, { passive: false });
+      canvas.addEventListener('touchend', () => { hoverAlpha = 0; });
 
       let disposed = false;
 
@@ -2031,7 +2220,39 @@
         },
         tick(time) {
           if (disposed) return;
-          updateWave(time);
+          const dt = prevTime < 0 ? 0.016 : Math.min(time - prevTime, 0.05);
+          prevTime = time;
+
+          // Smoothly decay when not hovering
+          hoverAlpha = Math.max(hoverAlpha - dt * 2.2, 0);
+
+          const p = geo.attributes.position.array;
+
+          // Interpolate wave params: calm → excited
+          const amp   = 0.4  + hoverAlpha * 0.55;  // 0.4 → 0.95
+          const freq  = 2.0  + hoverAlpha * 3.5;   // 2   → 5.5
+          const speed = 2.0  + hoverAlpha * 5.0;   // 2   → 7
+
+          for (let i = 0; i < COUNT; i++) {
+            const x = (i / (COUNT - 1)) * 4 - 2;
+
+            // Base sine
+            let y = Math.sin(x * freq + time * speed) * amp;
+
+            // Hover: localised rattling disturbance that follows cursor X
+            if (hoverAlpha > 0) {
+              const dx = x - mouseX;
+              const bump = Math.exp(-dx * dx * 2.5);          // Gaussian at cursor
+              y += bump * hoverAlpha
+                 * Math.sin(x * 8 - time * 14) * 0.45;       // fast harmonic
+            }
+
+            p[i * 3]     = x;
+            p[i * 3 + 1] = y;
+            p[i * 3 + 2] = 0;
+          }
+
+          geo.attributes.position.needsUpdate = true;
           renderer.render(scene, camera);
         },
         dispose() {
@@ -4787,179 +5008,94 @@
       scene.add(dir);
 
       const mouse = new THREE.Vector2();
-      const mouseWorld = new THREE.Vector3(0, 0.2, 0);
+      const mouseWorld = new THREE.Vector3(0, 0.2, 0); // projected point (for velocity tracking)
+      const mouseVel   = new THREE.Vector3(0, 0, 0);
+      const mouseRayOrigin = new THREE.Vector3();       // camera ray origin
+      const mouseRayDir    = new THREE.Vector3(0, 0, -1); // camera ray direction (normalised)
       const raycaster = new THREE.Raycaster();
       const plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
       let canvasRect = localRenderer.domElement.getBoundingClientRect();
 
-      const BASE_LIN_DAMP = 2.2;
-      const BASE_ANG_DAMP = 1.1;
       const LETTER_SCALE = 4.05;
       const TARGET_CENTER = { x: 0, y: 0.2, z: 0 };
-      const RADIAL_GAIN = 1.25;
-      const RADIAL_MAX_SPEED = 2.1;
-      const RADIAL_BRAKE_OUT = 1.8;
-      const TANGENTIAL_GAIN_NEAR = 1.1;
-      const TANGENTIAL_GAIN_FAR = 3.2;
-      const TANGENTIAL_GAIN_DIST = 3.2;
-      const TANGENTIAL_DECAY_FLOOR = 0.05;
-      const MAX_DELTA_V = 3.1;
-      const MIN_DELTA_V = 0.015;
-      const SETTLE_RADIUS = 0.16;
-      const SETTLE_SPEED = 0.05;
-      const SETTLE_LIN_DAMP = 4.2;
-      const SETTLE_ANG_DAMP = 3.6;
-      const CENTER_IDLE_RADIUS = 1.6;
-      const CENTER_IDLE_WIDTH = 1.4;
-      const SEPARATION_RADIUS = 1.68;
-      const SEPARATION_PUSH = 0.35;
-      const SEPARATION_MAX = 0.9;
-      const STEP_DT_MIN = 1 / 240;
-      const STEP_DT_MAX = 1 / 30;
-      const SPIN_DAMP_THRESHOLD = 0.55;
-      const SPIN_LIN_DAMP = 2.8;
-      const SPIN_ANG_DAMP = 3.4;
-      const COLLIDER_RESTITUTION = 0.8;
-      const pointerHalfLength = 1.0;
-      const pointerRadius = 0.1; // diameter 0.2 along cylinder axis
-      const pointerRestitution = COLLIDER_RESTITUTION * 5;
-      const POINTER_REPEL_RADIUS = LETTER_SCALE * 0.85;
-      const POINTER_REPEL_PUSH = 2.4;
-      const POINTER_REPEL_VEL_GAIN = 1.1;
-      const POINTER_VEL_DAMP = 0.6;
-      const CLICK_BURST_STRENGTH = 64;
-      const CLICK_BURST_SPREAD = 0.35;
 
-      let RAPIER = null;
-      let world = null;
-      let pointerBody = null;
-      const bodies = [];
-      const bodyMap = new Map();
+      // ── Soft-force simulation parameters ─────────────────────────────
+      const SIM_SPRING_K      = 1.6;   // spring to center
+      const SIM_IDLE_R        = 0.6;   // dead-zone radius
+      const SIM_DAMP          = 3.5;   // linear damping
+      const SIM_SEP_THRESH    = 0.75;  // min vertex-to-vertex clearance (world units)
+      const SIM_SEP_F         = 8.0;   // contact force (reduced: impulse is primary)
+      const SIM_RESTITUTION   = 0.25;  // restitution coefficient (0=inelastic, 1=elastic)
+      const SIM_INERTIA_K     = 0.35;  // moment of inertia factor (sphere approx: I = k*m*r²)
+      const SIM_SEP_POS_CORR  = 0.8;   // position correction per frame (hard overlap constraint)
+      const N_CORRECTION_ITERS = 3;    // correction passes per frame (multi-body convergence)
+      const N_SAMPLE          = 48;    // surface sample points per letter
+      const SIM_MOUSE_R_MULT  = 1.3;   // mouse repulsion zone = body.radius * this
+      const SIM_MOUSE_F       = 16.0;  // radial push force (stationary cursor)
+      const SIM_MOUSE_VEL_F   = 32.0;  // velocity multiplier: fast sweep = strong launch
+      const SIM_MAX_SPEED   = 22.0;
+      const SIM_ANG_DAMP         = 0.84;  // angular decay per 60fps step
+      const SIM_ANG_GAIN         = 0.12;  // random angular noise (reduced — real torque handles most spin)
+      const SIM_MOUSE_TORQUE_F   = 3.5;   // mouse tangential-drag torque scale
+      // SIM_SEP_TORQUE_F removed: rigid body impulse now handles rotation naturally
+      const SIM_NOISE_F     = 0.05;              // organic drift noise
+      const SIM_CLICK_F     = 8.0;               // click burst delta-v
+      // ─────────────────────────────────────────────────────────────────
+
+      const palette = [0x024b9e, 0x217adf, 0x72b4ff];
+      const bodies  = []; // { mesh, vx, vy, vz, avx, avy, avz }
 
       let ready = false;
       let lastTime = null;
-      let acc = 0;
-      const FIXED = 1 / 60;
-      const MAX_STEPS = 3;
-
-      const palette = [0x024b9e, 0x217adf, 0x72b4ff];
-      const letterBurstDirections = {
-        k: { dir: new THREE.Vector3(-1, 0, 0), strength: 1 },
-        e: { dir: new THREE.Vector3(0, 1, 0), strength: 0.65 },
-        n: { dir: new THREE.Vector3(1, 0, 0), strength: 1 },
-      };
-
-      const pointerState = { x: TARGET_CENTER.x, y: TARGET_CENTER.y, z: TARGET_CENTER.z };
-      const pointerVelocity = { x: 0, y: 0, z: 0 };
-
-      let currentWidth = 1;
-      let currentHeight = 1;
       let hoverActive = false;
-
-      const syncPointerToMouse = () => {
-        const nextX = mouseWorld.x;
-        const nextY = mouseWorld.y;
-        const nextZ = mouseWorld.z;
-        pointerVelocity.x = nextX - pointerState.x;
-        pointerVelocity.y = nextY - pointerState.y;
-        pointerVelocity.z = nextZ - pointerState.z;
-        const stepLenSq = pointerVelocity.x * pointerVelocity.x + pointerVelocity.y * pointerVelocity.y + pointerVelocity.z * pointerVelocity.z;
-        const maxStep = POINTER_REPEL_RADIUS * 1.5;
-        if (stepLenSq > maxStep * maxStep) {
-          const inv = maxStep / Math.sqrt(stepLenSq);
-          pointerVelocity.x *= inv;
-          pointerVelocity.y *= inv;
-          pointerVelocity.z *= inv;
-        }
-        pointerState.x = nextX;
-        pointerState.y = nextY;
-        pointerState.z = nextZ;
-        if (pointerBody) {
-          pointerBody.setTranslation({ x: nextX, y: nextY, z: nextZ }, true);
-          pointerBody.setNextKinematicTranslation({ x: nextX, y: nextY, z: nextZ });
-          pointerBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
-          pointerBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
-        }
-      };
+      let currentWidth  = 1;
+      let currentHeight = 1;
 
       const updateMouseWorld = (e) => {
         if (!hoverActive) return;
         canvasRect = localRenderer.domElement.getBoundingClientRect();
-        const w = Math.max(canvasRect.width, 1);
+        const w = Math.max(canvasRect.width,  1);
         const h = Math.max(canvasRect.height, 1);
         mouse.x = ((e.clientX - canvasRect.left) / w) * 2 - 1;
         mouse.y = -((e.clientY - canvasRect.top) / h) * 2 + 1;
+        const prevX = mouseWorld.x, prevY = mouseWorld.y;
         raycaster.setFromCamera(mouse, camera);
+        // Store ray (origin + normalised direction) for depth-independent repulsion
+        mouseRayOrigin.copy(raycaster.ray.origin);
+        mouseRayDir.copy(raycaster.ray.direction); // Three.js already normalises this
+        // Project onto centre plane for velocity tracking only
         raycaster.ray.intersectPlane(plane, mouseWorld);
         mouseWorld.z = TARGET_CENTER.z;
-        syncPointerToMouse();
+        // Exponential smoothing on velocity: responsive but jitter-free.
+        const rawVx = mouseWorld.x - prevX;
+        const rawVy = mouseWorld.y - prevY;
+        mouseVel.x = mouseVel.x * 0.3 + rawVx * 0.7;
+        mouseVel.y = mouseVel.y * 0.3 + rawVy * 0.7;
       };
 
-      const resetPointer = () => {
+      const handlePointerEnter = (e) => {
+        hoverActive = true;
+        if (e) updateMouseWorld(e);
+      };
+      const handlePointerLeave = () => {
+        hoverActive = false;
         mouseWorld.set(TARGET_CENTER.x, TARGET_CENTER.y, TARGET_CENTER.z);
-        pointerState.x = TARGET_CENTER.x;
-        pointerState.y = TARGET_CENTER.y;
-        pointerState.z = TARGET_CENTER.z;
-        pointerVelocity.x = 0;
-        pointerVelocity.y = 0;
-        pointerVelocity.z = 0;
-        if (pointerBody) {
-          pointerBody.setTranslation({ x: TARGET_CENTER.x, y: TARGET_CENTER.y, z: TARGET_CENTER.z }, true);
-          pointerBody.setNextKinematicTranslation({ x: TARGET_CENTER.x, y: TARGET_CENTER.y, z: TARGET_CENTER.z });
-          pointerBody.setLinvel({ x: 0, y: 0, z: 0 }, true);
-          pointerBody.setAngvel({ x: 0, y: 0, z: 0 }, true);
-        }
+        mouseVel.set(0, 0, 0);
       };
-
-      const setHover = (state, event) => {
-        if (state) {
-          hoverActive = true;
-          if (event) updateMouseWorld(event);
-          else syncPointerToMouse();
-        } else {
-          hoverActive = false;
-          resetPointer();
-        }
-      };
-
-      const handlePointerEnter = (e) => setHover(true, e);
-      const handlePointerLeave = () => setHover(false);
 
       const handleClick = () => {
-        if (!ready || !world || bodies.length === 0) return;
-        const originX = hoverActive ? pointerState.x : TARGET_CENTER.x;
-        const originY = hoverActive ? pointerState.y : TARGET_CENTER.y;
-        const originZ = hoverActive ? pointerState.z : TARGET_CENTER.z;
-        const jitter = new THREE.Vector3();
-        const dir = new THREE.Vector3();
-        for (let i = 0; i < bodies.length; i++) {
-          const entry = bodies[i];
-          const rb = world.getRigidBody(entry.handle);
-          if (!rb) continue;
-          const pos = rb.translation();
-          if (!pos) continue;
-          let strengthScale = 1;
-          if (entry.key && letterBurstDirections[entry.key]) {
-            const spec = letterBurstDirections[entry.key];
-            dir.copy(spec.dir).normalize();
-            strengthScale = spec.strength ?? 1;
-          } else {
-            dir.set(pos.x - originX, pos.y - originY, pos.z - originZ);
-            const len = dir.length();
-            if (len < 1e-3) {
-              jitter.randomDirection();
-              dir.copy(jitter);
-            } else {
-              dir.multiplyScalar(1 / len);
-            }
-          }
-          jitter.set((Math.random() - 0.5) * CLICK_BURST_SPREAD, (Math.random() - 0.5) * CLICK_BURST_SPREAD, (Math.random() - 0.5) * CLICK_BURST_SPREAD);
-          dir.add(jitter).normalize();
-          const massValue = rb.mass?.();
-          const mass = Number.isFinite(massValue) && massValue > 0 ? massValue : 1;
-          const burst = CLICK_BURST_STRENGTH * strengthScale;
-          rb.applyImpulse({ x: dir.x * burst * mass, y: dir.y * burst * mass, z: dir.z * burst * mass }, true);
-          pos.free?.();
+        if (!ready || bodies.length === 0) return;
+        const ox = hoverActive ? mouseWorld.x : TARGET_CENTER.x;
+        const oy = hoverActive ? mouseWorld.y : TARGET_CENTER.y;
+        const oz = hoverActive ? mouseWorld.z : TARGET_CENTER.z;
+        for (const b of bodies) {
+          const dx = b.mesh.position.x - ox + (Math.random() - 0.5) * 0.5;
+          const dy = b.mesh.position.y - oy + (Math.random() - 0.5) * 0.5;
+          const dz = b.mesh.position.z - oz + (Math.random() - 0.5) * 0.5;
+          const len = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1;
+          b.vx += (dx / len) * SIM_CLICK_F;
+          b.vy += (dy / len) * SIM_CLICK_F;
+          b.vz += (dz / len) * SIM_CLICK_F;
         }
       };
 
@@ -4973,405 +5109,399 @@
 
       const init = async () => {
         try {
-          const [rapier, font] = await Promise.all([loadRapier(), getHelvetikerRegular()]);
-          RAPIER = rapier;
-          world = new RAPIER.World({ x: 0, y: 0, z: 0 });
+          const font = await getHelvetikerRegular();
 
           const makeTextGeo = (char) => new TextGeometry(char, {
             font,
             size: 0.8,
             depth: 0.28,
-            curveSegments: 6,
+            curveSegments: 28,
             bevelEnabled: true,
             bevelThickness: 0.05,
             bevelSize: 0.03,
-            bevelSegments: 2
+            bevelSegments: 8
           }).center();
 
           const geoK = makeTextGeo('k');
           const geoE = makeTextGeo('e');
           const geoN = makeTextGeo('n');
+          const geos = [geoK, geoE, geoN];
 
-          const geoRadius = (geo) => {
+          // Bounding sphere radius (for mouse repulsion broad-phase)
+          const radii = geos.map(geo => {
             geo.computeBoundingSphere();
-            return Math.max(0.25, geo.boundingSphere?.radius ?? 0.3);
-          };
+            return (geo.boundingSphere?.radius ?? 0.55) * LETTER_SCALE;
+          });
 
-          const radiusK = geoRadius(geoK);
-          const radiusE = geoRadius(geoE);
-          const radiusN = geoRadius(geoN);
-
-          const pointsFromGeo = (geo) => {
-            const src = geo.attributes.position.array;
-            if (!src || src.length < 9) return null;
-            for (let i = 0; i < src.length; i++) {
-              if (!Number.isFinite(src[i])) return null;
+          // Sample N surface points from geometry vertices (local space, pre-scale)
+          // Concave regions (e.g. the indent in 'k') have no vertices → other
+          // letters can naturally fit into those gaps during simulation.
+          const samplePoints = (geo) => {
+            const src   = geo.attributes.position.array;
+            const total = Math.floor(src.length / 3);
+            const step  = Math.max(1, Math.floor(total / N_SAMPLE));
+            const pts   = [];
+            for (let k = 0; k < total; k += step) {
+              pts.push(src[k * 3], src[k * 3 + 1], src[k * 3 + 2]);
             }
-            return new Float32Array(src);
+            return new Float32Array(pts);
           };
 
-          const scalePoints = (points, scale) => {
-            if (!points) return null;
-            const scaled = new Float32Array(points.length);
-            for (let i = 0; i < points.length; i++) scaled[i] = points[i] * scale;
-            return scaled;
-          };
+          const localPts = geos.map(samplePoints);
 
-          const ptsK = pointsFromGeo(geoK);
-          const ptsE = pointsFromGeo(geoE);
-          const ptsN = pointsFromGeo(geoN);
-          const ptsKScaled = scalePoints(ptsK, LETTER_SCALE);
-          const ptsEScaled = scalePoints(ptsE, LETTER_SCALE);
-          const ptsNScaled = scalePoints(ptsN, LETTER_SCALE);
-
-          const makeHullFresh = (points) => {
-            if (!points) return null;
-            try {
-              return RAPIER.ColliderDesc.convexHull(new Float32Array(points));
-            } catch {
-              return null;
-            }
-          };
-
-          const addLetter = (geo, scaledPoints, color, radius, key) => {
-            const mesh = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color, metalness: 0.1, roughness: 0.35 }));
-            mesh.position.set((Math.random() - 0.5) * 4, (Math.random() - 0.4) * 2.5, (Math.random() - 0.5) * 3);
-            mesh.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
+          const count = 6; // 2 of each letter
+          for (let i = 0; i < count; i++) {
+            const idx   = i % 3;
+            const lp    = localPts[idx];
+            const mesh  = new THREE.Mesh(
+              geos[idx],
+              new THREE.MeshStandardMaterial({ color: palette[idx], metalness: 0.1, roughness: 0.35 })
+            );
+            mesh.position.set(
+              (Math.random() - 0.5) * 9,
+              (Math.random() - 0.5) * 6,
+              (Math.random() - 0.5) * 4
+            );
+            mesh.rotation.set(
+              Math.random() * Math.PI,
+              Math.random() * Math.PI,
+              Math.random() * Math.PI
+            );
             mesh.scale.setScalar(LETTER_SCALE);
             scene.add(mesh);
-
-            const rbDesc = RAPIER.RigidBodyDesc.dynamic()
-              .setCanSleep(true)
-              .setLinearDamping(BASE_LIN_DAMP)
-              .setAngularDamping(BASE_ANG_DAMP)
-              .setTranslation(mesh.position.x, mesh.position.y, mesh.position.z);
-            const rb = world.createRigidBody(rbDesc);
-            rb.setRotation(new RAPIER.Quaternion(mesh.quaternion.x, mesh.quaternion.y, mesh.quaternion.z, mesh.quaternion.w), true);
-            const handle = rb.handle;
-
-            mesh.updateMatrixWorld(true);
-
-            const desc = makeHullFresh(scaledPoints);
-            if (desc) {
-              if (desc.setRestitution) desc.setRestitution(COLLIDER_RESTITUTION);
-              world.createCollider(desc, world.getRigidBody(handle));
-              desc.free?.();
-            } else {
-              const size = new THREE.Box3().setFromObject(mesh).getSize(new THREE.Vector3());
-              const halfX = Math.max(size.x * 0.5, 0.25 * LETTER_SCALE);
-              const halfY = Math.max(size.y * 0.5, 0.25 * LETTER_SCALE);
-              const halfZ = Math.max(size.z * 0.5, 0.18 * LETTER_SCALE);
-              const fallback = RAPIER.ColliderDesc.cuboid(halfX, halfY, halfZ);
-              if (fallback.setRestitution) fallback.setRestitution(COLLIDER_RESTITUTION);
-              world.createCollider(fallback, world.getRigidBody(handle));
-              fallback.free?.();
-            }
-
-            const entryRadius = Number.isFinite(radius) ? radius * LETTER_SCALE : 0.3 * LETTER_SCALE;
-            const entry = { mesh, handle, radius: entryRadius, key };
-            bodies.push(entry);
-            bodyMap.set(handle, entry);
-          };
-
-          const count = 3;
-          for (let i = 0; i < count; i++) {
-            const choice = i % 3;
-            const color = palette[Math.min(choice, palette.length - 1)];
-            if (choice === 0) addLetter(geoK, ptsKScaled, color, radiusK, 'k');
-            else if (choice === 1) addLetter(geoE, ptsEScaled, color, radiusE, 'e');
-            else addLetter(geoN, ptsNScaled, color, radiusN, 'n');
+            bodies.push({
+              mesh,
+              radius:      radii[idx],          // bounding-sphere radius (world units)
+              localPoints: lp,                  // sampled vertices in local space
+              worldPoints: new Float32Array(lp.length), // pre-alloc, filled each frame
+              vx:  (Math.random() - 0.5) * 0.5,
+              vy:  (Math.random() - 0.5) * 0.5,
+              vz:  (Math.random() - 0.5) * 0.2,
+              avx: (Math.random() - 0.5) * 1.0,
+              avy: (Math.random() - 0.5) * 1.0,
+              avz: (Math.random() - 0.5) * 1.0,
+            });
           }
 
-          const pointerDesc = RAPIER.RigidBodyDesc.kinematicPositionBased().setCanSleep(false);
-          pointerBody = world.createRigidBody(pointerDesc);
-          pointerBody.setTranslation({ x: TARGET_CENTER.x, y: TARGET_CENTER.y, z: TARGET_CENTER.z }, true);
-          let pointerColliderDesc = RAPIER.ColliderDesc.cylinder(pointerHalfLength, pointerRadius);
-          const pointerRotation = new RAPIER.Quaternion(Math.sin(Math.PI / 4), 0, 0, Math.cos(Math.PI / 4));
-          if (pointerColliderDesc.setRotation) pointerColliderDesc = pointerColliderDesc.setRotation(pointerRotation);
-          if (pointerColliderDesc.setRestitution) pointerColliderDesc = pointerColliderDesc.setRestitution(pointerRestitution);
-          world.createCollider(pointerColliderDesc, pointerBody);
-
-          resetPointer();
           ready = true;
         } catch (err) {
-          console.error('Rapier swarm initialization failed', err);
+          console.error('Swarm init failed', err);
         }
       };
 
       init();
 
-      const applyCenterDrive = (dt) => {
-        if (!ready || !world || !pointerBody) return;
-        const safeDt = Math.min(Math.max(dt ?? (1 / 60), STEP_DT_MIN), STEP_DT_MAX);
-        const distScale = Math.max(TANGENTIAL_GAIN_DIST, 1e-6);
+      // ── Per-frame soft-force simulation ──────────────────────────────
+      const simulate = (dt) => {
+        const safeDt = Math.min(dt, 1 / 30);
+        const n      = bodies.length;
+        const sepX   = new Float32Array(n);
+        const sepY   = new Float32Array(n);
+        const sepZ   = new Float32Array(n);
 
-        if (hoverActive) {
-          pointerBody.setNextKinematicTranslation({ x: mouseWorld.x, y: mouseWorld.y, z: mouseWorld.z });
-        } else {
-          pointerBody.setNextKinematicTranslation({ x: TARGET_CENTER.x, y: TARGET_CENTER.y, z: TARGET_CENTER.z });
-        }
-
-        const active = [];
-        const positions = [];
-        const velocities = [];
-
-        for (let i = 0; i < bodies.length; i++) {
-          const entry = bodies[i];
-          const rb = world.getRigidBody(entry.handle);
-          if (!rb) continue;
-
-          const pos = rb.translation();
-          const vel = rb.linvel();
-          if (!pos || !vel) {
-            pos?.free?.();
-            vel?.free?.();
-            continue;
-          }
-
-          const px = pos.x;
-          const py = pos.y;
-          const pz = pos.z;
-          const vx = vel.x;
-          const vy = vel.y;
-          const vz = vel.z;
-          pos.free?.();
-          vel.free?.();
-
-          if (!Number.isFinite(px) || !Number.isFinite(py) || !Number.isFinite(pz) || !Number.isFinite(vx) || !Number.isFinite(vy) || !Number.isFinite(vz)) continue;
-
-          const toX = TARGET_CENTER.x - px;
-          const toY = TARGET_CENTER.y - py;
-          const toZ = TARGET_CENTER.z - pz;
-          const distSq = toX * toX + toY * toY + toZ * toZ;
-          const dist = Math.sqrt(distSq);
-          const speed = Math.hypot(vx, vy, vz);
-
-          if (dist < SETTLE_RADIUS && speed < SETTLE_SPEED) {
-            rb.setLinearDamping(SETTLE_LIN_DAMP);
-            rb.setAngularDamping(SETTLE_ANG_DAMP);
-            rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
-            rb.setAngvel({ x: 0, y: 0, z: 0 }, true);
-            continue;
-          }
-
-          active.push({ entry, rb });
-          positions.push({ x: px, y: py, z: pz, toX, toY, toZ, dist });
-          velocities.push({ x: vx, y: vy, z: vz });
-        }
-
-        if (!active.length) return;
-
-        const sepX = new Array(active.length).fill(0);
-        const sepY = new Array(active.length).fill(0);
-        const sepZ = new Array(active.length).fill(0);
-        const sepRadius2 = SEPARATION_RADIUS * SEPARATION_RADIUS;
-
-        for (let i = 0; i < active.length; i++) {
-          const pi = positions[i];
-          for (let j = i + 1; j < active.length; j++) {
-            const pj = positions[j];
-            let dx = pi.x - pj.x;
-            let dy = pi.y - pj.y;
-            let dz = pi.z - pj.z;
-            const dist2 = dx * dx + dy * dy + dz * dz;
-            if (dist2 >= sepRadius2 || dist2 <= 1e-9) continue;
-            const dist = Math.sqrt(dist2);
-            const strength = (SEPARATION_RADIUS - dist) / SEPARATION_RADIUS;
-            const push = Math.min(SEPARATION_MAX, strength * SEPARATION_PUSH);
-            const inv = push / dist;
-            dx *= inv;
-            dy *= inv;
-            dz *= inv;
-            sepX[i] += dx;
-            sepY[i] += dy;
-            sepZ[i] += dz;
-            sepX[j] -= dx;
-            sepY[j] -= dy;
-            sepZ[j] -= dz;
+        // ── Step 1: transform all sample points to world space ──────────
+        // Rotation formula: v' = v + 2w(q×v) + 2(q×(q×v))
+        // simplified: t = 2*(q.xyz × v),  v' = v + w*t + q.xyz×t
+        for (let i = 0; i < n; i++) {
+          const b  = bodies[i];
+          const q  = b.mesh.quaternion;
+          const qx = q.x, qy = q.y, qz = q.z, qw = q.w;
+          const { x: px, y: py, z: pz } = b.mesh.position;
+          const lp = b.localPoints;
+          const wp = b.worldPoints;
+          const np = lp.length / 3;
+          for (let k = 0; k < np; k++) {
+            const lx = lp[k*3]   * LETTER_SCALE;
+            const ly = lp[k*3+1] * LETTER_SCALE;
+            const lz = lp[k*3+2] * LETTER_SCALE;
+            const tx = 2*(qy*lz - qz*ly);
+            const ty = 2*(qz*lx - qx*lz);
+            const tz = 2*(qx*ly - qy*lx);
+            wp[k*3]   = lx + qw*tx + qy*tz - qz*ty + px;
+            wp[k*3+1] = ly + qw*ty + qz*tx - qx*tz + py;
+            wp[k*3+2] = lz + qw*tz + qx*ty - qy*tx + pz;
           }
         }
 
-        if (hoverActive) {
-          const pointerPos = pointerBody.translation();
-          const ptrX = pointerPos ? pointerPos.x : pointerState.x;
-          const ptrY = pointerPos ? pointerPos.y : pointerState.y;
-          const ptrZ = pointerPos ? pointerPos.z : pointerState.z;
-          const pointerSpeed = Math.hypot(pointerVelocity.x, pointerVelocity.y, pointerVelocity.z);
-          const pointerRadiusSq = POINTER_REPEL_RADIUS * POINTER_REPEL_RADIUS;
-          for (let i = 0; i < active.length; i++) {
-            const pos = positions[i];
-            let dx = pos.x - ptrX;
-            let dy = pos.y - ptrY;
-            let dz = pos.z - ptrZ;
-            const distSq = dx * dx + dy * dy + dz * dz;
-            if (distSq >= pointerRadiusSq || distSq <= 1e-9) continue;
-            const dist = Math.sqrt(distSq);
-            const penetration = (POINTER_REPEL_RADIUS - dist) / POINTER_REPEL_RADIUS;
-            const basePush = POINTER_REPEL_PUSH * penetration;
-            const velPush = pointerSpeed * POINTER_REPEL_VEL_GAIN;
-            const push = basePush + velPush;
-            const inv = push / dist;
-            dx *= inv;
-            dy *= inv;
-            dz *= inv;
-            sepX[i] += dx;
-            sepY[i] += dy;
-            sepZ[i] += dz;
-          }
-          pointerPos?.free?.();
-        }
+        // ── Step 2: pairwise vertex-based separation ─────────────────────
+        // For each pair, find the closest vertex pair across both letters.
+        // Concave regions (e.g. the indent in 'k') have no vertices, so
+        // another letter can fit into that gap without triggering separation.
+        const thresh2 = SIM_SEP_THRESH * SIM_SEP_THRESH;
 
-        for (let i = 0; i < active.length; i++) {
-          const mag = Math.hypot(sepX[i], sepY[i], sepZ[i]);
-          if (mag > SEPARATION_MAX) {
-            const scale = SEPARATION_MAX / mag;
-            sepX[i] *= scale;
-            sepY[i] *= scale;
-            sepZ[i] *= scale;
-          }
-        }
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            // Broad-phase: skip if bounding spheres are clearly far apart
+            const ci = bodies[i].mesh.position, cj = bodies[j].mesh.position;
+            const cdx = ci.x-cj.x, cdy = ci.y-cj.y, cdz = ci.z-cj.z;
+            const broadR = bodies[i].radius + bodies[j].radius + SIM_SEP_THRESH;
+            if (cdx*cdx + cdy*cdy + cdz*cdz > broadR * broadR) continue;
 
-        for (let i = 0; i < active.length; i++) {
-          const { rb } = active[i];
-          const pos = positions[i];
-          const vel = velocities[i];
-
-          const dist = pos.dist;
-          let dirX = 0;
-          let dirY = 0;
-          let dirZ = 0;
-          if (dist > 1e-8) {
-            const invDist = 1 / dist;
-            dirX = pos.toX * invDist;
-            dirY = pos.toY * invDist;
-            dirZ = pos.toZ * invDist;
-          }
-
-          const vx = vel.x;
-          const vy = vel.y;
-          const vz = vel.z;
-          const radialSpeed = dirX * vx + dirY * vy + dirZ * vz;
-          const tangX = vx - radialSpeed * dirX;
-          const tangY = vy - radialSpeed * dirY;
-          const tangZ = vz - radialSpeed * dirZ;
-          const tangSpeed = Math.hypot(tangX, tangY, tangZ);
-
-          let idleBlend = 1;
-          if (dist <= CENTER_IDLE_RADIUS) idleBlend = 0;
-          else if (dist < CENTER_IDLE_RADIUS + CENTER_IDLE_WIDTH) {
-            idleBlend = (dist - CENTER_IDLE_RADIUS) / CENTER_IDLE_WIDTH;
-          }
-
-          let targetRadialBase = Math.min(dist * RADIAL_GAIN, RADIAL_MAX_SPEED) * idleBlend;
-          let desiredRadial = targetRadialBase;
-          if (radialSpeed < 0) desiredRadial += (-radialSpeed) * RADIAL_BRAKE_OUT;
-          desiredRadial = Math.max(desiredRadial, targetRadialBase);
-
-          const distBlend = Math.min(dist / distScale, 1);
-          const tangentialGain = TANGENTIAL_GAIN_NEAR + (TANGENTIAL_GAIN_FAR - TANGENTIAL_GAIN_NEAR) * distBlend;
-          const tangDecay = Math.max(TANGENTIAL_DECAY_FLOOR, 1 - tangentialGain * safeDt);
-
-          const targetTangX = tangX * tangDecay;
-          const targetTangY = tangY * tangDecay;
-          const targetTangZ = tangZ * tangDecay;
-
-          const targetVelX = dirX * desiredRadial + targetTangX + sepX[i];
-          const targetVelY = dirY * desiredRadial + targetTangY + sepY[i];
-          const targetVelZ = dirZ * desiredRadial + targetTangZ + sepZ[i];
-
-          let deltaVelX = targetVelX - vx;
-          let deltaVelY = targetVelY - vy;
-          let deltaVelZ = targetVelZ - vz;
-          const deltaMag = Math.hypot(deltaVelX, deltaVelY, deltaVelZ);
-          if (deltaMag > MAX_DELTA_V) {
-            const scale = MAX_DELTA_V / deltaMag;
-            deltaVelX *= scale;
-            deltaVelY *= scale;
-            deltaVelZ *= scale;
-          }
-
-          const massValue = rb.mass?.();
-          const mass = Number.isFinite(massValue) && massValue > 0 ? massValue : 1;
-
-          if (deltaMag < MIN_DELTA_V) {
-            if (tangSpeed > SPIN_DAMP_THRESHOLD) {
-              rb.setLinearDamping(SPIN_LIN_DAMP);
-              rb.setAngularDamping(SPIN_ANG_DAMP);
-            } else {
-              rb.setLinearDamping(BASE_LIN_DAMP);
-              rb.setAngularDamping(BASE_ANG_DAMP);
+            // Narrow-phase: find minimum vertex-to-vertex distance
+            const wpi = bodies[i].worldPoints;
+            const wpj = bodies[j].worldPoints;
+            const npi = wpi.length / 3;
+            const npj = wpj.length / 3;
+            let minD2 = Infinity, bestDx = 0, bestDy = 0, bestDz = 0;
+            let cpix = 0, cpiy = 0, cpiz = 0; // contact vertex on body i
+            let cpjx = 0, cpjy = 0, cpjz = 0; // contact vertex on body j
+            for (let a = 0; a < npi; a++) {
+              const ax = wpi[a*3], ay = wpi[a*3+1], az = wpi[a*3+2];
+              for (let b2 = 0; b2 < npj; b2++) {
+                const bx = wpj[b2*3], by = wpj[b2*3+1], bz = wpj[b2*3+2];
+                const dx = ax - bx, dy = ay - by, dz = az - bz;
+                const d2 = dx*dx + dy*dy + dz*dz;
+                if (d2 < minD2) {
+                  minD2 = d2; bestDx = dx; bestDy = dy; bestDz = dz;
+                  cpix = ax; cpiy = ay; cpiz = az;
+                  cpjx = bx; cpjy = by; cpjz = bz;
+                }
+              }
             }
-            continue;
-          }
 
-          rb.applyImpulse({ x: deltaVelX * mass, y: deltaVelY * mass, z: deltaVelZ * mass }, true);
+            if (minD2 < thresh2) {
+              const d = Math.sqrt(minD2);
 
-          if (tangSpeed > SPIN_DAMP_THRESHOLD) {
-            rb.setLinearDamping(SPIN_LIN_DAMP);
-            rb.setAngularDamping(SPIN_ANG_DAMP);
-          } else {
-            rb.setLinearDamping(BASE_LIN_DAMP);
-            rb.setAngularDamping(BASE_ANG_DAMP);
+              // Contact normal: vertex direction for surface contact (allows concave fitting);
+              // fall back to centre-to-centre for deep penetration where vertex dir is unreliable.
+              const cLen2 = cdx*cdx + cdy*cdy + cdz*cdz;
+              let nx, ny, nz;
+              if (d < SIM_SEP_THRESH * 0.3 || cLen2 < 0.01) {
+                const cLen = Math.sqrt(cLen2) || 1;
+                nx = cdx/cLen; ny = cdy/cLen; nz = cdz/cLen;
+              } else {
+                nx = bestDx/d; ny = bestDy/d; nz = bestDz/d;
+              }
+
+              const bi = bodies[i], bj = bodies[j];
+
+              // ── Rigid body impulse at contact point ─────────────────────────
+              // Lever arms from centre of mass to contact vertex
+              const riX = cpix-ci.x, riY = cpiy-ci.y, riZ = cpiz-ci.z;
+              const rjX = cpjx-cj.x, rjY = cpjy-cj.y, rjZ = cpjz-cj.z;
+
+              // Relative velocity at contact point: v_contact = v_cm + ω × r
+              const vcix = bi.vx + (bi.avy*riZ - bi.avz*riY);
+              const vciy = bi.vy + (bi.avz*riX - bi.avx*riZ);
+              const vciz = bi.vz + (bi.avx*riY - bi.avy*riX);
+              const vcjx = bj.vx + (bj.avy*rjZ - bj.avz*rjY);
+              const vcjy = bj.vy + (bj.avz*rjX - bj.avx*rjZ);
+              const vcjz = bj.vz + (bj.avx*rjY - bj.avy*rjX);
+              const relVn = (vcix-vcjx)*nx + (vciy-vcjy)*ny + (vciz-vcjz)*nz;
+
+              if (relVn < 0) {
+                // Moment of inertia (sphere approx): I = k·m·r²  (m=1)
+                const Ii = SIM_INERTIA_K * bi.radius * bi.radius;
+                const Ij = SIM_INERTIA_K * bj.radius * bj.radius;
+
+                // ri×n, rj×n — used for angular coupling in effective mass
+                const riXnx=riY*nz-riZ*ny, riXny=riZ*nx-riX*nz, riXnz=riX*ny-riY*nx;
+                const rjXnx=rjY*nz-rjZ*ny, rjXny=rjZ*nx-rjX*nz, rjXnz=rjX*ny-rjY*nx;
+
+                // Effective mass = 1/mi + 1/mj + (ri×n)²/Ii + (rj×n)²/Ij
+                // Large off-centre lever → large denom → small impulse → energy goes to rotation
+                const effMass = 2
+                  + (riXnx*riXnx + riXny*riXny + riXnz*riXnz) / Ii
+                  + (rjXnx*rjXnx + rjXny*rjXny + rjXnz*rjXnz) / Ij;
+
+                const jn = -(1 + SIM_RESTITUTION) * relVn / effMass;
+
+                // Linear velocity change (mass = 1 each)
+                bi.vx += jn*nx; bi.vy += jn*ny; bi.vz += jn*nz;
+                bj.vx -= jn*nx; bj.vy -= jn*ny; bj.vz -= jn*nz;
+
+                // Angular velocity change: Δω = (r × j·n) / I
+                bi.avx += (riY*(jn*nz) - riZ*(jn*ny)) / Ii;
+                bi.avy += (riZ*(jn*nx) - riX*(jn*nz)) / Ii;
+                bi.avz += (riX*(jn*ny) - riY*(jn*nx)) / Ii;
+                bj.avx -= (rjY*(jn*nz) - rjZ*(jn*ny)) / Ij;
+                bj.avy -= (rjZ*(jn*nx) - rjX*(jn*nz)) / Ij;
+                bj.avz -= (rjX*(jn*ny) - rjY*(jn*nx)) / Ij;
+              }
+
+              // ── Contact force (prevents spring from pushing bodies together) ──
+              const pen = (SIM_SEP_THRESH - d) / SIM_SEP_THRESH;
+              const f   = pen * SIM_SEP_F;
+              sepX[i] += nx*f; sepY[i] += ny*f; sepZ[i] += nz*f;
+              sepX[j] -= nx*f; sepY[j] -= ny*f; sepZ[j] -= nz*f;
+
+              // ── Position correction (hard constraint: no overlap) ────────────
+              const corr = (SIM_SEP_THRESH - d) * SIM_SEP_POS_CORR;
+              ci.x += nx*corr; ci.y += ny*corr; ci.z += nz*corr;
+              cj.x -= nx*corr; cj.y -= ny*corr; cj.z -= nz*corr;
+            }
           }
         }
 
-        pointerVelocity.x *= POINTER_VEL_DAMP;
-        pointerVelocity.y *= POINTER_VEL_DAMP;
-        pointerVelocity.z *= POINTER_VEL_DAMP;
+        const mouseSpd = mouseVel.length();
+        const dampFac  = Math.exp(-SIM_DAMP * safeDt);
+        const angDamp  = Math.pow(SIM_ANG_DAMP, safeDt * 60);
+
+        for (let i = 0; i < n; i++) {
+          const b  = bodies[i];
+          const px = b.mesh.position.x;
+          const py = b.mesh.position.y;
+          const pz = b.mesh.position.z;
+
+          let ax = sepX[i], ay = sepY[i], az = sepZ[i];
+
+          // Spring attraction toward center
+          const toCx = TARGET_CENTER.x - px;
+          const toCy = TARGET_CENTER.y - py;
+          const toCz = TARGET_CENTER.z - pz;
+          const distC = Math.sqrt(toCx * toCx + toCy * toCy + toCz * toCz);
+          if (distC > SIM_IDLE_R) {
+            const sf = (distC - SIM_IDLE_R) * SIM_SPRING_K / distC;
+            ax += toCx * sf; ay += toCy * sf; az += toCz * sf;
+          }
+
+          // Mouse interaction — ray-based repulsion (depth-independent).
+          // Treats the mouse as an infinite rod from the camera through the cursor.
+          // Every object reacts regardless of its Z depth; repulsion is perpendicular
+          // to the ray, so objects are pushed outward from the ray axis.
+          if (hoverActive) {
+            const mouseR = b.radius * SIM_MOUSE_R_MULT;
+            // Project body centre onto mouse ray: t = dot(P-O, D)
+            const tax = px - mouseRayOrigin.x;
+            const tay = py - mouseRayOrigin.y;
+            const taz = pz - mouseRayOrigin.z;
+            const tProj = tax*mouseRayDir.x + tay*mouseRayDir.y + taz*mouseRayDir.z;
+            // Closest point on ray to body centre
+            const cx = mouseRayOrigin.x + mouseRayDir.x * tProj;
+            const cy = mouseRayOrigin.y + mouseRayDir.y * tProj;
+            const cz = mouseRayOrigin.z + mouseRayDir.z * tProj;
+            // Perpendicular vector from ray to body (repulsion direction)
+            const rx = px - cx, ry = py - cy, rz = pz - cz;
+            const rd2 = rx*rx + ry*ry + rz*rz;
+            if (rd2 < mouseR * mouseR && rd2 > 1e-9) {
+              const rd = Math.sqrt(rd2);
+              // Smoothstep falloff
+              const tv = 1 - rd / mouseR;
+              const falloff = tv * tv * (3 - 2 * tv);
+              // Velocity-scaled radial force: fast sweep = strong launch
+              const strength = SIM_MOUSE_F * (1 + mouseSpd * SIM_MOUSE_VEL_F) * falloff;
+              const rnx = rx / rd, rny = ry / rd, rnz = rz / rd; // unit outward normal
+              ax += rnx * strength;
+              ay += rny * strength;
+              az += rnz * strength;
+
+              // Torque from tangential "scratch" component of mouse sweep.
+              // A pure radial force through the centre creates no torque; torque comes
+              // from the component of mouse velocity tangent to the body surface.
+              // τ = -(n × mt) * R * scale,  where mt = mouseVel − (mouseVel·n)n
+              if (mouseSpd > 0.0005) {
+                const mvx = mouseVel.x / mouseSpd, mvy = mouseVel.y / mouseSpd;
+                const dot = mvx * rnx + mvy * rny; // mouseVel · normal (z=0 for mouseVel)
+                const mtx = mvx - dot * rnx;
+                const mty = mvy - dot * rny;
+                const mtz =     - dot * rnz;
+                // -(n × mt) scaled by radius and sweep strength
+                const ts = mouseSpd * SIM_MOUSE_TORQUE_F * falloff * b.radius;
+                b.avx += (rnz * mty - rny * mtz) * ts;
+                b.avy += (rnx * mtz - rnz * mtx) * ts;
+                b.avz += (rny * mtx - rnx * mty) * ts;
+              }
+            }
+          }
+
+          // Organic drift noise
+          ax += (Math.random() - 0.5) * SIM_NOISE_F;
+          ay += (Math.random() - 0.5) * SIM_NOISE_F;
+          az += (Math.random() - 0.5) * SIM_NOISE_F * 0.3;
+
+          // Semi-implicit Euler + exponential damping
+          b.vx = (b.vx + ax * safeDt) * dampFac;
+          b.vy = (b.vy + ay * safeDt) * dampFac;
+          b.vz = (b.vz + az * safeDt) * dampFac;
+
+          // Speed cap
+          const spd = Math.sqrt(b.vx * b.vx + b.vy * b.vy + b.vz * b.vz);
+          if (spd > SIM_MAX_SPEED) {
+            const s = SIM_MAX_SPEED / spd;
+            b.vx *= s; b.vy *= s; b.vz *= s;
+          }
+
+          // Position update
+          b.mesh.position.x += b.vx * safeDt;
+          b.mesh.position.y += b.vy * safeDt;
+          b.mesh.position.z += b.vz * safeDt;
+
+          // Angular velocity: decays, driven by linear speed
+          b.avx *= angDamp; b.avy *= angDamp; b.avz *= angDamp;
+          if (spd > 0.05) {
+            const gain = spd * SIM_ANG_GAIN * safeDt;
+            b.avx += (Math.random() - 0.5) * gain;
+            b.avy += (Math.random() - 0.5) * gain;
+            b.avz += (Math.random() - 0.5) * gain;
+          }
+          b.mesh.rotation.x += b.avx * safeDt;
+          b.mesh.rotation.y += b.avy * safeDt;
+          b.mesh.rotation.z += b.avz * safeDt;
+        }
+
+        // ── Position correction iterations (hard overlap constraint) ────────
+        // Multiple passes converge multi-body conflicts: residual = (1-POS_CORR)^N_ITERS
+        for (let iter = 0; iter < N_CORRECTION_ITERS; iter++) {
+          // Refresh world-space vertex positions using corrected centres
+          for (let i = 0; i < n; i++) {
+            const b = bodies[i];
+            const q = b.mesh.quaternion;
+            const qx=q.x, qy=q.y, qz=q.z, qw=q.w;
+            const {x:px, y:py, z:pz} = b.mesh.position;
+            const lp = b.localPoints, wp = b.worldPoints, np = lp.length/3;
+            for (let k=0; k<np; k++) {
+              const lx=lp[k*3]*LETTER_SCALE, ly=lp[k*3+1]*LETTER_SCALE, lz=lp[k*3+2]*LETTER_SCALE;
+              const tx=2*(qy*lz-qz*ly), ty=2*(qz*lx-qx*lz), tz=2*(qx*ly-qy*lx);
+              wp[k*3]  =lx+qw*tx+qy*tz-qz*ty+px;
+              wp[k*3+1]=ly+qw*ty+qz*tx-qx*tz+py;
+              wp[k*3+2]=lz+qw*tz+qx*ty-qy*tx+pz;
+            }
+          }
+          // Position-only correction pass (no velocity changes)
+          for (let i = 0; i < n; i++) {
+            for (let j = i+1; j < n; j++) {
+              const ci = bodies[i].mesh.position, cj = bodies[j].mesh.position;
+              const cdx=ci.x-cj.x, cdy=ci.y-cj.y, cdz=ci.z-cj.z;
+              const bR = bodies[i].radius + bodies[j].radius + SIM_SEP_THRESH;
+              if (cdx*cdx+cdy*cdy+cdz*cdz > bR*bR) continue;
+              const wpi=bodies[i].worldPoints, wpj=bodies[j].worldPoints;
+              const npi=wpi.length/3, npj=wpj.length/3;
+              let mD2=Infinity, bDx=0, bDy=0, bDz=0;
+              for (let a=0; a<npi; a++) {
+                const ax=wpi[a*3], ay=wpi[a*3+1], az=wpi[a*3+2];
+                for (let b2=0; b2<npj; b2++) {
+                  const dx=ax-wpj[b2*3], dy=ay-wpj[b2*3+1], dz=az-wpj[b2*3+2];
+                  const d2=dx*dx+dy*dy+dz*dz;
+                  if (d2<mD2){mD2=d2;bDx=dx;bDy=dy;bDz=dz;}
+                }
+              }
+              if (mD2 < thresh2) {
+                const d = Math.sqrt(mD2);
+                const cLen2=cdx*cdx+cdy*cdy+cdz*cdz;
+                let nx, ny, nz;
+                if (d < SIM_SEP_THRESH*0.3 || cLen2 < 0.01) {
+                  const cLen=Math.sqrt(cLen2)||1;
+                  nx=cdx/cLen; ny=cdy/cLen; nz=cdz/cLen;
+                } else { nx=bDx/d; ny=bDy/d; nz=bDz/d; }
+                const corr = (SIM_SEP_THRESH - d) * SIM_SEP_POS_CORR;
+                ci.x+=nx*corr; ci.y+=ny*corr; ci.z+=nz*corr;
+                cj.x-=nx*corr; cj.y-=ny*corr; cj.z-=nz*corr;
+              }
+            }
+          }
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
+        mouseVel.multiplyScalar(0.82); // decay mouse velocity each simulate() tick
       };
 
       return {
         update(time) {
           if (!ready) return;
-          if (lastTime === null) {
-            lastTime = time;
-            controls.update();
-            return;
-          }
+          if (lastTime === null) { lastTime = time; controls.update(); return; }
           const dt = Math.min(0.1, Math.max(0, time - lastTime));
           lastTime = time;
-
-          applyCenterDrive(dt);
-
-          acc += dt;
-          let steps = 0;
-          while (acc >= FIXED && steps < MAX_STEPS) {
-            world.step();
-            acc -= FIXED;
-            steps++;
-          }
-
-          const syncBody = (rb) => {
-            const entry = bodyMap.get(rb.handle);
-            if (!entry) return;
-            const t = rb.translation();
-            if (!t) return;
-            const tx = t.x;
-            const ty = t.y;
-            const tz = t.z;
-            t.free?.();
-            if (!Number.isFinite(tx) || !Number.isFinite(ty) || !Number.isFinite(tz)) return;
-
-            const r = rb.rotation();
-            if (r) {
-              entry.mesh.quaternion.set(r.x, r.y, r.z, r.w);
-              r.free?.();
-            }
-
-            entry.mesh.position.set(tx, ty, tz);
-          };
-
-          if (world.forEachRigidBody) {
-            world.forEachRigidBody(syncBody);
-          } else {
-            for (let i = 0; i < bodies.length; i++) {
-              const rb = world.getRigidBody(bodies[i].handle);
-              if (!rb) continue;
-              syncBody(rb);
-              rb.free?.();
-            }
-          }
-
+          simulate(dt);
           controls.update();
         },
         render(rect) {
@@ -5574,77 +5704,6 @@
 
     const DETAIL_TARGET_IDS = ['scene-7', 'scene-8', 'scene-9', 'scene-10', 'scene-11', 'scene-12', 'scene-13', 'scene-14'];
     const DETAIL_TARGET_ID_SET = new Set(DETAIL_TARGET_IDS);
-    let svgStrokesHidden = false;
-    let svgRestoreTimer = null;
-
-    function hideSvgStrokesReverse(options = {}) {
-      const instant = Boolean(options && options.instant);
-      if (svgStrokesHidden) return;
-      const svg = document.querySelector('.svg-strokes');
-      if (!svg) {
-        svgStrokesHidden = true;
-        return;
-      }
-      svgStrokesHidden = true;
-      if (svgRestoreTimer) {
-        clearTimeout(svgRestoreTimer);
-        svgRestoreTimer = null;
-      }
-      if (instant) {
-        if (svg.parentNode) svg.remove();
-        return;
-      }
-      const totalTimeline = parseFloat(svg.dataset.strokeTimeline || '0');
-      const paths = Array.from(svg.querySelectorAll('path'));
-      if (!paths.length) {
-        svg.remove();
-        return;
-      }
-      let remaining = paths.length;
-      const cleanup = () => {
-        if (svg.parentNode) svg.remove();
-      };
-      paths.forEach((path) => {
-        const durationRaw = parseFloat(path.dataset.strokeDuration || '0');
-        const delayRaw = parseFloat(path.dataset.strokeDelay || '0');
-        const duration = Number.isFinite(durationRaw) ? durationRaw : 0;
-        const delay = Number.isFinite(delayRaw) ? delayRaw : 0;
-        const endTime = delay + duration;
-        const reverseDelayRaw = totalTimeline > 0 ? totalTimeline - endTime : 0;
-        const reverseDelay = Number.isFinite(reverseDelayRaw) ? Math.max(reverseDelayRaw, 0) : 0;
-        const computedOffsetStr = window.getComputedStyle(path).strokeDashoffset;
-        const computedOffset = Number.parseFloat(computedOffsetStr);
-        if (Number.isFinite(computedOffset)) {
-          path.style.strokeDashoffset = String(computedOffset);
-        }
-        path.style.animation = 'none';
-        void path.getBoundingClientRect();
-        const durationValue = Math.max(duration, 0);
-        const delayValue = reverseDelay;
-        path.style.animation = `draw-stroke ${durationValue}ms ease ${delayValue}ms reverse forwards`;
-        if (durationValue === 0) {
-          remaining -= 1;
-          if (remaining === 0) cleanup();
-          return;
-        }
-        path.addEventListener('animationend', () => {
-          remaining -= 1;
-          if (remaining === 0) cleanup();
-        }, { once: true });
-      });
-    }
-
-    function scheduleRestoreSvgStrokes(delay = 0) {
-      if (!svgStrokesHidden) return;
-      if (svgRestoreTimer) {
-        clearTimeout(svgRestoreTimer);
-      }
-      svgRestoreTimer = window.setTimeout(() => {
-        svgRestoreTimer = null;
-        svgStrokesHidden = false;
-        buildGridStrokes({ force: true });
-      }, Math.max(0, delay));
-    }
 
     // ===== attach to cells =====
     const sceneCells = Array.from(document.querySelectorAll('.scene'));
@@ -5895,886 +5954,343 @@
 
     window.addEventListener('touchend', scheduleScrollResume, { passive: true });
 
-    // ===== simple grid column focuser =====
-    (function setupColumnFocus() {
+    // ===== Tile Expand System (FLIP + position:fixed) =====
+    (function setupTileExpand() {
       if (!gridEl) return;
       const articles = Array.from(gridEl.querySelectorAll('article')).filter(cell => DETAIL_TARGET_ID_SET.has(cell.id));
       if (!articles.length) return;
 
-      const initialViewportWidth = window.innerWidth || document.documentElement.clientWidth || 0;
-      const initialViewportHeight = window.innerHeight || document.documentElement.clientHeight || 0;
+      let activeTileHero = null;
+      let expandingCell = null;
+      let isAnimating = false;
 
-      const focusAnimation = {
-        duration: 1000,
-        frame: null,
-        scrollFrame: null,
-        sequenceTimer: null,
-        baseColumnOffsets: [],
-        baseRowOffsets: [],
-        baseColumns: [],
-        baseRows: [],
-        columnsCurrent: [],
-        rowsCurrent: [],
-        columnGap: 0,
-        rowGap: 0,
-        autoRowsInline: '',
-        autoRowsComputed: '',
-        cellTrackInfo: new Map(),
-        viewportWidth: initialViewportWidth,
-        viewportHeight: initialViewportHeight
-      };
-      const POSITION_EPSILON = 1.5;
-      let expandedArticle = null;
-
-      let expandedColumn = -1;
-      let expandedRow = -1;
-
-      const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-
-      function clampIndex(value, count) {
-        if (!Number.isFinite(value)) return -1;
-        if (count <= 0) return -1;
-        const intValue = Math.floor(value);
-        if (intValue < 0) return 0;
-        if (intValue >= count) return count - 1;
-        return intValue;
+      function escHtml(str) {
+        return String(str)
+          .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
       }
 
-      function resolveGridLineIndex(rawValue, count) {
-        if (!rawValue) return -1;
-        const parsed = Number.parseInt(rawValue, 10);
-        if (!Number.isFinite(parsed)) return -1;
-        return clampIndex(parsed - 1, count);
-      }
-
-      function parseSpanToken(value) {
-        if (!value) return 0;
-        const match = value.trim().match(/^span\s+(\d+)$/i);
-        if (!match) return 0;
-        const parsed = Number.parseInt(match[1], 10);
-        return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
-      }
-
-      function resolveGridSpan(startValue, endValue) {
-        const spanToken = parseSpanToken(endValue);
-        if (spanToken > 0) return spanToken;
-        const start = Number.parseInt(startValue, 10);
-        const end = Number.parseInt(endValue, 10);
-        if (Number.isFinite(start) && Number.isFinite(end)) {
-          return Math.max(1, end - start);
-        }
-        return 1;
-      }
-
-      function getClosestIndex(offsets, offsetValue) {
-        if (!offsets.length) return -1;
-        let closest = 0;
-        let minDiff = Infinity;
-        offsets.forEach((offset, idx) => {
-          const diff = Math.abs(offset - offsetValue);
-          if (diff < minDiff) {
-            minDiff = diff;
-            closest = idx;
-          }
-        });
-        return closest;
-      }
-
-      function getColumnIndexByOffset(cell) {
-        const offsets = focusAnimation.baseColumnOffsets;
-        if (!offsets.length) return -1;
-        const gridRect = gridEl.getBoundingClientRect();
-        const rect = cell.getBoundingClientRect();
-        const cellOffset = rect.left - gridRect.left;
-        return getClosestIndex(offsets, cellOffset);
-      }
-
-      function getRowIndexByOffset(cell) {
-        const offsets = focusAnimation.baseRowOffsets;
-        if (!offsets.length) return -1;
-        const gridRect = gridEl.getBoundingClientRect();
-        const rect = cell.getBoundingClientRect();
-        const cellOffset = rect.top - gridRect.top;
-        return getClosestIndex(offsets, cellOffset);
-      }
-
-      function updateCellTrackInfo() {
-        const infoMap = focusAnimation.cellTrackInfo;
-        infoMap.clear();
-        const columnCount = focusAnimation.baseColumns.length;
-        const rowCount = focusAnimation.baseRows.length;
-        const gridRect = gridEl.getBoundingClientRect();
-        const gridLeft = gridRect.left;
-        const gridTop = gridRect.top;
-
-        articles.forEach(cell => {
-          const rect = cell.getBoundingClientRect();
-          const style = window.getComputedStyle(cell);
-          let columnIndex = resolveGridLineIndex(style.gridColumnStart, columnCount);
-          let rowIndex = resolveGridLineIndex(style.gridRowStart, rowCount);
-          let columnSpan = resolveGridSpan(style.gridColumnStart, style.gridColumnEnd);
-          let rowSpan = resolveGridSpan(style.gridRowStart, style.gridRowEnd);
-
-          if (columnIndex === -1) {
-            columnIndex = getClosestIndex(focusAnimation.baseColumnOffsets, rect.left - gridLeft);
-          }
-          if (rowIndex === -1) {
-            rowIndex = getClosestIndex(focusAnimation.baseRowOffsets, rect.top - gridTop);
-          }
-
-          if (columnIndex >= 0 && columnCount > 0) {
-            columnIndex = clampIndex(columnIndex, columnCount);
-            const remainingColumns = Math.max(1, columnCount - columnIndex);
-            columnSpan = Math.min(Math.max(1, columnSpan), remainingColumns);
-          } else {
-            columnSpan = Math.max(1, columnSpan);
-          }
-
-          if (rowIndex >= 0 && rowCount > 0) {
-            rowIndex = clampIndex(rowIndex, rowCount);
-            const remainingRows = Math.max(1, rowCount - rowIndex);
-            rowSpan = Math.min(Math.max(1, rowSpan), remainingRows);
-          } else {
-            rowSpan = Math.max(1, rowSpan);
-          }
-
-          infoMap.set(cell, {
-            columnIndex,
-            rowIndex,
-            columnSpan,
-            rowSpan
-          });
-        });
-      }
-
-      function getTrackCount(property) {
-        const value = window.getComputedStyle(gridEl)[property];
-        if (!value) return 0;
-        const trimmed = value.trim();
-        if (!trimmed) return 0;
-        const repeatMatch = trimmed.match(/^repeat\(\s*(\d+)\s*,/i);
-        if (repeatMatch) return parseInt(repeatMatch[1], 10) || 0;
-        return trimmed.split(/\s+/).filter(Boolean).length;
-      }
-
-      function measureBaseState() {
-        const previousColumnStyle = gridEl.style.gridTemplateColumns;
-        const previousRowStyle = gridEl.style.gridTemplateRows;
-        if (expandedColumn !== -1 || expandedRow !== -1) {
-          gridEl.style.removeProperty('grid-template-columns');
-          gridEl.style.removeProperty('grid-template-rows');
-        }
-
-        const style = window.getComputedStyle(gridEl);
-        focusAnimation.columnGap = parseFloat(style.columnGap || '0') || 0;
-        focusAnimation.rowGap = parseFloat(style.rowGap || '0') || 0;
-        focusAnimation.autoRowsInline = gridEl.style.gridAutoRows || '';
-        focusAnimation.autoRowsComputed = style.gridAutoRows || '';
-
-        const gridRect = gridEl.getBoundingClientRect();
-        const columnPositions = [];
-        const rowPositions = [];
-
-        const cells = Array.from(gridEl.querySelectorAll('.cell'));
-        cells.forEach(cell => {
-          const rect = cell.getBoundingClientRect();
-          if (!rect) return;
-          const left = rect.left;
-          const top = rect.top;
-          if (!columnPositions.some(pos => Math.abs(pos - left) <= POSITION_EPSILON)) {
-            columnPositions.push(left);
-          }
-          if (!rowPositions.some(pos => Math.abs(pos - top) <= POSITION_EPSILON)) {
-            rowPositions.push(top);
-          }
-        });
-
-        columnPositions.sort((a, b) => a - b);
-        rowPositions.sort((a, b) => a - b);
-
-        const inferredColumnCount = Math.max(getTrackCount('gridTemplateColumns'), columnPositions.length, 1);
-        const inferredRowCount = Math.max(getTrackCount('gridTemplateRows'), rowPositions.length, 1);
-
-        if (!columnPositions.length) {
-          const width = Math.max(0, (gridRect.width - focusAnimation.columnGap * Math.max(inferredColumnCount - 1, 0)) / inferredColumnCount);
-          for (let i = 0; i < inferredColumnCount; i++) {
-            columnPositions.push(gridRect.left + i * (width + focusAnimation.columnGap));
-          }
-        }
-
-        if (!rowPositions.length) {
-          const height = Math.max(0, (gridRect.height - focusAnimation.rowGap * Math.max(inferredRowCount - 1, 0)) / inferredRowCount);
-          for (let i = 0; i < inferredRowCount; i++) {
-            rowPositions.push(gridRect.top + i * (height + focusAnimation.rowGap));
-          }
-        }
-
-        const columnOffsets = columnPositions.map(pos => pos - gridRect.left);
-        const rowOffsets = rowPositions.map(pos => pos - gridRect.top);
-        const columnWidths = columnPositions.map((pos, idx) => {
-          const next = idx < columnPositions.length - 1 ? columnPositions[idx + 1] : gridRect.right;
-          return Math.max(0, next - pos);
-        });
-        const rowHeights = rowPositions.map((pos, idx) => {
-          const next = idx < rowPositions.length - 1 ? rowPositions[idx + 1] : gridRect.bottom;
-          return Math.max(0, next - pos);
-        });
-
-        focusAnimation.baseColumnOffsets = columnOffsets;
-        focusAnimation.baseColumns = columnWidths;
-        focusAnimation.baseRowOffsets = rowOffsets;
-        focusAnimation.baseRows = rowHeights;
-        focusAnimation.columnsCurrent = columnWidths.slice();
-        focusAnimation.rowsCurrent = rowHeights.slice();
-        updateCellTrackInfo();
-        focusAnimation.viewportWidth = window.innerWidth || document.documentElement.clientWidth || gridRect.width;
-        focusAnimation.viewportHeight = window.innerHeight || document.documentElement.clientHeight || gridRect.height;
-
-        if (expandedColumn !== -1 || expandedRow !== -1) {
-          gridEl.style.gridTemplateColumns = previousColumnStyle;
-          gridEl.style.gridTemplateRows = previousRowStyle;
-        }
-      }
-
-      function startAnimation(columnsTarget, rowsTarget, options = {}) {
-        const columnCount = focusAnimation.baseColumns.length;
-        const rowCount = focusAnimation.baseRows.length;
-        if (columnCount === 0 || rowCount === 0) return;
-
-        const startColumns = focusAnimation.columnsCurrent.length === columnCount
-          ? focusAnimation.columnsCurrent.slice()
-          : focusAnimation.baseColumns.slice();
-        const startRows = focusAnimation.rowsCurrent.length === rowCount
-          ? focusAnimation.rowsCurrent.slice()
-          : focusAnimation.baseRows.slice();
-
-        const targetColumns = columnsTarget.slice(0, columnCount);
-        while (targetColumns.length < columnCount) targetColumns.push(0);
-
-        const targetRows = rowsTarget.slice(0, rowCount);
-        while (targetRows.length < rowCount) targetRows.push(0);
-
-        if (focusAnimation.frame) cancelAnimationFrame(focusAnimation.frame);
-        if (focusAnimation.sequenceTimer) {
-          clearTimeout(focusAnimation.sequenceTimer);
-          focusAnimation.sequenceTimer = null;
-        }
-
-        const applyFrame = (columns, rows) => {
-          const normalizedColumns = [];
-          const normalizedRows = [];
-          for (let i = 0; i < columnCount; i += 1) {
-            normalizedColumns.push(Math.max(columns[i] ?? 0, 0));
-          }
-          for (let i = 0; i < rowCount; i += 1) {
-            normalizedRows.push(Math.max(rows[i] ?? 0, 0));
-          }
-          gridEl.style.gridTemplateColumns = normalizedColumns.map(v => `${v}px`).join(' ');
-          gridEl.style.gridTemplateRows = normalizedRows.map(v => `${v}px`).join(' ');
-          focusAnimation.columnsCurrent = normalizedColumns;
-          focusAnimation.rowsCurrent = normalizedRows;
-        };
-
-        if (options.sequence === 'row-then-column') {
-          const EPSILON = 0.5;
-          const hasRowChange = targetRows.some((value, idx) => Math.abs(value - (startRows[idx] ?? 0)) > EPSILON);
-          const hasColumnChange = targetColumns.some((value, idx) => Math.abs(value - (startColumns[idx] ?? 0)) > EPSILON);
-
-          const rowPhaseRatio = typeof options.rowPhaseRatio === 'number' ? options.rowPhaseRatio : 0.6;
-          const clampedRowRatio = Math.min(Math.max(rowPhaseRatio, 0), 1);
-          const rowDuration = Math.max(1, Math.round(typeof options.rowDuration === 'number'
-            ? options.rowDuration
-            : focusAnimation.duration * clampedRowRatio));
-          const defaultColumnDuration = Math.max(focusAnimation.duration - rowDuration, Math.round(focusAnimation.duration * 0.4));
-          const columnDuration = Math.max(1, Math.round(typeof options.columnDuration === 'number'
-            ? options.columnDuration
-            : defaultColumnDuration));
-          const phaseDelay = typeof options.phaseDelay === 'number' ? options.phaseDelay : 140;
-
-          const startColumnAnimation = () => {
-            focusAnimation.sequenceTimer = null;
-            if (!hasColumnChange) {
-              applyFrame(targetColumns, targetRows);
-              options.onComplete?.();
-              return;
-            }
-            const columnStart = focusAnimation.columnsCurrent.length === columnCount
-              ? focusAnimation.columnsCurrent.slice()
-              : startColumns.slice();
-            const columnStartTime = performance.now();
-            const stepColumn = (now) => {
-              const progress = Math.min(1, (now - columnStartTime) / columnDuration);
-              const eased = easeInOutCubic(progress);
-              const columns = columnStart.map((start, idx) => start + (targetColumns[idx] - start) * eased);
-              applyFrame(columns, targetRows);
-              if (progress < 1) {
-                focusAnimation.frame = requestAnimationFrame(stepColumn);
-              } else {
-                focusAnimation.frame = null;
-                options.onComplete?.();
-              }
-            };
-            focusAnimation.frame = requestAnimationFrame(stepColumn);
-          };
-
-          const launchColumn = () => {
-            if (phaseDelay > 0 && hasColumnChange) {
-              focusAnimation.sequenceTimer = window.setTimeout(startColumnAnimation, phaseDelay);
-            } else {
-              startColumnAnimation();
-            }
-          };
-
-          if (!hasRowChange) {
-            applyFrame(startColumns, targetRows);
-            launchColumn();
-            return;
-          }
-
-          const rowStartTime = performance.now();
-          const stepRow = (now) => {
-            const progress = Math.min(1, (now - rowStartTime) / rowDuration);
-            const eased = easeInOutCubic(progress);
-            const rows = startRows.map((start, idx) => start + (targetRows[idx] - start) * eased);
-            applyFrame(startColumns, rows);
-            if (progress < 1) {
-              focusAnimation.frame = requestAnimationFrame(stepRow);
-            } else {
-              focusAnimation.frame = null;
-              applyFrame(startColumns, targetRows);
-              launchColumn();
-            }
-          };
-
-          focusAnimation.frame = requestAnimationFrame(stepRow);
-          return;
-        }
-
-        const startTime = performance.now();
-        const step = (now) => {
-          const progress = Math.min(1, (now - startTime) / focusAnimation.duration);
-          const eased = easeInOutCubic(progress);
-          const columns = startColumns.map((start, idx) => start + (targetColumns[idx] - start) * eased);
-          const rows = startRows.map((start, idx) => start + (targetRows[idx] - start) * eased);
-          applyFrame(columns, rows);
-          if (progress < 1) {
-            focusAnimation.frame = requestAnimationFrame(step);
-          } else {
-            focusAnimation.frame = null;
-            options.onComplete?.();
-          }
-        };
-
-        focusAnimation.frame = requestAnimationFrame(step);
-      }
-
-      function startScrollAnimation(targetY) {
-        if (focusAnimation.scrollFrame) {
-          cancelAnimationFrame(focusAnimation.scrollFrame);
-          focusAnimation.scrollFrame = null;
-        }
-        const startY = window.scrollY || window.pageYOffset || 0;
-        const delta = targetY - startY;
-        if (Math.abs(delta) < 1) return;
-        const startTime = performance.now();
-        function step(now) {
-          const progress = Math.min(1, (now - startTime) / focusAnimation.duration);
-          const eased = easeInOutCubic(progress);
-          window.scrollTo(0, startY + delta * eased);
-          if (progress < 1) {
-            focusAnimation.scrollFrame = requestAnimationFrame(step);
-          } else {
-            focusAnimation.scrollFrame = null;
-          }
-        }
-        focusAnimation.scrollFrame = requestAnimationFrame(step);
-      }
-
-      function getColumnIndexForCell(cell) {
-        const info = focusAnimation.cellTrackInfo.get(cell);
-        if (info && info.columnIndex >= 0) return info.columnIndex;
-        return getColumnIndexByOffset(cell);
-      }
-
-      function getRowIndexForCell(cell) {
-        const info = focusAnimation.cellTrackInfo.get(cell);
-        if (info && info.rowIndex >= 0) return info.rowIndex;
-        return getRowIndexByOffset(cell);
-      }
-
-      function ensureDetailContent(cell) {
-        if (!cell || cell.querySelector('.scene__detail-overlay')) return;
+      function showInnerGrid(hero, cell) {
         const title = cell.dataset.title || '';
-        const description = cell.dataset.description || '';
+        const description = (currentLang === 'ja' && cell.dataset.descriptionJa) ? cell.dataset.descriptionJa : cell.dataset.description || '';
         const link = cell.dataset.link || '';
         const linkLabel = cell.dataset.linkLabel || 'Open link';
+        const imgSrc = cell.dataset.img || '';
+        const hasHtml = /<[a-z][\s\S]*>/i.test(description);
+        const descHtml = hasHtml ? description : escHtml(description).replace(/\n+/g, '<br>');
 
-        const overlay = document.createElement('div');
-        overlay.className = 'scene__detail-overlay';
-        overlay.addEventListener('click', (event) => event.stopPropagation());
+        const inner = document.createElement('div');
+        inner.className = 'inner-grid';
+        const imgTag = imgSrc ? `<img src="${escHtml(imgSrc)}" alt="${escHtml(title)}" class="inner-grid__img">` : '';
+        const linkTag = link ? `<a class="inner-grid__link" href="${escHtml(link)}" target="_blank" rel="noopener noreferrer">${escHtml(linkLabel)}</a>` : '';
+        inner.innerHTML = [
+          '<div class="inner-grid__visual">' + imgTag + '</div>',
+          '<div class="inner-grid__content">',
+          '  <div class="inner-grid__meta">AR / WebXR</div>',
+          '  <h2 class="inner-grid__title">' + escHtml(title) + '</h2>',
+          '  <div class="inner-grid__text">' + descHtml + '</div>',
+          '  <div class="inner-grid__actions">' + linkTag + '<button class="inner-grid__close" aria-label="Close detail">\u2715 Close</button></div>',
+          '</div>'
+        ].join('');
 
-        const body = document.createElement('div');
-        body.className = 'scene__detail-body';
-        if (title) {
-          const heading = document.createElement('h3');
-          heading.className = 'scene__detail-title';
-          heading.textContent = title;
-          body.appendChild(heading);
-        }
-        if (description) {
-          const paragraph = document.createElement('div');
-          paragraph.className = 'scene__detail-text';
-          const normalized = description.replace(/\r\n?/g, '\n');
-          if (/<[a-z][\s\S]*>/i.test(normalized)) {
-            paragraph.innerHTML = normalized;
-          } else {
-            const parts = normalized.split(/\n+/).map(part => part.trim()).filter(Boolean);
-            parts.forEach((part, index) => {
-              if (index > 0) paragraph.appendChild(document.createElement('br'));
-              paragraph.appendChild(document.createTextNode(part));
-            });
-          }
-          body.appendChild(paragraph);
-        }
+        hero.appendChild(inner);
 
-        const actions = document.createElement('div');
-        actions.className = 'scene__detail-actions';
-        if (link) {
-          const anchor = document.createElement('a');
-          anchor.className = 'scene__detail-link';
-          anchor.href = link;
-          anchor.target = '_blank';
-          anchor.rel = 'noopener noreferrer';
-          anchor.textContent = linkLabel;
-          actions.appendChild(anchor);
-        }
-        const closeBtn = document.createElement('button');
-        closeBtn.type = 'button';
-        closeBtn.className = 'scene__detail-close';
-        closeBtn.setAttribute('aria-label', 'Close detail');
-        closeBtn.textContent = 'Close';
-        closeBtn.addEventListener('click', (event) => {
-          event.stopPropagation();
-          resetFocus();
+        inner.querySelector('.inner-grid__close').addEventListener('click', e => {
+          e.stopPropagation();
+          collapseTile();
         });
-        actions.appendChild(closeBtn);
-        body.appendChild(actions);
-        overlay.appendChild(body);
-        cell.appendChild(overlay);
+        inner.addEventListener('click', e => e.stopPropagation());
+
+        requestAnimationFrame(() => inner.classList.add('inner-grid--visible'));
       }
 
-      function lockGridToCurrentSize() {
-        const { baseColumns, baseRows, columnsCurrent, rowsCurrent } = focusAnimation;
-        const columns = columnsCurrent.length === baseColumns.length && columnsCurrent.length
-          ? columnsCurrent
-          : baseColumns;
-        const rows = rowsCurrent.length === baseRows.length && rowsCurrent.length
-          ? rowsCurrent
-          : baseRows;
-        if (columns.length) {
-          const list = columns.map(value => `${Math.max(value, 0)}px`).join(' ');
-          gridEl.style.gridTemplateColumns = list;
-          focusAnimation.columnsCurrent = columns.slice();
-        }
-        if (rows.length) {
-          const list = rows.map(value => `${Math.max(value, 0)}px`).join(' ');
-          gridEl.style.gridTemplateRows = list;
-          focusAnimation.rowsCurrent = rows.slice();
-        }
-      }
+      function expandTile(cell) {
+        if (isAnimating || activeTileHero) return;
+        isAnimating = true;
 
-      function openDetail(cell) {
-        if (!cell) return;
-        ensureDetailContent(cell);
-        if (expandedArticle && expandedArticle !== cell) {
-          expandedArticle.classList.remove('scene--detail-open');
-        }
-        if (!focusAnimation.baseColumns.length || !focusAnimation.baseRows.length) {
-          measureBaseState();
-        }
-        lockGridToCurrentSize();
-        expandedArticle = cell;
-        cell.classList.add('scene--detail-open');
+        const rect = cell.getBoundingClientRect();
+
+        const hero = document.createElement('div');
+        hero.className = 'tile-hero';
+        hero.style.cssText = [
+          'position:fixed',
+          'top:' + rect.top + 'px',
+          'left:' + rect.left + 'px',
+          'width:' + rect.width + 'px',
+          'height:' + rect.height + 'px',
+          'z-index:1000',
+          'overflow:hidden',
+          'background:var(--bg)',
+          'transition:top .6s cubic-bezier(.65,0,.15,1),left .6s cubic-bezier(.65,0,.15,1),width .6s cubic-bezier(.65,0,.15,1),height .6s cubic-bezier(.65,0,.15,1)'
+        ].join(';');
+        document.body.appendChild(hero);
+
+        cell.classList.add('cell--expanding');
+        expandingCell = cell;
+        activeTileHero = hero;
         document.body.classList.add('scene-overlay-open');
         if (infoPanel) {
           infoPanel.classList.add(INFO_PANEL_HIDDEN_CLASS);
           infoPanel.setAttribute('aria-hidden', 'true');
         }
-        if (DETAIL_TARGET_ID_SET.has(cell.id)) {
-          hideSvgStrokesReverse();
-        }
+
+        hideCSSLines();
+
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          hero.style.top = '0';
+          hero.style.left = '0';
+          hero.style.width = '100vw';
+          hero.style.height = '100vh';
+          hero.style.borderRadius = '0';
+
+          hero.addEventListener('transitionend', () => {
+            isAnimating = false;
+            showInnerGrid(hero, cell);
+          }, { once: true });
+        }));
       }
 
-      function closeDetail() {
-        if (!expandedArticle) return;
-        expandedArticle.classList.remove('scene--detail-open');
-        expandedArticle = null;
+      function collapseTile() {
+        if (!activeTileHero || !expandingCell || isAnimating) return;
+        isAnimating = true;
+
+        const hero = activeTileHero;
+        const cell = expandingCell;
+
+        const innerGrid = hero.querySelector('.inner-grid');
+        if (innerGrid) innerGrid.classList.remove('inner-grid--visible');
+
         document.body.classList.remove('scene-overlay-open');
         if (infoPanel) {
           infoPanel.classList.remove(INFO_PANEL_HIDDEN_CLASS);
           infoPanel.removeAttribute('aria-hidden');
         }
-      }
 
-      function applyFocus(cell, columnIndex, rowIndex) {
-        const columnCount = focusAnimation.baseColumns.length;
-        const rowCount = focusAnimation.baseRows.length;
-        if (columnCount === 0 || rowCount === 0) return;
-        if (columnIndex < 0 || columnIndex >= columnCount) return;
-        if (rowIndex < 0 || rowIndex >= rowCount) return;
+        const rect = cell.getBoundingClientRect();
+        hero.style.top = rect.top + 'px';
+        hero.style.left = rect.left + 'px';
+        hero.style.width = rect.width + 'px';
+        hero.style.height = rect.height + 'px';
 
-        const trackInfo = focusAnimation.cellTrackInfo.get(cell) || null;
-        const columnSpanRaw = trackInfo?.columnSpan ?? 1;
-        const rowSpanRaw = trackInfo?.rowSpan ?? 1;
-        const columnSpan = Math.max(1, Math.min(columnSpanRaw, columnCount - columnIndex));
-        const rowSpan = Math.max(1, Math.min(rowSpanRaw, rowCount - rowIndex));
-
-        gridEl.style.gridAutoRows = '0px';
-
-        const gridRect = gridEl.getBoundingClientRect();
-        const totalColumnWidth = gridRect.width;
-        const columnsTarget = focusAnimation.baseColumns.map(() => 0);
-        for (let i = 0; i < columnSpan; i += 1) {
-          const idx = Math.min(columnCount - 1, columnIndex + i);
-          columnsTarget[idx] = totalColumnWidth / columnSpan;
-        }
-
-        const baseSpanHeight = focusAnimation.baseRows.slice(rowIndex, rowIndex + rowSpan).reduce((sum, value) => sum + value, 0);
-        const rowGapAllowance = focusAnimation.rowGap * Math.max(rowSpan - 1, 0);
-        const targetRowHeightTotal = Math.max(0, window.innerHeight - rowGapAllowance, baseSpanHeight);
-        const rowsTarget = focusAnimation.baseRows.map(() => 0);
-        if (baseSpanHeight > 0) {
-          for (let i = 0; i < rowSpan; i += 1) {
-            const idx = Math.min(rowCount - 1, rowIndex + i);
-            const baseHeight = focusAnimation.baseRows[idx] || 0;
-            const weight = baseHeight / baseSpanHeight;
-            rowsTarget[idx] = targetRowHeightTotal * weight;
-          }
-        } else {
-          const fallbackShare = rowSpan > 0 ? targetRowHeightTotal / rowSpan : targetRowHeightTotal;
-          for (let i = 0; i < rowSpan; i += 1) {
-            const idx = Math.min(rowCount - 1, rowIndex + i);
-            rowsTarget[idx] = fallbackShare;
-          }
-        }
-
-        expandedColumn = columnIndex;
-        expandedRow = rowIndex;
-        startAnimation(columnsTarget, rowsTarget, { sequence: 'row-then-column' });
-        const rowOffset = focusAnimation.baseRowOffsets[rowIndex] ?? 0;
-        const targetScrollY = Math.max(0, (window.scrollY || window.pageYOffset || 0) + gridRect.top + rowOffset);
-        startScrollAnimation(targetScrollY);
-      }
-
-      function resetFocus(immediate = false) {
-        if (focusAnimation.frame) {
-          cancelAnimationFrame(focusAnimation.frame);
-          focusAnimation.frame = null;
-        }
-        if (focusAnimation.scrollFrame) {
-          cancelAnimationFrame(focusAnimation.scrollFrame);
-          focusAnimation.scrollFrame = null;
-        }
-        if (focusAnimation.sequenceTimer) {
-          clearTimeout(focusAnimation.sequenceTimer);
-          focusAnimation.sequenceTimer = null;
-        }
-        closeDetail();
-        expandedColumn = -1;
-        expandedRow = -1;
-
-        const autoRowsValue = focusAnimation.autoRowsInline || focusAnimation.autoRowsComputed || '';
-        if (autoRowsValue) {
-          gridEl.style.gridAutoRows = autoRowsValue;
-        } else {
-          gridEl.style.removeProperty('grid-auto-rows');
-        }
-
-        if (immediate || !focusAnimation.baseColumns.length || !focusAnimation.baseRows.length) {
-          gridEl.style.removeProperty('grid-template-columns');
-          gridEl.style.removeProperty('grid-template-rows');
-          focusAnimation.columnsCurrent = focusAnimation.baseColumns.slice();
-          focusAnimation.rowsCurrent = focusAnimation.baseRows.slice();
-        } else {
-          startAnimation(focusAnimation.baseColumns.slice(), focusAnimation.baseRows.slice(), {
-            onComplete: () => {
-              gridEl.style.removeProperty('grid-template-columns');
-              gridEl.style.removeProperty('grid-template-rows');
-              focusAnimation.columnsCurrent = focusAnimation.baseColumns.slice();
-              focusAnimation.rowsCurrent = focusAnimation.baseRows.slice();
-            }
-          });
-        }
-        if (svgStrokesHidden) {
-          const delay = immediate ? 0 : focusAnimation.duration + 60;
-          scheduleRestoreSvgStrokes(delay);
-        }
+        hero.addEventListener('transitionend', () => {
+          hero.remove();
+          cell.classList.remove('cell--expanding');
+          activeTileHero = null;
+          expandingCell = null;
+          isAnimating = false;
+          showCSSLines();
+        }, { once: true });
       }
 
       articles.forEach(cell => {
         cell.style.cursor = 'pointer';
-        cell.addEventListener('pointerdown', () => {
-          if (!DETAIL_TARGET_ID_SET.has(cell.id)) return;
-          hideSvgStrokesReverse({ instant: true });
-        });
-        cell.addEventListener('click', (event) => {
-          event.stopPropagation();
-          const columnIndex = getColumnIndexForCell(cell);
-          const rowIndex = getRowIndexForCell(cell);
-          if (columnIndex === -1 || rowIndex === -1) return;
-          const isSameCell = expandedColumn === columnIndex && expandedRow === rowIndex && expandedArticle === cell;
-          if (isSameCell) {
-            resetFocus();
-            return;
-          }
-          openDetail(cell);
-          applyFocus(cell, columnIndex, rowIndex);
+        cell.addEventListener('click', e => {
+          e.stopPropagation();
+          if (activeTileHero || isAnimating) return;
+          expandTile(cell);
         });
       });
 
       document.addEventListener('click', () => {
-        if (expandedColumn !== -1 || expandedRow !== -1) resetFocus();
+        if (activeTileHero && !isAnimating) collapseTile();
       });
 
       window.addEventListener('resize', () => {
-        const width = window.innerWidth || document.documentElement.clientWidth || 0;
-        const height = window.innerHeight || document.documentElement.clientHeight || 0;
-        const prevWidth = focusAnimation.viewportWidth ?? width;
-        const prevHeight = focusAnimation.viewportHeight ?? height;
-        const widthDiff = Math.abs(width - prevWidth);
-        const heightDiff = Math.abs(height - prevHeight);
-        if (widthDiff < 1 && heightDiff <= 160) {
-          focusAnimation.viewportWidth = width;
-          focusAnimation.viewportHeight = height;
-          return;
-        }
-
-        const wasExpanded = expandedColumn !== -1 && expandedRow !== -1;
-        const prevColumn = expandedColumn;
-        const prevRow = expandedRow;
-        const prevArticle = expandedArticle;
-        resetFocus(true);
-        measureBaseState();
-        focusAnimation.viewportWidth = width;
-        focusAnimation.viewportHeight = height;
-        if (wasExpanded && prevArticle && gridEl.contains(prevArticle)) {
-          const columnCount = focusAnimation.baseColumns.length;
-          const rowCount = focusAnimation.baseRows.length;
-          if (columnCount && rowCount) {
-            const safeColumn = Math.min(prevColumn, columnCount - 1);
-            const safeRow = Math.min(prevRow, rowCount - 1);
-            openDetail(prevArticle);
-            applyFocus(prevArticle, safeColumn, safeRow);
-          }
-        }
-      });
-
-      measureBaseState();
+        if (activeTileHero && !isAnimating) collapseTile();
+      }, { passive: true });
     })();
 
-    // === グリッド境界線を自動抽出して描く ===
-    function buildGridStrokes({
-      order = 'row-major',       // 'row-major' = 上→下, 左→右
-      baseDelay = 200,           // 開始ディレイ(ms)
-      stepDelay = 90,            // セグメント間ディレイ(ms)
-      msPerPx = 1.4,             // 1pxあたりの描画時間(ms) → 長い線ほどゆっくり
-      epsilon = 2,               // 隣接判定の許容誤差(px)
-      force = false              // レイアウト変更時など強制描画
-    } = {}) {
-      const root = document.querySelector('.page');
+    // === CSS Grid Lines (Dropbox-style scaleX/Y draw-in) ===
+    function buildCSSLines() {
       const grid = document.querySelector('.grid5x3');
-      if (!root || !grid) return;
-      if (svgStrokesHidden) return;
+      if (!grid) return;
 
-      const viewportWidth = Math.round(window.innerWidth || document.documentElement.clientWidth || 0);
-      const viewportHeight = Math.round(window.innerHeight || document.documentElement.clientHeight || 0);
-      const lastWidth = buildGridStrokes._lastWidth;
-      const lastHeight = buildGridStrokes._lastHeight;
-      const orientationType = (window.screen && window.screen.orientation && typeof window.screen.orientation.type === 'string')
-        ? window.screen.orientation.type
-        : (viewportWidth >= viewportHeight ? 'landscape' : 'portrait');
-      const lastOrientation = buildGridStrokes._lastOrientation;
+      grid.querySelectorAll('.grid-line').forEach(el => el.remove());
 
-      if (!force && typeof lastWidth === 'number' && typeof lastHeight === 'number') {
-        const widthDiff = Math.abs(viewportWidth - lastWidth);
-        const heightDiff = Math.abs(viewportHeight - lastHeight);
-        const orientationChanged = lastOrientation && lastOrientation !== orientationType;
-        const heightOnlyResize = widthDiff < 1 && heightDiff > 0 && heightDiff <= 160;
-        if (!orientationChanged && heightOnlyResize) {
-          buildGridStrokes._lastWidth = viewportWidth;
-          buildGridStrokes._lastHeight = viewportHeight;
-          buildGridStrokes._lastOrientation = orientationType;
-          return;
-        }
-      }
+      const cells = Array.from(grid.querySelectorAll(':scope > .cell')).filter(el => el.offsetParent);
+      if (!cells.length) return;
 
-      // 既存の層を作り直し
-      const old = root.querySelector('.svg-strokes');
-      if (old) old.remove();
-      const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      svg.classList.add('svg-strokes');
-      root.appendChild(svg);
+      const gridRect = grid.getBoundingClientRect();
+      const cs = getComputedStyle(grid);
+      const colGap = parseFloat(cs.columnGap) || 0;
+      const rowGap = parseFloat(cs.rowGap) || 0;
+      const GAP_EPSILON = Math.max(colGap, rowGap, 2) * 0.6 + 2;
 
-      const rr = root.getBoundingClientRect();
-      const gr = grid.getBoundingClientRect();
-
-      // 対象セル（.cell）を取得
-      const cells = Array.from(grid.querySelectorAll('.cell')).filter(el => el.offsetParent);
-
-      // 相対rect取得（root座標系へ）
-      const R = cells.map(el => {
-        const r = el.getBoundingClientRect();
+      // Get cell rects relative to grid
+      const rects = cells.map(cell => {
+        const r = cell.getBoundingClientRect();
         return {
-          el,
-          left: r.left - rr.left,
-          right: r.right - rr.left,
-          top: r.top - rr.top,
-          bottom: r.bottom - rr.top
+          left:   Math.round(r.left   - gridRect.left),
+          top:    Math.round(r.top    - gridRect.top),
+          right:  Math.round(r.right  - gridRect.left),
+          bottom: Math.round(r.bottom - gridRect.top),
         };
       });
 
-      const H = [], V = []; // 水平・垂直の境界候補
-      for (let i = 0; i < R.length; i++) {
-        for (let j = i + 1; j < R.length; j++) {
-          const a = R[i], b = R[j];
+      // Collect line segments only where two cells are directly adjacent
+      // vSegMap: x → [{start, end}]  (vertical lines between left/right neighbors)
+      // hSegMap: y → [{start, end}]  (horizontal lines between top/bottom neighbors)
+      const vSegMap = new Map();
+      const hSegMap = new Map();
 
-          // 水平境界（上下に接する）
-          {
-            const overlapX1 = Math.max(a.left, b.left);
-            const overlapX2 = Math.min(a.right, b.right);
-            if (overlapX2 - overlapX1 > 1) {
-              const dy1 = Math.abs(a.bottom - b.top);
-              const dy2 = Math.abs(b.bottom - a.top);
-              if (dy1 <= epsilon) {
-                H.push({ y: (a.bottom + b.top) / 2, x1: overlapX1, x2: overlapX2 });
-              } else if (dy2 <= epsilon) {
-                H.push({ y: (b.bottom + a.top) / 2, x1: overlapX1, x2: overlapX2 });
+      for (let i = 0; i < rects.length; i++) {
+        for (let j = i + 1; j < rects.length; j++) {
+          const a = rects[i], b = rects[j];
+
+          // Vertical boundary: a is left of b (or b is left of a)
+          for (const [L, R] of [[a, b], [b, a]]) {
+            const gap = R.left - L.right;
+            if (gap >= -GAP_EPSILON && gap <= colGap + GAP_EPSILON) {
+              const x = Math.floor((L.right + R.left) / 2);
+              const segTop    = Math.max(L.top,    R.top);
+              const segBottom = Math.min(L.bottom, R.bottom);
+              if (segBottom > segTop) {
+                if (!vSegMap.has(x)) vSegMap.set(x, []);
+                vSegMap.get(x).push({ start: segTop, end: segBottom });
               }
             }
           }
-          // 垂直境界（左右に接する）
-          {
-            const overlapY1 = Math.max(a.top, b.top);
-            const overlapY2 = Math.min(a.bottom, b.bottom);
-            if (overlapY2 - overlapY1 > 1) {
-              const dx1 = Math.abs(a.right - b.left);
-              const dx2 = Math.abs(b.right - a.left);
-              if (dx1 <= epsilon) {
-                V.push({ x: (a.right + b.left) / 2, y1: overlapY1, y2: overlapY2 });
-              } else if (dx2 <= epsilon) {
-                V.push({ x: (b.right + a.left) / 2, y1: overlapY1, y2: overlapY2 });
+
+          // Horizontal boundary: a is above b (or b is above a)
+          for (const [T, B] of [[a, b], [b, a]]) {
+            const gap = B.top - T.bottom;
+            if (gap >= -GAP_EPSILON && gap <= rowGap + GAP_EPSILON) {
+              const y = Math.floor((T.bottom + B.top) / 2);
+              const segLeft  = Math.max(T.left,  B.left);
+              const segRight = Math.min(T.right, B.right);
+              if (segRight > segLeft) {
+                if (!hSegMap.has(y)) hSegMap.set(y, []);
+                hSegMap.get(y).push({ start: segLeft, end: segRight });
               }
             }
           }
         }
       }
 
-      // 同一直線上の連続セグメントを結合（＝横二連小セルの下線を1本に）
-      function merge(list, ori) {
-        const groups = new Map();
-        const key = s => ori === 'H' ? Math.round(s.y * 2) / 2 : Math.round(s.x * 2) / 2;
-        for (const s of list) {
-          const k = key(s);
-          if (!groups.has(k)) groups.set(k, []);
-          groups.get(k).push(s);
-        }
-        const out = [];
-        for (const [_, segs] of groups) {
-          segs.sort(ori === 'H' ? (a, b) => a.x1 - b.x1 : (a, b) => a.y1 - b.y1);
-          let cur = { ...segs[0] };
-          for (let i = 1; i < segs.length; i++) {
-            const n = segs[i];
-            if (ori === 'H' ? n.x1 <= cur.x2 + 1.1 : n.y1 <= cur.y2 + 1.1) {
-              if (ori === 'H') cur.x2 = Math.max(cur.x2, n.x2); else cur.y2 = Math.max(cur.y2, n.y2);
-            } else { out.push(cur); cur = { ...n }; }
+      // Merge overlapping or gap-separated segments into single continuous spans.
+      // gapTolerance: max gap between segments that gets bridged (= grid gap + small epsilon)
+      function mergeSegs(segs, gapTolerance) {
+        if (!segs.length) return [];
+        segs.sort((a, b) => a.start - b.start);
+        const merged = [{ ...segs[0] }];
+        for (let k = 1; k < segs.length; k++) {
+          const last = merged[merged.length - 1];
+          if (segs[k].start <= last.end + gapTolerance) {
+            last.end = Math.max(last.end, segs[k].end);
+          } else {
+            merged.push({ ...segs[k] });
           }
-          out.push(cur);
         }
-        return out;
+        return merged;
       }
-      const Hm = merge(H, 'H');
-      const Vm = merge(V, 'V');
 
-      // アニメ順序：row-major（上→下、左→右）
-      const segs = [
-        ...Hm.map(s => ({ type: 'H', ...s })),
-        ...Vm.map(s => ({ type: 'V', ...s })),
-      ].sort((a, b) => {
-        const ay = (a.type === 'H' ? a.y : a.y1), by = (b.type === 'H' ? b.y : b.y1);
-        if (order === 'row-major') {
-          return (ay - by) || ((a.type === 'H' ? a.x1 : a.x) - (b.type === 'H' ? b.x1 : b.x));
-        } else { // col-major
-          const ax = (a.type === 'H' ? a.x1 : a.x), bx = (b.type === 'H' ? b.x1 : b.x);
-          return (ax - bx) || (ay - by);
-        }
+      const fragment = document.createDocumentFragment();
+
+      // Vertical lines: segments are separated by rowGap — bridge those gaps
+      vSegMap.forEach((segs, x) => {
+        mergeSegs(segs, rowGap + GAP_EPSILON).forEach(seg => {
+          const line = document.createElement('div');
+          line.className = 'grid-line grid-line--v';
+          line.style.left   = x + 'px';
+          line.style.top    = seg.start + 'px';
+          line.style.height = (seg.end - seg.start) + 'px';
+          fragment.appendChild(line);
+        });
       });
 
-      // パス生成＋長さベースの描画
-      let maxEndTime = 0;
-      segs.forEach((s, i) => {
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        let length = 0;
-
-        if (s.type === 'H') {
-          const y = Math.round(s.y) + .5;
-          const x1 = Math.round(s.x1) + .5, x2 = Math.round(s.x2) - .5;
-          length = Math.max(0, x2 - x1);
-          if (length <= 0) return;
-          p.setAttribute('d', `M ${x1} ${y} L ${x2} ${y}`);
-        } else {
-          const x = Math.round(s.x) + .5;
-          const y1 = Math.round(s.y1) + .5, y2 = Math.round(s.y2) - .5;
-          length = Math.max(0, y2 - y1);
-          if (length <= 0) return;
-          p.setAttribute('d', `M ${x} ${y1} L ${x} ${y2}`);
-        }
-        const duration = Math.max(240, length * msPerPx);
-        const delay = baseDelay + i * stepDelay;
-        const endTime = delay + duration;
-        if (endTime > maxEndTime) maxEndTime = endTime;
-        p.dataset.strokeDuration = String(duration);
-        p.dataset.strokeDelay = String(delay);
-        p.dataset.strokeLength = String(length);
-        p.style.strokeDasharray = length;
-        p.style.strokeDashoffset = length;
-        p.style.animation = `draw-stroke ${duration}ms ease ${delay}ms forwards`;
-        svg.appendChild(p);
+      // Horizontal lines: segments are separated by colGap — bridge those gaps
+      hSegMap.forEach((segs, y) => {
+        mergeSegs(segs, colGap + GAP_EPSILON).forEach(seg => {
+          const line = document.createElement('div');
+          line.className = 'grid-line grid-line--h';
+          line.style.top   = y + 'px';
+          line.style.left  = seg.start + 'px';
+          line.style.width = (seg.end - seg.start) + 'px';
+          fragment.appendChild(line);
+        });
       });
 
-      // サイドバー右端を「上→下」に1本描画
-      const sidebar = document.querySelector('.sidebar');
-      if (sidebar) {
-        const sr = sidebar.getBoundingClientRect();
-        const x = Math.round(sr.right - rr.left) + .5;
-        const y1 = Math.round(sr.top - rr.top) + .5;
-        const y2 = Math.round(sr.bottom - rr.top) - .5;
-        const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-        p.setAttribute('d', `M ${x} ${y1} L ${x} ${y2}`);
-        const len = y2 - y1;
-        if (len > 0) {
-          const duration = Math.max(240, len * msPerPx);
-          const delay = 100;
-          const endTime = delay + duration;
-          if (endTime > maxEndTime) maxEndTime = endTime;
-          p.dataset.strokeDuration = String(duration);
-          p.dataset.strokeDelay = String(delay);
-          p.dataset.strokeLength = String(len);
-          p.style.strokeDasharray = len;
-          p.style.strokeDashoffset = len;
-          p.style.animation = `draw-stroke ${duration}ms ease ${delay}ms forwards`;
-          svg.appendChild(p);
-        }
-      }
-      svg.dataset.strokeTimeline = String(maxEndTime);
-
-      buildGridStrokes._lastWidth = viewportWidth;
-      buildGridStrokes._lastHeight = viewportHeight;
-      buildGridStrokes._lastOrientation = orientationType;
+      grid.appendChild(fragment);
     }
 
-    // 初回＆リサイズで実行（フォントロード後に）
-    window.addEventListener('load', () => buildGridStrokes(), { once: true });
-    addEventListener('resize', () => { clearTimeout(buildGridStrokes._t); buildGridStrokes._t = setTimeout(() => buildGridStrokes(), 120); }, { passive: true });
+    function triggerCSSLines() {
+      const lines = Array.from(document.querySelectorAll('.grid-line'));
+      lines.forEach((line, i) => {
+        line.style.transitionDelay = (200 + i * 80) + 'ms';
+        line.classList.add('grid-line--visible');
+      });
+    }
+
+    function hideCSSLines() {
+      document.querySelectorAll('.grid-line').forEach(line => {
+        line.style.transition = 'transform 0.25s ease, opacity 0.25s ease';
+        line.style.transitionDelay = '0ms';
+        line.classList.remove('grid-line--visible');
+      });
+    }
+
+    function showCSSLines() {
+      const lines = Array.from(document.querySelectorAll('.grid-line'));
+      lines.forEach((line, i) => {
+        line.style.transition = '';
+        line.style.transitionDelay = (i * 55) + 'ms';
+        line.classList.add('grid-line--visible');
+      });
+    }
+
+    // ===== 言語切替 =====
+    const i18n = {
+      ja: {
+        lead: 'アマチュアとしてAR作品を作ってます。ARならではのUI、ゲーム性、アフォーダンスみたいなものに興味があります。似たような興味を持つ人がいたら、ぜひ一緒になにか作りましょう。',
+        'what-i-made-desc': '主に8th Wallを使ってWeb ARを作ってきましたが、8th Wallがああなってしまったので、今後どうしようか迷い中。ARグラスが出てきた時に使える技術が良いと思うけど、Vision Proを買うようなお金もないし、、、',
+        'about-desc': '私はBench Inc.でデザイナーとして働いており、主に業務システムのUI/UXデザインを担当しています。<br>アマチュアのARクリエイターとして、これまでにいくつかのARプロジェクトを手掛け、かつての8th Wallのチャレンジでは複数の賞を受賞しました。',
+      },
+      en: {
+        lead: "I make AR projects as an amateur. I’m interested in the UI, game mechanics, and affordances unique to AR. Since these are half-experimental works, the quality isn’t high. If you share similar interests, let’s make something together.",
+        'what-i-made-desc': "I’ve mainly been creating Web AR with 8th Wall, but since 8th Wall ended up the way it did, I’m not sure what direction to take next. I think learning something useful for when AR glasses become mainstream would be ideal, but I can’t exactly afford a Vision Pro...",
+        'about-desc': "I work as a designer at Bench Inc., where I’m mainly responsible for UI/UX design of business systems.<br>As an amateur AR creator, I’ve worked on several AR projects and won multiple awards in past 8th Wall challenges.",
+      },
+    };
+
+    let currentLang = 'ja';
+
+    function applyLang(lang) {
+      currentLang = lang;
+      const t = i18n[lang];
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.getAttribute('data-i18n');
+        if (t[key] !== undefined) el.textContent = t[key];
+      });
+      document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const key = el.getAttribute('data-i18n-html');
+        if (t[key] !== undefined) el.innerHTML = t[key];
+      });
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('lang-btn--active', btn.dataset.lang === lang);
+      });
+    }
+
+    document.addEventListener('click', e => {
+      const btn = e.target.closest('.lang-btn');
+      if (btn) applyLang(btn.dataset.lang);
+    });
+
+    // 初回＆リサイズで実行
+    window.addEventListener('load', () => {
+      buildCSSLines();
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        triggerCSSLines();
+        document.body.classList.add('lines-ready'); // sidebar border draw-in
+      }));
+    }, { once: true });
+
+    addEventListener('resize', () => {
+      clearTimeout(buildCSSLines._t);
+      buildCSSLines._t = setTimeout(() => {
+        buildCSSLines();
+        triggerCSSLines();
+      }, 120);
+    }, { passive: true });
 
   </script>
 </body>
