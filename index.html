@@ -873,14 +873,7 @@
     #scene-3,
     #scene-4,
     #scene-5,
-    #scene-7,
-    #scene-8,
-    #scene-9,
-    #scene-10,
-    #scene-11,
-    #scene-12,
-    #scene-13,
-    #scene-14,
+    .work-card,
     #scene-21,
     #contact-curtain {
       user-select: none;
@@ -1062,46 +1055,6 @@
         grid-row: 5;
       }
 
-      #scene-7 {
-        grid-column: 1;
-        grid-row: 6;
-      }
-
-      #scene-8 {
-        grid-column: 2;
-        grid-row: 6;
-      }
-
-      #scene-9 {
-        grid-column: 3;
-        grid-row: 6;
-      }
-
-      #scene-10 {
-        grid-column: 1;
-        grid-row: 7;
-      }
-
-      #scene-11 {
-        grid-column: 2;
-        grid-row: 7;
-      }
-
-      #scene-12 {
-        grid-column: 3;
-        grid-row: 7;
-      }
-
-      #scene-13 {
-        grid-column: 1;
-        grid-row: 8;
-      }
-
-      #scene-14 {
-        grid-column: 2 / span 2;
-        grid-row: 8;
-      }
-
       #scene-21 {
         grid-column: 1 / span 3;
         grid-row: 9 / span 2;
@@ -1230,7 +1183,20 @@
           </div>
         </article>
         <!-- 4行目 右3セル -->
-        <article id="scene-8" class="cell scene" data-effect="image" data-img="./img/bugssymphony.jpg"
+        <article id="scene-14" class="cell scene work-card" data-effect="image" data-img="./img/persona-ai.png"
+          data-category="AI / OSS" data-title="PersonaAI-OSS"
+          data-description='An open-source tool designed to make it easier to imagine how a target audience will receive an article before publishing it.<br><br>
+          It generates personas from selected audience attributes, then asks those personas to react to the article from their own perspective. That makes it easier to spot why a piece may feel hard to read or where the messaging is failing to land.<br><br>
+          The core idea is based on DeepPersona: you define the target attributes, and it creates multiple personas from within that range without making them overly biased. We are already in an era where AI writes articles, so I built this from the assumption that an era where AI also reads articles is probably coming.'
+          data-description-ja='記事を公開する前に「この記事はターゲットにどう受け取られるのか」を想像しやすくするためのOSSです。<br><br>
+          属性からペルソナを生成し、そのペルソナの視点で記事の感想を書かせることで、読まれにくい理由や伝わり方のズレを確認しやすくしています。<br><br>
+          中では DeepPersona の考え方を使っていて、ターゲットとなる属性を決めるだけで、その範囲の中から偏りすぎない複数のペルソナを作れるのが特徴です。AIで記事を書かれる時代になりましたが、AIに記事を読んでもらう時代も来るだろうという発想で作っています。'
+          data-img-thumbnail="./img/persona-ai_thumbnail.png"
+          data-img-anchor-y="top"
+          data-link="https://github.com/Ken321/PersonaAI-OSS"
+          data-link-label="GitHub">
+        </article>
+        <article id="scene-8" class="cell scene work-card" data-effect="image" data-img="./img/bugssymphony.jpg"
           data-title="Bugs Symphony" data-description='When the game starts, butterflies and dragonflies appear perched on the ground. As you approach them, they take flight and flee — that "flee on approach" behavior in AR was the whole concept behind this game.<br><br>
           The flocking motion after takeoff is calculated using the Boids algorithm via GPUComputationRenderer. I love Boids for the way pure computation produces something that feels genuinely organic.<br>
           The target bugs emit sound via PositionalAudio, so with headphones you can pinpoint their location by ear alone — you could play with your eyes closed just by following the direction of the sound. Since AR is inherently spatial, I wanted to use sound directionality not as background music, but as the core of gameplay itself.<br><br>
@@ -1241,7 +1207,7 @@
           ※ もともと8thwallのExplore Together Challenge向けに作った位置情報ベースのゲームでしたが、8thwall終了に伴い、どこでも遊べる形に変更しています。' data-link="https://bugs-symphony.vercel.app/"
           data-link-label="Play">
         </article>
-        <article id="scene-12" class="cell scene" data-effect="image" data-img="./img/block-breaker.png" data-title="Block Breaker AR"
+        <article id="scene-12" class="cell scene work-card" data-effect="image" data-img="./img/block-breaker.png" data-title="Block Breaker AR"
           data-description='A game exploring what classic breakout looks like in AR. Since AR glasses and HMDs aren&apos;t accessible to me, I&apos;m doing AR on a smartphone — so I wanted to push what&apos;s uniquely possible with that format.<br><br>
           A phone is a window into AR space, but in this game it&apos;s also a racket. You physically bounce the ball off the phone itself. Going 3D made it absurdly difficult, but that&apos;s part of the charm.'
           data-description-ja='懐かしのブロック崩しをARにするならどうなるかを考えたゲーム。ARグラスやHMDがないのでスマホでARをやってるわけですが、スマホのARならではというのをできないかと思って作ってみました。<br><br>
@@ -1249,7 +1215,7 @@
           data-link="https://breakout-ar.vercel.app/" data-link-label="Play">
 
         </article>
-        <article id="scene-13" class="cell scene" data-effect="image" data-img="./img/drive-the-earth.png"
+        <article id="scene-13" class="cell scene work-card" data-effect="image" data-img="./img/drive-the-earth.png"
           data-title="Drive The Earth"
           data-description='A game using Sky Effect, 8thwall&apos;s signature feature for projecting AR into the sky.<br><br>
           A planet is on a collision course with Earth, and a million-horsepower robot picks it up and runs. In hindsight, the sense of actually carrying the Earth doesn&apos;t quite come through — but that&apos;s how it goes.'
@@ -1260,7 +1226,7 @@
         </article>
 
         <!-- 5行目 全5セル（What I madeの下） -->
-        <article id="scene-7" class="cell scene" data-effect="image" data-img="./img/tenori_friends.png"
+        <article id="scene-7" class="cell scene work-card" data-effect="image" data-img="./img/tenori_friends.png"
           data-title="TENORI Friends" data-description='This project imagines what communication platforms like Slack or LINE might look like in AR.<br>
           Your connected friend appears as a tiny avatar wandering around a miniature room. Even when your friend isn’t online, the avatar might still talk about the weather in their location (I originally wanted it to display their latest posts from X as well). When they log in, you can chat through their avatar — ideally, I wanted to enable voice conversations too.<br>
           
@@ -1279,21 +1245,7 @@
             <a href="https://youtu.be/-SKVXbq8gUs?si=SsdnsV43orP-6hph" target="_blank" rel="noopener noreferrer">Watch on YouTube</a>
           </div> -->
         </article>
-        <article id="scene-14" class="cell scene" data-effect="image" data-img="./img/light_bird.png"
-          data-title="Light Birds" data-description='An AR experience where glowing birds flock and gather around your fingertips.<br>
-          Before creating BUGS SYMPHONY, I wanted to experiment with GPUComputationRenderer, so I built this piece as a technical exploration.<br>
-          The flocking behavior is driven by the Boids algorithm, computed entirely on the GPU.<br>
-          By feeding the hand mesh captured from AR into the same computation, the interaction became dramatically more responsive and lifelike — as if the birds truly sensed and reacted to your movements in real space.<br>
-          Built with: 8th Wall (Three.js)'
-          data-description-ja='手の指先に向かって光り輝く鳥たちが群れ集まるAR体験です。<br>
-          BUGS SYMPHONYを制作する前に、GPUComputationRendererを試してみたくて技術的な探求として制作しました。<br>
-          群れの動きはBoidsアルゴリズムによってGPU上で完全に計算されています。<br>
-          ARで取得したハンドメッシュを同じ計算に入力することで、インタラクションが劇的にレスポンシブでリアルになり、まるで鳥たちが現実空間のあなたの動きを感知して反応しているかのようです。<br>
-          使用技術: 8th Wall (Three.js)' data-link="https://www.8thwall.com/bench/gpgpu-postprocess-example"
-          data-link-label="Launch on 8th Wall">
-
-        </article>
-        <article id="scene-11" class="cell scene" data-effect="image" data-img="./img/haiti.png"
+        <article id="scene-11" class="cell scene work-card" data-effect="image" data-img="./img/haiti.png"
           data-title="Hope for Haiti" data-description='An AR experience created for <a href="https://www.8thwall.com/blog/post/145396566051/meet-the-winners-8thwall-hopeforhaiti" target="_blank" rel="noopener noreferrer">The 8th Wall × Hope for Haiti Challenge</a>.<br>
           In front of the user hangs a translucent screen displaying information and videos about Hope for Haiti.<br>
           As you push through the screens and move forward, the experience invites you to feel as if you’re walking into the story itself.<br>
@@ -1309,7 +1261,7 @@
           data-link-label="Open on 8th Wall">
 
         </article>
-        <article id="scene-10" class="cell scene" data-effect="image" data-img="./img/meishi.png"
+        <article id="scene-10" class="cell scene work-card" data-effect="image" data-img="./img/meishi.png"
           data-title="AR Business Card" data-description='I work as a UI/UX designer at a company called Bench, and this project turns my business card into an AR mini-game.<br>
           By using image tracking, the experience gives the illusion that the AR elements physically interact with the real card itself. There are three playful modes:<br>
           Greeting CEO – Our CEO appears standing on the card and greets you. Tilt the card, and he loses balance and falls off.<br>
@@ -1327,7 +1279,7 @@
           data-link-label="Watch on x">
 
         </article>
-        <article id="scene-9" class="cell scene" data-effect="image" data-img="./img/kamizumo.png"
+        <article id="scene-9" class="cell scene work-card" data-effect="image" data-img="./img/kamizumo.png"
           data-title="AR Kami-Zumo" data-description='This project reimagines "Kami Sumo," a traditional Japanese tabletop wrestling game, in augmented reality.<br>
           When you tap the virtual buttons placed on a real table, paper-like sumo wrestlers shake and move as if reacting to the table itself being hit. This makes the experience surprisingly tactile and physically believable for AR.<br>
           Most AR interfaces tend to rely on floating virtual buttons in space — something you tap with no physical feedback. Personally, I find that lack of touch very unsatisfying. By projecting UI onto real surfaces, at least you can feel the object beneath it. That simple contact adds a sense of reality and usability that purely virtual interfaces often lack.<br>
@@ -4801,7 +4753,9 @@
 
       const geometry = new THREE.PlaneGeometry(3.0, 3.0);
       const loader = new THREE.TextureLoader();
-      const src = cellEl.dataset?.img || '';
+      const src = cellEl.dataset?.imgThumbnail || cellEl.dataset?.img || '';
+      const imgAnchorY = cellEl.dataset?.imgAnchorY;
+      const anchorYValue = imgAnchorY === 'top' ? 0.0 : imgAnchorY === 'bottom' ? 1.0 : 0.5;
       const uniforms = {
         uTex: { value: null },
         imageAspectRatio: { value: 1.0 },
@@ -4813,6 +4767,7 @@
         uExposure: { value: 1.20 },
         uSaturation: { value: 0.85 },
         uWash: { value: 0.10 },
+        uAnchorY: { value: anchorYValue },
       };
 
       const tex = loader.load(src, (loaded) => {
@@ -4842,6 +4797,7 @@
         uniform float uExposure;
         uniform float uSaturation;
         uniform float uWash;
+        uniform float uAnchorY;
         varying vec2 vUv;
         float exponentialInOut(float t){
           return t == 0.0 || t == 1.0 ? t : (t < 0.5 ? 0.5 * pow(2.0, (20.0 * t) - 10.0) : -0.5 * pow(2.0, 10.0 - (t * 20.0)) + 1.0);
@@ -4851,7 +4807,7 @@
           float u = imageAspectRatio / aspectRatio;
           if (imageAspectRatio > aspectRatio) { u = 1.0 / u; }
           uv.y *= u;
-          uv.y -= (u)/2.0 - 0.5;
+          uv.y -= uAnchorY * (u - 1.0);
           float zoomLevel = 0.2;
           float hoverLevel = exponentialInOut(min(1.0, (distance(vec2(0.5), uv) * hover) + hover));
           uv *= 1.0 - zoomLevel * hoverLevel;
@@ -5746,9 +5702,6 @@
       MOBILE_MEDIA.addListener(handleMobileMediaChange);
     }
 
-    const DETAIL_TARGET_IDS = ['scene-7', 'scene-8', 'scene-9', 'scene-10', 'scene-11', 'scene-12', 'scene-13', 'scene-14'];
-    const DETAIL_TARGET_ID_SET = new Set(DETAIL_TARGET_IDS);
-
     // ===== attach to cells =====
     const sceneCells = Array.from(document.querySelectorAll('.scene'));
     const gridEl = document.querySelector('.grid5x3');
@@ -6001,7 +5954,7 @@
     // ===== Tile Expand System (FLIP + position:fixed) =====
     (function setupTileExpand() {
       if (!gridEl) return;
-      const articles = Array.from(gridEl.querySelectorAll('article')).filter(cell => DETAIL_TARGET_ID_SET.has(cell.id));
+      const articles = Array.from(gridEl.querySelectorAll('.work-card'));
       if (!articles.length) return;
 
       let activeTileHero = null;
@@ -6016,6 +5969,7 @@
 
       function showInnerGrid(hero, cell) {
         const title = cell.dataset.title || '';
+        const category = cell.dataset.category || 'AR / WebXR';
         const description = (currentLang === 'ja' && cell.dataset.descriptionJa) ? cell.dataset.descriptionJa : cell.dataset.description || '';
         const link = cell.dataset.link || '';
         const linkLabel = cell.dataset.linkLabel || 'Open link';
@@ -6030,7 +5984,7 @@
         inner.innerHTML = [
           '<div class="inner-grid__visual">' + imgTag + '</div>',
           '<div class="inner-grid__content">',
-          '  <div class="inner-grid__meta">AR / WebXR</div>',
+          '  <div class="inner-grid__meta">' + escHtml(category) + '</div>',
           '  <h2 class="inner-grid__title">' + escHtml(title) + '</h2>',
           '  <div class="inner-grid__text">' + descHtml + '</div>',
           '  <div class="inner-grid__actions">' + linkTag + '<button class="inner-grid__close" aria-label="Close detail">\u2715 Close</button></div>',
