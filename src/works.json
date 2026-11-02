@@ -1,0 +1,230 @@
+[
+  {
+    "id": "scene-8",
+    "title": "Bugs Symphony",
+    "descriptionJa": "虫に近づくと、ふっと飛び立って逃げる。その距離感をARで作りたくて始めたゲームです。画面をタップする代わりに、自分が歩いて近づくことが操作になります。<br><br>蝶やトンボの群れの中から、音を出している虫を探します。ヘッドフォンをつけると音の方向が手がかりに。空間を使うゲームなら、音もBGMだけでなく、居場所を知るために使いたいと考えました。<br><br>飛び立った虫の群れにはBoidsを使っています。単純なルールから、生き物らしい動きが生まれるところが好きです。もともとは8th WallのExplore Together Challenge向けの位置情報ゲームとして制作し、現在はどこでも遊べる形に作り直しています。",
+    "descriptionEn": "I started with a small interaction I wanted to make in AR: bugs taking flight as you approach. Walking closer becomes the input, instead of tapping a screen.<br><br>Find the bug making a sound among the butterflies and dragonflies. With headphones, its direction becomes a clue. In a game built around space, I wanted sound to help you find your way, not just provide background music.<br><br>The flock moves using Boids. I like how simple rules can produce something that feels alive. Originally a location-based entry for 8th Wall’s Explore Together Challenge, the game has since been reworked to play anywhere.",
+    "link": "https://bugs-symphony.vercel.app/",
+    "linkLabel": "Play",
+    "category": "AR / WebXR",
+    "image": "img/bugssymphony.jpg",
+    "summaryJa": "音のする方へ。近づくと、虫が飛び立つ。",
+    "summaryEn": "Follow the sound. Watch the bugs take flight.",
+    "anchor": "center",
+    "images": [
+      {
+        "src": "./assets/images/bugssymphony-400-f9e6d6a2.webp",
+        "width": 400,
+        "height": 400,
+        "bytes": 25976
+      },
+      {
+        "src": "./assets/images/bugssymphony-500-001fe678.webp",
+        "width": 500,
+        "height": 500,
+        "bytes": 34690
+      }
+    ]
+  },
+  {
+    "id": "scene-12",
+    "title": "Block Breaker AR",
+    "descriptionJa": "スマホはARを見るための窓ですが、手に持って動かせる道具でもあります。その特徴を操作に使えないかと考えて、ブロック崩しを作りました。<br><br>飛んでくるボールを、スマホそのもので打ち返します。画面の中のラケットを指で動かすのではなく、端末の位置を変えてボールを迎える遊びです。<br><br>奥行きが加わったぶん、狙った場所で打ち返すのはかなり難しくなりました。スマホならではの操作の面白さと、空間の中で遊びやすくする難しさを試した作品です。",
+    "descriptionEn": "A phone is a window into AR, but it is also an object you can hold and move. I made this breakout game to explore using the phone itself as an input.<br><br>Move the device to meet an incoming ball and bounce it back. Instead of sliding a paddle across the screen, you use the phone as the paddle.<br><br>Adding depth made hitting the ball much harder than expected. The project explores both the appeal of a physical input and the challenge of making a spatial game easy to play.",
+    "link": "https://breakout-ar.vercel.app/",
+    "linkLabel": "Play",
+    "category": "AR / WebXR",
+    "image": "img/block-breaker.png",
+    "summaryJa": "スマホそのものが、ラケットになる。",
+    "summaryEn": "Your phone becomes the racket.",
+    "anchor": "center",
+    "images": [
+      {
+        "src": "./assets/images/block-breaker-400-ae6177fe.webp",
+        "width": 400,
+        "height": 702,
+        "bytes": 33918
+      },
+      {
+        "src": "./assets/images/block-breaker-800-58f504db.webp",
+        "width": 800,
+        "height": 1403,
+        "bytes": 77488
+      },
+      {
+        "src": "./assets/images/block-breaker-1280-4e81ac12.webp",
+        "width": 1280,
+        "height": 2245,
+        "bytes": 132418
+      }
+    ]
+  },
+  {
+    "id": "scene-9",
+    "title": "AR Kami-Zumo",
+    "descriptionJa": "空中のボタンには、押した手応えがない。ならば、実際に触れられる机を操作に使ったらどうだろう。そんな仮説から作った、最初のAR作品です。<br><br>机に置いたARの土俵で、二人で紙相撲を遊びます。土俵脇のマーカーを手で叩くと、力士が動く仕組みです。もともと力士に直接触れない遊びなので、机の手触りを残したまま、力士をデジタルに置き換えられると考えました。<br><br>必殺技や進行方向の操作も加えています。一方で、叩く強さの反映や手の認識精度には課題が残りました。「現実のモノを間に挟むと、操作した実感が変わる」という考えを、まず触れる形にした試作です。<br><br><small>使用技術：Unity / AR Foundation / MediaPipeUnityPlugin</small>",
+    "descriptionEn": "A floating button has no surface to press. What if a real table could provide that feeling instead? This question led to my first AR project.<br><br>Two people play paper sumo on an AR ring placed on a table. Tapping marked spots beside the ring moves the wrestlers. In physical paper sumo, you never touch the wrestlers directly, so it seemed a good way to keep the real sensation of tapping while making the wrestlers digital.<br><br>I added special moves and some directional control. Detecting hands reliably and reflecting how hard a player taps remained challenges. It is a working prototype of an idea: placing a real object between your hands and a digital world can change how an interaction feels.<br><br><small>Built with: Unity / AR Foundation / MediaPipeUnityPlugin</small>",
+    "link": "https://youtu.be/nF4E8MjyVu8?si=C9Tpxh7yzLl8rq2K",
+    "linkLabel": "Watch on YouTube",
+    "category": "AR / WebXR",
+    "image": "img/kamizumo.png",
+    "summaryJa": "机を叩く手触りを、ARの操作に。",
+    "summaryEn": "The table becomes the AR interface.",
+    "anchor": "center",
+    "images": [
+      {
+        "src": "./assets/images/kamizumo-400-ae9b31ec.webp",
+        "width": 400,
+        "height": 400,
+        "bytes": 26380
+      },
+      {
+        "src": "./assets/images/kamizumo-500-ff093233.webp",
+        "width": 500,
+        "height": 500,
+        "bytes": 35158
+      }
+    ]
+  },
+  {
+    "id": "scene-13",
+    "title": "Drive The Earth",
+    "descriptionJa": "空にARを重ねられるなら、見上げた景色そのものをゲームの舞台にできないか。8th WallのSky Effectを使って試した作品です。<br><br>迫ってくる惑星から逃げるため、100万馬力のロボットが地球を運ぶ、という設定にしました。画面の中だけでは収まらないスケールの遊びを考えています。<br><br>ただ、実際に作ると「地球を運んでいる感じ」を出すのは難しい。大きなものを表示することと、その大きさや動きを体感できることは別なのだと感じた試作です。",
+    "descriptionEn": "If AR can appear in the sky, could the view above you become the setting for a game? I explored that idea with 8th Wall’s Sky Effect.<br><br>The premise is a million-horsepower robot carrying Earth away from an incoming planet. I wanted to try a scale of play that reaches beyond the screen.<br><br>In practice, conveying the feeling of carrying Earth proved difficult. This prototype reminded me that showing something enormous is different from making its scale and movement felt.",
+    "link": "https://ken321.github.io/drive-the-earth/",
+    "linkLabel": "Play",
+    "category": "AR / WebXR",
+    "image": "img/drive-the-earth.png",
+    "summaryJa": "見上げた空を、ゲームの舞台に。",
+    "summaryEn": "Turn the sky above you into a game.",
+    "anchor": "center",
+    "images": [
+      {
+        "src": "./assets/images/drive-the-earth-400-7743bb44.webp",
+        "width": 400,
+        "height": 696,
+        "bytes": 34130
+      },
+      {
+        "src": "./assets/images/drive-the-earth-621-9d7bee4c.webp",
+        "width": 621,
+        "height": 1080,
+        "bytes": 58176
+      }
+    ]
+  },
+  {
+    "id": "scene-7",
+    "title": "TENORI Friends",
+    "descriptionJa": "SlackやLINEのようなやり取りが、ARの空間に出てきたらどうなるだろう。メッセージの一覧ではなく、小さなアバターを通して友人とつながる体験を考えました。<br><br>友人のアバターがミニチュアの部屋を歩き、ログイン中はそのアバターを通してチャットできます。不在のときも、相手のいる場所の天気を話してくれます。用事があるときだけ開く連絡手段から、相手の気配を感じる場所へ近づけたいと思いました。<br><br>ブラウザで始められるよう8th Wallで制作し、Shared AR Moduleで同期しています。音声で話すことやSNSの投稿を伝えることも構想しましたが、この作品では未実装です。<br><br><small>使用技術：8th Wall / A-Frame</small>",
+    "descriptionEn": "What might communication through Slack or LINE become in an AR space? I explored connecting through a small avatar rather than a list of messages.<br><br>A friend’s avatar walks around a miniature room, and you can chat through it while they are online. When they are away, it can tell you about the weather where they live. I wanted to explore a sense of someone being nearby, beyond opening an app only when you have something to say.<br><br>Built for the browser with 8th Wall, it uses Shared AR Module for synchronization. Voice conversations and sharing social posts were ideas for the project, but were not implemented.<br><br><small>Built with: 8th Wall / A-Frame</small>",
+    "link": "https://youtu.be/-SKVXbq8gUs?si=SsdnsV43orP-6hph",
+    "linkLabel": "Watch on YouTube",
+    "category": "AR / WebXR",
+    "image": "img/tenori_friends.png",
+    "summaryJa": "離れた友人が、小さなアバターでそばにいる。",
+    "summaryEn": "A distant friend, a tiny presence beside you.",
+    "anchor": "center",
+    "images": [
+      {
+        "src": "./assets/images/tenori_friends-400-5c412f3a.webp",
+        "width": 400,
+        "height": 400,
+        "bytes": 15168
+      },
+      {
+        "src": "./assets/images/tenori_friends-500-05793d89.webp",
+        "width": 500,
+        "height": 500,
+        "bytes": 19904
+      }
+    ]
+  },
+  {
+    "id": "scene-11",
+    "title": "Hope for Haiti",
+    "descriptionJa": "情報をスクロールして読む代わりに、自分が歩いて読み進める。空間を使うことで、伝え方を変えられないかと考えたAR体験です。8th Wall × Hope for Haiti Challengeに向けて制作しました。<br><br>ハイチに関する情報や動画を映す半透明のスクリーンが、目の前に並びます。スクリーンをくぐり抜けながら進むと、足元にハイビスカスが咲き、最後には花びらが空から舞い落ちます。<br><br>読む、進む、景色が変わる。そのつながりを通して、遠い場所の話を、自分のいる空間で受け取る体験を目指しました。<br><br><small>使用技術：8th Wall / Three.js</small>",
+    "descriptionEn": "Instead of scrolling through information, you walk through it. Created for the 8th Wall × Hope for Haiti Challenge, this AR experience explores how space can change the way a story is presented.<br><br>Translucent screens ahead of you show information and videos about Haiti. As you pass through them, hibiscus flowers bloom at your feet. At the end, petals fall from the sky.<br><br>Reading, moving forward, and seeing the surroundings change are connected. I wanted visitors to encounter a story from far away within the space they occupy.<br><br><small>Built with: 8th Wall / Three.js</small>",
+    "link": "https://www.8thwall.com/bench/hope-for-haiti-challenge",
+    "linkLabel": "Open on 8th Wall",
+    "category": "AR / WebXR",
+    "image": "img/haiti.png",
+    "summaryJa": "歩いて読み進める、ハイチの物語。",
+    "summaryEn": "Walk through a story about Haiti.",
+    "anchor": "center",
+    "images": [
+      {
+        "src": "./assets/images/haiti-400-99cfa339.webp",
+        "width": 400,
+        "height": 400,
+        "bytes": 17278
+      },
+      {
+        "src": "./assets/images/haiti-500-b4358d42.webp",
+        "width": 500,
+        "height": 500,
+        "bytes": 22532
+      }
+    ]
+  },
+  {
+    "id": "scene-10",
+    "title": "AR Business Card",
+    "descriptionJa": "モノを傾けると、その上のモノが滑り落ちる。誰もが知っている動きをARの操作に使えないかと考えた、Benchの名刺アプリです。<br><br>名刺にカメラを向けると、Benchメンバーのアバターが現れます。名刺を傾けるとバランスを崩し、上下に動かすと跳ね上がる。試しているうちにその動きが面白くなり、丸まったアバターを弾ませるジャグリングと、二階建ての玉転がし迷路も作りました。<br><br>名刺を、現実とARをつなぐ操作の道具にする試みです。ただし、絵柄をカメラに映し続ける制約は残ります。慣れた操作を使うだけでなく、それを邪魔しない仕組みも必要だと感じました。<br><br><small>使用技術：Unity / AR Foundation</small>",
+    "descriptionEn": "When you tilt an object, things on top of it slide off. Could that familiar behavior become an AR input? This business card app for Bench explores the idea.<br><br>Point the camera at a card and a Bench team member’s avatar appears. Tilt the card and it loses its balance; move the card up and down and it bounces. Playing with those movements led to two more modes: juggling a curled-up avatar and rolling it through a two-story maze.<br><br>The card becomes a physical control connecting the real and digital worlds. Keeping its image in view of the camera remains a constraint. Familiar gestures help, but the technology also needs to stay out of their way.<br><br><small>Built with: Unity / AR Foundation</small>",
+    "link": "https://x.com/321kn/status/1541271768639238144",
+    "linkLabel": "Watch on x",
+    "category": "AR / WebXR",
+    "image": "img/meishi.png",
+    "summaryJa": "傾ける、弾ませる。名刺が操作の道具になる。",
+    "summaryEn": "Tilt it. Bounce it. A business card becomes a controller.",
+    "anchor": "center",
+    "images": [
+      {
+        "src": "./assets/images/meishi-400-b9f26289.webp",
+        "width": 400,
+        "height": 399,
+        "bytes": 10850
+      },
+      {
+        "src": "./assets/images/meishi-500-2b3f10ed.webp",
+        "width": 500,
+        "height": 499,
+        "bytes": 14448
+      }
+    ]
+  },
+  {
+    "id": "scene-14",
+    "title": "PersonaAI-OSS",
+    "descriptionJa": "書き手には当たり前のことが、読み手には伝わらない。そのずれを公開前に考えるための、AIを使ったOSSです。<br><br>想定する読者の属性から複数のペルソナを作り、それぞれの視点で記事への感想を生成します。DeepPersonaの考え方を取り入れ、一人の架空の読者だけに寄らないようにしています。<br><br>AIに書いてもらうだけでなく、読んでもらったらどうなるか。生成された反応を実際の読者の声と同一視せず、伝わりにくい箇所や、見落としていた視点を探す手がかりとして使うツールです。",
+    "descriptionEn": "What seems obvious to a writer may not come across to a reader. This open-source AI tool helps explore that gap before an article is published.<br><br>It creates multiple personas from audience attributes, then generates a response to the article from each perspective. Drawing on DeepPersona, it looks beyond a single imagined reader.<br><br>What if AI could read with us, as well as write with us? The generated reactions are prompts for finding unclear passages and overlooked perspectives, rather than a substitute for feedback from real readers.",
+    "link": "https://github.com/Ken321/PersonaAI-OSS",
+    "linkLabel": "GitHub",
+    "category": "AI / OSS",
+    "image": "img/persona-ai.png",
+    "summaryJa": "公開する前に、別の視点で読んでもらう。",
+    "summaryEn": "Before publishing, try another reader’s perspective.",
+    "anchor": "left top",
+    "images": [
+      {
+        "src": "./assets/images/persona-ai-400-a2207a6e.webp",
+        "width": 400,
+        "height": 403,
+        "bytes": 22784
+      },
+      {
+        "src": "./assets/images/persona-ai-800-73409574.webp",
+        "width": 800,
+        "height": 805,
+        "bytes": 66930
+      },
+      {
+        "src": "./assets/images/persona-ai-1280-2d39d2ea.webp",
+        "width": 1280,
+        "height": 1289,
+        "bytes": 123854
+      }
+    ]
+  }
+]

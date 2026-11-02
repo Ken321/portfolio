@@ -1,0 +1,204 @@
+{
+  "baseline": {
+    "errors": [
+      "Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "initial": {
+      "contexts": 14,
+      "canvases": 13,
+      "asciiSpans": 361,
+      "resources": 8708032,
+      "avatarLoaded": true,
+      "overflow": false
+    }
+  },
+  "new": {
+    "errors": [],
+    "initial": {
+      "contexts": 4,
+      "canvases": 4,
+      "asciiSpans": 0,
+      "resources": 901072,
+      "avatarLoaded": false,
+      "overflow": false,
+      "performance": [
+        {
+          "kind": "hero",
+          "visible": true,
+          "loaded": true,
+          "frames": 132,
+          "time": 4.399837333333327,
+          "state": "ready"
+        },
+        {
+          "kind": "ken",
+          "visible": false,
+          "loaded": true,
+          "frames": 0,
+          "time": 0,
+          "state": "ready"
+        },
+        {
+          "kind": "avatar",
+          "visible": false,
+          "loaded": false,
+          "frames": 0,
+          "time": 0
+        }
+      ]
+    },
+    "atKen": [
+      {
+        "kind": "hero",
+        "visible": false,
+        "loaded": true,
+        "frames": 140,
+        "time": 4.666437333333328,
+        "state": "ready"
+      },
+      {
+        "kind": "ken",
+        "visible": true,
+        "loaded": true,
+        "frames": 41,
+        "time": 1.3666440000000004,
+        "state": "ready"
+      },
+      {
+        "kind": "avatar",
+        "visible": false,
+        "loaded": false,
+        "frames": 0,
+        "time": 0
+      }
+    ],
+    "atAvatar": [
+      {
+        "kind": "hero",
+        "visible": false,
+        "loaded": true,
+        "frames": 140,
+        "time": 4.666437333333328,
+        "state": "ready"
+      },
+      {
+        "kind": "ken",
+        "visible": false,
+        "loaded": true,
+        "frames": 46,
+        "time": 1.5499440000000004,
+        "state": "ready"
+      },
+      {
+        "kind": "avatar",
+        "visible": true,
+        "loaded": true,
+        "frames": 66,
+        "time": 2.1998453333333323,
+        "state": "ready"
+      }
+    ],
+    "checks": "8 static cards; dialog focus/scroll restore; repeated open/close; language; lazy avatar; offscreen hero paused; reduced motion releases effects"
+  },
+  "desktop": {
+    "overflow": false,
+    "performance": [
+      {
+        "kind": "hero",
+        "visible": true,
+        "loaded": true,
+        "frames": 107,
+        "time": 1.8499666666666645,
+        "state": "ready"
+      },
+      {
+        "kind": "ken",
+        "visible": true,
+        "loaded": true,
+        "frames": 106,
+        "time": 1.833299999999998,
+        "state": "ready"
+      },
+      {
+        "kind": "avatar",
+        "visible": false,
+        "loaded": false,
+        "frames": 0,
+        "time": 0
+      }
+    ]
+  },
+  "reduced": {
+    "overflow": false,
+    "canvas": 0
+  },
+  "fallback": "3D bundle blocked; work detail remains usable",
+  "lifecycle": {
+    "released": [
+      {
+        "kind": "hero",
+        "visible": false,
+        "loaded": false,
+        "frames": 4,
+        "time": 0,
+        "state": "idle"
+      },
+      {
+        "kind": "ken",
+        "visible": false,
+        "loaded": false,
+        "frames": 0,
+        "time": 0,
+        "state": "idle"
+      },
+      {
+        "kind": "avatar",
+        "visible": true,
+        "loaded": true,
+        "frames": 931,
+        "time": 31.03223333333345,
+        "state": "ready"
+      }
+    ],
+    "restored": {
+      "states": [
+        {
+          "kind": "hero",
+          "visible": true,
+          "loaded": true,
+          "frames": 12,
+          "time": 0.2666333333333326,
+          "state": "ready"
+        },
+        {
+          "kind": "ken",
+          "visible": false,
+          "loaded": true,
+          "frames": 0,
+          "time": 0,
+          "state": "ready"
+        },
+        {
+          "kind": "avatar",
+          "visible": false,
+          "loaded": true,
+          "frames": 931,
+          "time": 31.03223333333345,
+          "state": "ready"
+        }
+      ],
+      "canvases": 5
+    }
+  },
+  "conditions": {
+    "date": "2026-10-30",
+    "browser": "Desktop Chrome emulating mobile; not a physical phone",
+    "mobileViewport": [
+      390,
+      844
+    ],
+    "mobileDeviceScaleFactor": 3,
+    "initialMeasurement": "4.5 seconds after load; resource transfer bytes exclude HTML navigation",
+    "baselineCommit": "66163e5"
+  }
+}

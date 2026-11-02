@@ -1,0 +1,217 @@
+{
+  "source": "https://www.mixamo.com/",
+  "clipName": "Bored",
+  "sourceSha256": "be24f593b14c880c87127266864e2f978961ceba3def42157a0a17b3db815b86",
+  "avatarSha256": "dbedf6e3d73a619ac579d20ca5b8afbed380c3c54bb0e860336460c7ae5ba054",
+  "armSpaceDegrees": 15,
+  "clampWhenFinished": true,
+  "duration": 10.666666984558105,
+  "fps": 30,
+  "frames": 322,
+  "bones": 50,
+  "tracks": 51,
+  "hipScale": 0.006761562300576192,
+  "bytes": 725538,
+  "mapping": [
+    {
+      "source": "mixamorigHips",
+      "target": "DEF-spine"
+    },
+    {
+      "source": "mixamorigSpine",
+      "target": "DEF-spine001"
+    },
+    {
+      "source": "mixamorigSpine1",
+      "target": "DEF-spine002"
+    },
+    {
+      "source": "mixamorigSpine2",
+      "target": "DEF-spine003"
+    },
+    {
+      "source": "mixamorigLeftShoulder",
+      "target": "DEF-shoulderL"
+    },
+    {
+      "source": "mixamorigLeftArm",
+      "target": "DEF-upper_armL"
+    },
+    {
+      "source": "mixamorigLeftForeArm",
+      "target": "DEF-forearmL"
+    },
+    {
+      "source": "mixamorigLeftHand",
+      "target": "DEF-handL"
+    },
+    {
+      "source": "mixamorigLeftHandIndex1",
+      "target": "DEF-f_index01L"
+    },
+    {
+      "source": "mixamorigLeftHandIndex2",
+      "target": "DEF-f_index02L"
+    },
+    {
+      "source": "mixamorigLeftHandIndex3",
+      "target": "DEF-f_index03L"
+    },
+    {
+      "source": "mixamorigLeftHandThumb1",
+      "target": "DEF-thumb01L"
+    },
+    {
+      "source": "mixamorigLeftHandThumb2",
+      "target": "DEF-thumb02L"
+    },
+    {
+      "source": "mixamorigLeftHandThumb3",
+      "target": "DEF-thumb03L"
+    },
+    {
+      "source": "mixamorigLeftHandMiddle1",
+      "target": "DEF-f_middle01L"
+    },
+    {
+      "source": "mixamorigLeftHandMiddle2",
+      "target": "DEF-f_middle02L"
+    },
+    {
+      "source": "mixamorigLeftHandMiddle3",
+      "target": "DEF-f_middle03L"
+    },
+    {
+      "source": "mixamorigLeftHandRing1",
+      "target": "DEF-f_ring01L"
+    },
+    {
+      "source": "mixamorigLeftHandRing2",
+      "target": "DEF-f_ring02L"
+    },
+    {
+      "source": "mixamorigLeftHandRing3",
+      "target": "DEF-f_ring03L"
+    },
+    {
+      "source": "mixamorigLeftHandPinky1",
+      "target": "DEF-f_pinky01L"
+    },
+    {
+      "source": "mixamorigLeftHandPinky2",
+      "target": "DEF-f_pinky02L"
+    },
+    {
+      "source": "mixamorigLeftHandPinky3",
+      "target": "DEF-f_pinky03L"
+    },
+    {
+      "source": "mixamorigRightShoulder",
+      "target": "DEF-shoulderR"
+    },
+    {
+      "source": "mixamorigRightArm",
+      "target": "DEF-upper_armR"
+    },
+    {
+      "source": "mixamorigRightForeArm",
+      "target": "DEF-forearmR"
+    },
+    {
+      "source": "mixamorigRightHand",
+      "target": "DEF-handR"
+    },
+    {
+      "source": "mixamorigRightHandIndex1",
+      "target": "DEF-f_index01R"
+    },
+    {
+      "source": "mixamorigRightHandIndex2",
+      "target": "DEF-f_index02R"
+    },
+    {
+      "source": "mixamorigRightHandIndex3",
+      "target": "DEF-f_index03R"
+    },
+    {
+      "source": "mixamorigRightHandThumb1",
+      "target": "DEF-thumb01R"
+    },
+    {
+      "source": "mixamorigRightHandThumb2",
+      "target": "DEF-thumb02R"
+    },
+    {
+      "source": "mixamorigRightHandThumb3",
+      "target": "DEF-thumb03R"
+    },
+    {
+      "source": "mixamorigRightHandMiddle1",
+      "target": "DEF-f_middle01R"
+    },
+    {
+      "source": "mixamorigRightHandMiddle2",
+      "target": "DEF-f_middle02R"
+    },
+    {
+      "source": "mixamorigRightHandMiddle3",
+      "target": "DEF-f_middle03R"
+    },
+    {
+      "source": "mixamorigRightHandRing1",
+      "target": "DEF-f_ring01R"
+    },
+    {
+      "source": "mixamorigRightHandRing2",
+      "target": "DEF-f_ring02R"
+    },
+    {
+      "source": "mixamorigRightHandRing3",
+      "target": "DEF-f_ring03R"
+    },
+    {
+      "source": "mixamorigRightHandPinky1",
+      "target": "DEF-f_pinky01R"
+    },
+    {
+      "source": "mixamorigRightHandPinky2",
+      "target": "DEF-f_pinky02R"
+    },
+    {
+      "source": "mixamorigRightHandPinky3",
+      "target": "DEF-f_pinky03R"
+    },
+    {
+      "source": "mixamorigNeck",
+      "target": "DEF-spine004"
+    },
+    {
+      "source": "mixamorigHead",
+      "target": "DEF-spine006"
+    },
+    {
+      "source": "mixamorigLeftUpLeg",
+      "target": "DEF-thighL"
+    },
+    {
+      "source": "mixamorigLeftLeg",
+      "target": "DEF-shinL"
+    },
+    {
+      "source": "mixamorigLeftFoot",
+      "target": "DEF-footL"
+    },
+    {
+      "source": "mixamorigRightUpLeg",
+      "target": "DEF-thighR"
+    },
+    {
+      "source": "mixamorigRightLeg",
+      "target": "DEF-shinR"
+    },
+    {
+      "source": "mixamorigRightFoot",
+      "target": "DEF-footR"
+    }
+  ]
+}

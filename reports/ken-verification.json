@@ -1,0 +1,41 @@
+[
+  {
+    "width": 320,
+    "errors": [],
+    "kenFramesInOneSecond": 60,
+    "heroFramesInOneSecond": 30,
+    "diagnostics": {
+      "drawCalls": 3,
+      "triangles": 14328,
+      "bodies": 9,
+      "colliders": 132
+    },
+    "reducedMotionReleaseAndResume": true
+  },
+  {
+    "width": 390,
+    "errors": [],
+    "kenFramesInOneSecond": 60,
+    "heroFramesInOneSecond": 30,
+    "diagnostics": {
+      "drawCalls": 3,
+      "triangles": 14328,
+      "bodies": 9,
+      "colliders": 132
+    },
+    "reducedMotionReleaseAndResume": true
+  },
+  {
+    "width": 1440,
+    "errors": [],
+    "kenFramesInOneSecond": 60,
+    "heroFramesInOneSecond": 60,
+    "diagnostics": {
+      "drawCalls": 3,
+      "triangles": 33432,
+      "bodies": 21,
+      "colliders": 308
+    },
+    "reducedMotionReleaseAndResume": true
+  }
+]

@@ -1,0 +1,88 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { FontLoader } from 'three/addons/loaders/FontLoader.js';
+import { createLetterAssets } from '../src/effects/ken-shapes.js';
+import { createPhysics } from '../src/effects/ken-physics.js';
+const font=new FontLoader().parse(JSON.parse(await readFile(new URL('../node_modules/three/examples/fonts/helvetiker_bold.typeface.json',import.meta.url),'utf8')));
+const assets=createLetterAssets(font);
+test('one collision sphere encloses every rendered letter vertex',()=>{
+  for(const asset of assets){
+    const p=asset.geometry.getAttribute('position');
+    for(let i=0;i<p.count;i++)assert.ok(Math.hypot(p.getX(i),p.getY(i),p.getZ(i)) < asset.radius);
+  }
+});
+for(const count of [9,15,18,21,36])test(`${count} letters remain separated and bounded during 20 seconds of pointer sweeps`,()=>{
+  const sim=createPhysics(assets,count);
+  let maxOverlap=0;
+  for(let step=0;step<2400;step++){
+    sim.step({x:Math.sin(step*.1)*3,y:Math.cos(step*.07)*2});
+    for(let i=0;i<count;i++){
+      const a=sim.bodies[i];
+      assert.ok(Number.isFinite(a.position.length()));assert.ok(a.position.length()<12);
+      assert.ok(Math.abs(a.quaternion.length()-1)<1e-6);
+      for(let j=i+1;j<count;j++){
+        const b=sim.bodies[j];
+        maxOverlap=Math.max(maxOverlap,a.radius+b.radius-a.position.distanceTo(b.position));
+      }
+    }
+  }
+  assert.ok(sim.contactCount>0);
+  assert.ok(maxOverlap<.005,`Excessive sphere overlap ${maxOverlap}`);
+});
+test('hover visibly displaces the gathering cluster',()=>{
+  const idle=createPhysics(assets,9),hover=createPhysics(assets,9);
+  const start=idle.bodies.map(b=>b.position.clone());
+  for(let i=0;i<240;i++){idle.step(null);hover.step({x:0,y:0});}
+  assert.ok(idle.bodies.some((b,i)=>b.position.distanceTo(start[i])>.1));
+  assert.ok(hover.bodies.some((b,i)=>b.position.distanceTo(idle.bodies[i].position)>.3));
+});
+test('bounded integration prevents fast opposing spheres tunnelling',()=>{
+  const sim=createPhysics(assets,2),[a,b]=sim.bodies;
+  a.position.set(-2,0,0);b.position.set(2,0,0);
+  a.velocity.set(200,0,0);b.velocity.set(-200,0,0);
+  for(let i=0;i<100;i++){sim.step(null);assert.ok(a.position.x<b.position.x);assert.ok(a.position.distanceTo(b.position)>=a.radius+b.radius-.005);}
+});
+
+for(const count of [9,15,18,21,36])test(`${count} letters settle, wake on hover, then settle again`,()=>{
+  const sim=createPhysics(assets,count);
+  for(let i=0;i<1200&&!sim.sleeping;i++)sim.step(null);
+  assert.ok(sim.sleeping,'Must settle within ten seconds');
+  const positions=sim.bodies.map(b=>b.position.clone()),rotations=sim.bodies.map(b=>b.quaternion.clone());
+  for(let i=0;i<240;i++)sim.step(null);
+  sim.bodies.forEach((b,i)=>{assert.ok(b.position.equals(positions[i]));assert.ok(b.quaternion.equals(rotations[i]));});
+  const front=sim.bodies.reduce((a,b)=>a.position.z>b.position.z?a:b);
+  const cameraZ=5.2, factor=cameraZ/(cameraZ-front.position.z);
+  const pointer={x:front.position.x*factor+.1,y:front.position.y*factor,cameraZ};
+  sim.step(pointer);assert.ok(!sim.sleeping);
+  for(let i=0;i<60;i++)sim.step(pointer);
+  assert.ok(sim.bodies.some((b,i)=>b.position.distanceTo(positions[i])>.2),'Hovered cluster must visibly react within half a second');
+  sim.step(null);
+  for(let i=0;i<1200&&!sim.sleeping;i++)sim.step(null);
+  assert.ok(sim.sleeping,'Must settle again after leaving');
+});
+
+test('a quick swipe produces energetic spin and translation, then settles',()=>{
+  const sim=createPhysics(assets,15);
+  for(let i=0;i<1200&&!sim.sleeping;i++)sim.step(null);
+  const front=sim.bodies.reduce((a,b)=>a.position.z>b.position.z?a:b);
+  const factor=5.2/(5.2-front.position.z),x=front.position.x*factor,y=front.position.y*factor;
+  let peakSpin=0,peakSpeed=0;
+  for(let i=0;i<60;i++){
+    sim.step({x:x-1+i/30,y,cameraZ:5.2});
+    for(const body of sim.bodies){peakSpin=Math.max(peakSpin,body.angular.length());peakSpeed=Math.max(peakSpeed,body.velocity.length());}
+  }
+  assert.ok(peakSpin>2,'Swipe must exceed the previous 1.2 rad/s rotation limit');
+  assert.ok(peakSpeed>4,'Swipe must exceed the previous translation limit');
+  for(let i=0;i<1200&&!sim.sleeping;i++)sim.step(null);
+  assert.ok(sim.sleeping,'An energetic swipe must still settle');
+});
+
+
+test('return response covers the reference distance in about half a second',()=>{
+  const sim=createPhysics([{radius:1}],1),body=sim.bodies[0];
+  body.position.set(3,0,0);body.velocity.set(0,0,0);
+  let steps=0;
+  while(body.position.x>1 && steps<120){sim.step(null);steps++;}
+  assert.ok(steps/120>=.45 && steps/120<=.55,`Return took ${steps/120}s`);
+});

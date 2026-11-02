@@ -1,0 +1,866 @@
+{
+  "inputs": {
+    "src/timing.js": {
+      "bytes": 277,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/three/build/three.module.js": {
+      "bytes": 1298981,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/geometries/TextGeometry.js": {
+      "bytes": 1572,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/loaders/FontLoader.js": {
+      "bytes": 3204,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/fonts/helvetiker_bold.typeface.json": {
+      "bytes": 61632,
+      "imports": []
+    },
+    "node_modules/three/examples/fonts/helvetiker_regular.typeface.json": {
+      "bytes": 63182,
+      "imports": []
+    },
+    "src/effects/shared.js": {
+      "bytes": 1892,
+      "imports": [
+        {
+          "path": "node_modules/three/examples/jsm/loaders/FontLoader.js",
+          "kind": "import-statement",
+          "original": "three/addons/loaders/FontLoader.js"
+        },
+        {
+          "path": "node_modules/three/examples/fonts/helvetiker_bold.typeface.json",
+          "kind": "import-statement",
+          "original": "three/examples/fonts/helvetiker_bold.typeface.json"
+        },
+        {
+          "path": "node_modules/three/examples/fonts/helvetiker_regular.typeface.json",
+          "kind": "import-statement",
+          "original": "three/examples/fonts/helvetiker_regular.typeface.json"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/shaders/CopyShader.js": {
+      "bytes": 571,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/postprocessing/Pass.js": {
+      "bytes": 1706,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/postprocessing/ShaderPass.js": {
+      "bytes": 1576,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "kind": "import-statement",
+          "original": "./Pass.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/postprocessing/MaskPass.js": {
+      "bytes": 2231,
+      "imports": [
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "kind": "import-statement",
+          "original": "./Pass.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/postprocessing/EffectComposer.js": {
+      "bytes": 4651,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/shaders/CopyShader.js",
+          "kind": "import-statement",
+          "original": "../shaders/CopyShader.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
+          "kind": "import-statement",
+          "original": "./ShaderPass.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/MaskPass.js",
+          "kind": "import-statement",
+          "original": "./MaskPass.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/MaskPass.js",
+          "kind": "import-statement",
+          "original": "./MaskPass.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/postprocessing/RenderPass.js": {
+      "bytes": 1941,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "kind": "import-statement",
+          "original": "./Pass.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js": {
+      "bytes": 1147,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js": {
+      "bytes": 12410,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "kind": "import-statement",
+          "original": "./Pass.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/shaders/CopyShader.js",
+          "kind": "import-statement",
+          "original": "../shaders/CopyShader.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js",
+          "kind": "import-statement",
+          "original": "../shaders/LuminosityHighPassShader.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/ascii.js": {
+      "bytes": 2635,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/effects/hero.js": {
+      "bytes": 35818,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/geometries/TextGeometry.js",
+          "kind": "import-statement",
+          "original": "three/addons/geometries/TextGeometry.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/loaders/FontLoader.js",
+          "kind": "import-statement",
+          "original": "three/addons/loaders/FontLoader.js"
+        },
+        {
+          "path": "src/effects/shared.js",
+          "kind": "import-statement",
+          "original": "./shared.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/EffectComposer.js",
+          "kind": "import-statement",
+          "original": "three/addons/postprocessing/EffectComposer.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/RenderPass.js",
+          "kind": "import-statement",
+          "original": "three/addons/postprocessing/RenderPass.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
+          "kind": "import-statement",
+          "original": "three/addons/postprocessing/ShaderPass.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js",
+          "kind": "import-statement",
+          "original": "three/addons/postprocessing/UnrealBloomPass.js"
+        },
+        {
+          "path": "src/effects/ascii.js",
+          "kind": "import-statement",
+          "original": "./ascii.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/ken-shapes.js": {
+      "bytes": 623,
+      "imports": [
+        {
+          "path": "node_modules/three/examples/jsm/geometries/TextGeometry.js",
+          "kind": "import-statement",
+          "original": "three/addons/geometries/TextGeometry.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/ken-physics.js": {
+      "bytes": 6528,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/ken-material.js": {
+      "bytes": 2403,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/ken.js": {
+      "bytes": 6689,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "src/effects/shared.js",
+          "kind": "import-statement",
+          "original": "./shared.js"
+        },
+        {
+          "path": "src/effects/ken-shapes.js",
+          "kind": "import-statement",
+          "original": "./ken-shapes.js"
+        },
+        {
+          "path": "src/effects/ken-physics.js",
+          "kind": "import-statement",
+          "original": "./ken-physics.js"
+        },
+        {
+          "path": "src/effects/ken-material.js",
+          "kind": "import-statement",
+          "original": "./ken-material.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/avatar-catch-motion.js": {
+      "bytes": 9846,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/avatar-body-motion.js": {
+      "bytes": 4282,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/avatar-motion.js": {
+      "bytes": 19224,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "src/effects/avatar-catch-motion.js",
+          "kind": "import-statement",
+          "original": "./avatar-catch-motion.js"
+        },
+        {
+          "path": "src/effects/avatar-body-motion.js",
+          "kind": "import-statement",
+          "original": "./avatar-body-motion.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/avatar-mixamo-motion.js": {
+      "bytes": 3797,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "src/effects/avatar-motion.js",
+          "kind": "import-statement",
+          "original": "./avatar-motion.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/voice-motion.js": {
+      "bytes": 1336,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
+      "bytes": 24850,
+      "imports": [],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/utils/BufferGeometryUtils.js": {
+      "bytes": 31768,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "node_modules/three/examples/jsm/loaders/GLTFLoader.js": {
+      "bytes": 110043,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
+          "kind": "import-statement",
+          "original": "../utils/BufferGeometryUtils.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/avatar.js": {
+      "bytes": 4821,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "src/effects/avatar-mixamo-motion.js",
+          "kind": "import-statement",
+          "original": "./avatar-mixamo-motion.js"
+        },
+        {
+          "path": "src/voice-motion.js",
+          "kind": "import-statement",
+          "original": "../voice-motion.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js",
+          "kind": "import-statement",
+          "original": "three/addons/libs/meshopt_decoder.module.js"
+        },
+        {
+          "path": "node_modules/three/examples/jsm/loaders/GLTFLoader.js",
+          "kind": "import-statement",
+          "original": "three/addons/loaders/GLTFLoader.js"
+        },
+        {
+          "path": "src/effects/shared.js",
+          "kind": "import-statement",
+          "original": "./shared.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects-controller.js": {
+      "bytes": 7416,
+      "imports": [
+        {
+          "path": "src/timing.js",
+          "kind": "import-statement",
+          "original": "./timing.js"
+        },
+        {
+          "path": "src/effects/hero.js",
+          "kind": "dynamic-import",
+          "original": "./effects/hero.js"
+        },
+        {
+          "path": "src/effects/ken.js",
+          "kind": "dynamic-import",
+          "original": "./effects/ken.js"
+        },
+        {
+          "path": "src/effects/avatar.js",
+          "kind": "dynamic-import",
+          "original": "./effects/avatar.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/voice-diagnostics.js": {
+      "bytes": 1756,
+      "imports": [],
+      "format": "esm"
+    },
+    "src/voice.js": {
+      "bytes": 10206,
+      "imports": [
+        {
+          "path": "src/voice-diagnostics.js",
+          "kind": "import-statement",
+          "original": "./voice-diagnostics.js"
+        },
+        {
+          "path": "src/voice-motion.js",
+          "kind": "import-statement",
+          "original": "./voice-motion.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/app.js": {
+      "bytes": 11676,
+      "imports": [
+        {
+          "path": "src/effects-controller.js",
+          "kind": "dynamic-import",
+          "original": "./effects-controller.js"
+        },
+        {
+          "path": "src/voice.js",
+          "kind": "dynamic-import",
+          "original": "./voice.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/styles.css": {
+      "bytes": 18631,
+      "imports": []
+    }
+  },
+  "outputs": {
+    "assets/build/app-LZTKKBKG.js": {
+      "imports": [
+        {
+          "path": "assets/build/effects-controller-5DX6XRCB.js",
+          "kind": "dynamic-import"
+        },
+        {
+          "path": "assets/build/voice-UB45LCPV.js",
+          "kind": "dynamic-import"
+        }
+      ],
+      "exports": [],
+      "entryPoint": "src/app.js",
+      "inputs": {
+        "src/app.js": {
+          "bytesInOutput": 7986
+        }
+      },
+      "bytes": 7987
+    },
+    "assets/build/hero-KLYPW6PR.js": {
+      "imports": [
+        {
+          "path": "assets/build/chunk-DFZL4AI5.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "assets/build/chunk-AG2NIBDL.js",
+          "kind": "import-statement"
+        }
+      ],
+      "exports": [
+        "createHeroEffects"
+      ],
+      "entryPoint": "src/effects/hero.js",
+      "inputs": {
+        "node_modules/three/examples/jsm/shaders/CopyShader.js": {
+          "bytesInOutput": 427
+        },
+        "node_modules/three/examples/jsm/postprocessing/Pass.js": {
+          "bytesInOutput": 617
+        },
+        "node_modules/three/examples/jsm/postprocessing/ShaderPass.js": {
+          "bytesInOutput": 779
+        },
+        "node_modules/three/examples/jsm/postprocessing/MaskPass.js": {
+          "bytesInOutput": 1096
+        },
+        "node_modules/three/examples/jsm/postprocessing/EffectComposer.js": {
+          "bytesInOutput": 2568
+        },
+        "node_modules/three/examples/jsm/postprocessing/RenderPass.js": {
+          "bytesInOutput": 970
+        },
+        "node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js": {
+          "bytesInOutput": 873
+        },
+        "node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js": {
+          "bytesInOutput": 8027
+        },
+        "src/effects/ascii.js": {
+          "bytesInOutput": 1209
+        },
+        "src/effects/hero.js": {
+          "bytesInOutput": 14523
+        }
+      },
+      "bytes": 31495
+    },
+    "assets/build/ken-UOGHBYHJ.js": {
+      "imports": [
+        {
+          "path": "assets/build/chunk-DFZL4AI5.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "assets/build/chunk-AG2NIBDL.js",
+          "kind": "import-statement"
+        }
+      ],
+      "exports": [
+        "createKen"
+      ],
+      "entryPoint": "src/effects/ken.js",
+      "inputs": {
+        "src/effects/ken-shapes.js": {
+          "bytesInOutput": 309
+        },
+        "src/effects/ken-physics.js": {
+          "bytesInOutput": 3017
+        },
+        "src/effects/ken-material.js": {
+          "bytesInOutput": 1656
+        },
+        "src/effects/ken.js": {
+          "bytesInOutput": 3418
+        }
+      },
+      "bytes": 8670
+    },
+    "assets/build/chunk-DFZL4AI5.js": {
+      "imports": [
+        {
+          "path": "assets/build/chunk-AG2NIBDL.js",
+          "kind": "import-statement"
+        }
+      ],
+      "exports": [
+        "a"
+      ],
+      "inputs": {
+        "node_modules/three/examples/jsm/geometries/TextGeometry.js": {
+          "bytesInOutput": 475
+        }
+      },
+      "bytes": 532
+    },
+    "assets/build/avatar-LJWF3ENX.js": {
+      "imports": [
+        {
+          "path": "assets/build/chunk-AG2NIBDL.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "assets/build/chunk-DSOSAS5T.js",
+          "kind": "import-statement"
+        }
+      ],
+      "exports": [
+        "createAvatar"
+      ],
+      "entryPoint": "src/effects/avatar.js",
+      "inputs": {
+        "src/effects/avatar-catch-motion.js": {
+          "bytesInOutput": 5862
+        },
+        "src/effects/avatar-body-motion.js": {
+          "bytesInOutput": 2499
+        },
+        "src/effects/avatar-motion.js": {
+          "bytesInOutput": 10123
+        },
+        "src/effects/avatar-mixamo-motion.js": {
+          "bytesInOutput": 2113
+        },
+        "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
+          "bytesInOutput": 22393
+        },
+        "node_modules/three/examples/jsm/utils/BufferGeometryUtils.js": {
+          "bytesInOutput": 991
+        },
+        "node_modules/three/examples/jsm/loaders/GLTFLoader.js": {
+          "bytesInOutput": 44206
+        },
+        "src/effects/avatar.js": {
+          "bytesInOutput": 2233
+        }
+      },
+      "bytes": 91161
+    },
+    "assets/build/chunk-AG2NIBDL.js": {
+      "imports": [],
+      "exports": [
+        "$",
+        "A",
+        "Aa",
+        "B",
+        "Ba",
+        "C",
+        "Ca",
+        "D",
+        "Da",
+        "E",
+        "Ea",
+        "F",
+        "Fa",
+        "G",
+        "Ga",
+        "H",
+        "Ha",
+        "I",
+        "Ia",
+        "J",
+        "Ja",
+        "K",
+        "Ka",
+        "L",
+        "La",
+        "M",
+        "Ma",
+        "N",
+        "Na",
+        "O",
+        "Oa",
+        "P",
+        "Pa",
+        "Q",
+        "Qa",
+        "R",
+        "S",
+        "T",
+        "U",
+        "V",
+        "W",
+        "X",
+        "Y",
+        "Z",
+        "_",
+        "a",
+        "aa",
+        "b",
+        "ba",
+        "c",
+        "ca",
+        "d",
+        "da",
+        "e",
+        "ea",
+        "f",
+        "fa",
+        "g",
+        "ga",
+        "h",
+        "ha",
+        "i",
+        "ia",
+        "j",
+        "ja",
+        "k",
+        "ka",
+        "l",
+        "la",
+        "m",
+        "ma",
+        "n",
+        "na",
+        "o",
+        "oa",
+        "p",
+        "pa",
+        "q",
+        "qa",
+        "r",
+        "ra",
+        "s",
+        "sa",
+        "t",
+        "ta",
+        "u",
+        "ua",
+        "v",
+        "va",
+        "w",
+        "wa",
+        "x",
+        "xa",
+        "y",
+        "ya",
+        "z",
+        "za"
+      ],
+      "inputs": {
+        "node_modules/three/build/three.module.js": {
+          "bytesInOutput": 547433
+        },
+        "node_modules/three/examples/jsm/loaders/FontLoader.js": {
+          "bytesInOutput": 1395
+        },
+        "node_modules/three/examples/fonts/helvetiker_bold.typeface.json": {
+          "bytesInOutput": 60025
+        },
+        "node_modules/three/examples/fonts/helvetiker_regular.typeface.json": {
+          "bytesInOutput": 61578
+        },
+        "src/effects/shared.js": {
+          "bytesInOutput": 989
+        }
+      },
+      "bytes": 672415
+    },
+    "assets/build/effects-controller-5DX6XRCB.js": {
+      "imports": [
+        {
+          "path": "assets/build/hero-KLYPW6PR.js",
+          "kind": "dynamic-import"
+        },
+        {
+          "path": "assets/build/ken-UOGHBYHJ.js",
+          "kind": "dynamic-import"
+        },
+        {
+          "path": "assets/build/avatar-LJWF3ENX.js",
+          "kind": "dynamic-import"
+        }
+      ],
+      "exports": [
+        "startEffects"
+      ],
+      "entryPoint": "src/effects-controller.js",
+      "inputs": {
+        "src/timing.js": {
+          "bytesInOutput": 91
+        },
+        "src/effects-controller.js": {
+          "bytesInOutput": 4296
+        }
+      },
+      "bytes": 4414
+    },
+    "assets/build/voice-UB45LCPV.js": {
+      "imports": [
+        {
+          "path": "assets/build/chunk-DSOSAS5T.js",
+          "kind": "import-statement"
+        }
+      ],
+      "exports": [
+        "createVoice"
+      ],
+      "entryPoint": "src/voice.js",
+      "inputs": {
+        "src/voice-diagnostics.js": {
+          "bytesInOutput": 1289
+        },
+        "src/voice.js": {
+          "bytesInOutput": 10419
+        }
+      },
+      "bytes": 11774
+    },
+    "assets/build/chunk-DSOSAS5T.js": {
+      "imports": [],
+      "exports": [
+        "a",
+        "b"
+      ],
+      "inputs": {
+        "src/voice-motion.js": {
+          "bytesInOutput": 690
+        }
+      },
+      "bytes": 713
+    },
+    "assets/build/styles-FO57JVZW.css": {
+      "imports": [],
+      "entryPoint": "src/styles.css",
+      "inputs": {
+        "src/styles.css": {
+          "bytesInOutput": 17534
+        }
+      },
+      "bytes": 17535
+    }
+  }
+}

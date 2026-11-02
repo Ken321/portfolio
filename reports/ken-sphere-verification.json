@@ -1,0 +1,22 @@
+{
+  "date": "2026-10-30",
+  "implementation": "conservative spheres, fixed time step, studio matcap, instanced rendering",
+  "measurements": [
+    {
+      "bodies": 9,
+      "steps": 10000,
+      "msPerStep": 0.001768445899999999
+    },
+    {
+      "bodies": 21,
+      "steps": 10000,
+      "msPerStep": 0.004718633299999999
+    }
+  ],
+  "asset": {
+    "file": "assets/build/ken-QSTB4YZR.js",
+    "bytes": 7453,
+    "gzipBytes": 3541
+  },
+  "notes": "Local Node CPU microbenchmark, not real-phone frame rate. Shared Three.js dependencies excluded from asset size."
+}
