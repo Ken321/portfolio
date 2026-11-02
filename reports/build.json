@@ -318,13 +318,45 @@
       ],
       "format": "esm"
     },
-    "src/effects/avatar-catch-motion.js": {
-      "bytes": 9846,
+    "src/effects/avatar-arm-limits.js": {
+      "bytes": 2055,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/avatar-bow-head-hold.js": {
+      "bytes": 4864,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "src/effects/avatar-arm-limits.js",
+          "kind": "import-statement",
+          "original": "./avatar-arm-limits.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/avatar-catch-motion.js": {
+      "bytes": 10192,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "src/effects/avatar-arm-limits.js",
+          "kind": "import-statement",
+          "original": "./avatar-arm-limits.js"
         }
       ],
       "format": "esm"
@@ -341,12 +373,22 @@
       "format": "esm"
     },
     "src/effects/avatar-motion.js": {
-      "bytes": 19224,
+      "bytes": 21750,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
+        },
+        {
+          "path": "src/effects/avatar-bow-head-hold.js",
+          "kind": "import-statement",
+          "original": "./avatar-bow-head-hold.js"
+        },
+        {
+          "path": "src/effects/avatar-arm-limits.js",
+          "kind": "import-statement",
+          "original": "./avatar-arm-limits.js"
         },
         {
           "path": "src/effects/avatar-catch-motion.js",
@@ -362,12 +404,17 @@
       "format": "esm"
     },
     "src/effects/avatar-mixamo-motion.js": {
-      "bytes": 3797,
+      "bytes": 6189,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
+        },
+        {
+          "path": "src/effects/avatar-bow-head-hold.js",
+          "kind": "import-statement",
+          "original": "./avatar-bow-head-hold.js"
         },
         {
           "path": "src/effects/avatar-motion.js",
@@ -524,10 +571,10 @@
     }
   },
   "outputs": {
-    "assets/build/app-LB3VCIH7.js": {
+    "assets/build/app-MYQDSX5K.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-WYHJWYYC.js",
+          "path": "assets/build/effects-controller-JXS2AH44.js",
           "kind": "dynamic-import"
         },
         {
@@ -649,7 +696,7 @@
       },
       "bytes": 532
     },
-    "assets/build/avatar-C4RT55NG.js": {
+    "assets/build/avatar-FRO7YAJM.js": {
       "imports": [
         {
           "path": "assets/build/chunk-S5WRHXED.js",
@@ -669,17 +716,23 @@
       ],
       "entryPoint": "src/effects/avatar.js",
       "inputs": {
+        "src/effects/avatar-arm-limits.js": {
+          "bytesInOutput": 795
+        },
+        "src/effects/avatar-bow-head-hold.js": {
+          "bytesInOutput": 2731
+        },
         "src/effects/avatar-catch-motion.js": {
-          "bytesInOutput": 5862
+          "bytesInOutput": 6013
         },
         "src/effects/avatar-body-motion.js": {
-          "bytesInOutput": 2499
+          "bytesInOutput": 2497
         },
         "src/effects/avatar-motion.js": {
-          "bytesInOutput": 10123
+          "bytesInOutput": 11378
         },
         "src/effects/avatar-mixamo-motion.js": {
-          "bytesInOutput": 2113
+          "bytesInOutput": 3252
         },
         "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
           "bytesInOutput": 22393
@@ -688,13 +741,13 @@
           "bytesInOutput": 991
         },
         "node_modules/three/examples/jsm/loaders/GLTFLoader.js": {
-          "bytesInOutput": 44206
+          "bytesInOutput": 44210
         },
         "src/effects/avatar.js": {
           "bytesInOutput": 2233
         }
       },
-      "bytes": 91189
+      "bytes": 97257
     },
     "assets/build/chunk-S5WRHXED.js": {
       "imports": [
@@ -821,7 +874,7 @@
       },
       "bytes": 672470
     },
-    "assets/build/effects-controller-WYHJWYYC.js": {
+    "assets/build/effects-controller-JXS2AH44.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
@@ -836,7 +889,7 @@
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/avatar-C4RT55NG.js",
+          "path": "assets/build/avatar-FRO7YAJM.js",
           "kind": "dynamic-import"
         }
       ],

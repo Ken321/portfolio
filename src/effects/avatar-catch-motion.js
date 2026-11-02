@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { ARM_LIMITS, limitArmReach, createRotationLimiter } from './avatar-arm-limits.js';
 const ease=x=>{x=THREE.MathUtils.clamp(x,0,1);return x*x*x*(x*(x*6-15)+10);};
 function curve(t,keys){for(let i=1;i<keys.length;i++)if(t<=keys[i][0]){const [a,x]=keys[i-1],[b,y]=keys[i];return THREE.MathUtils.lerp(x,y,ease((t-a)/(b-a)));}return keys.at(-1)[1];}
 
@@ -21,7 +22,7 @@ export function createCatchMotion(root){
   const lowerUp=new THREE.Vector3(0,1,0),lowerSide=new THREE.Vector3().crossVectors(lowerUp,lowerNormal).normalize();
   const lowerFrameInverse=new THREE.Quaternion().setFromRotationMatrix(new THREE.Matrix4().makeBasis(lowerSide,lowerUp,lowerNormal)).invert();
   const fingers=['index','middle','ring','pinky'].flatMap(name=>['01','02','03'].map(part=>find(`DEF-f_${name}.${part}.${side}`))).filter(Boolean).map(bone=>({bone,local:bone.quaternion.clone()}));
-  return {lowerFrameInverse,fingers,side,sign:side==='L'?1:-1,upper,distal,lower,hand,a:shoulder.distanceTo(elbow),b:elbow.distanceTo(wrist),inverseFrame,rest:new Map([upper,distal,lower].filter(Boolean).map(b=>[b,b.getWorldQuaternion(new THREE.Quaternion())]))};
+  return {limitForearm:createRotationLimiter(lower.quaternion.clone(),180,ARM_LIMITS.forearmTwist),limitWrist:createRotationLimiter(hand.quaternion.clone(),ARM_LIMITS.wristSwing,ARM_LIMITS.wristTwist),lowerFrameInverse,fingers,side,sign:side==='L'?1:-1,upper,distal,lower,hand,a:shoulder.distanceTo(elbow),b:elbow.distanceTo(wrist),inverseFrame,rest:new Map([upper,distal,lower].filter(Boolean).map(b=>[b,b.getWorldQuaternion(new THREE.Quaternion())]))};
  });
  const target=new THREE.Vector3(),offset=new THREE.Vector3();let time=-1,weight=0,lunge=0,spread=0,inspect=0,open=0,scan=0,down=0;
  const poseTarget=new THREE.Vector3(),gazeTarget=new THREE.Vector3(),palmNormal=new THREE.Vector3(),inspectNormal=new THREE.Vector3();
@@ -88,7 +89,7 @@ export function createCatchMotion(root){
     arm.upper.updateWorldMatrix(true,false);arm.upper.getWorldPosition(shoulder);
     // Solve each elbow near the common palm axis, allowing a gentle wrist extension.
     wrist.copy(poseTarget).addScaledVector(commonNormal,arm.sign*spread).addScaledVector(commonFinger,-.08);
-    axis.copy(wrist).sub(shoulder);const distance=THREE.MathUtils.clamp(axis.length(),.03,arm.a+arm.b-.005);axis.normalize();
+    const distance=limitArmReach(wrist,shoulder,arm.a,arm.b);axis.copy(wrist).sub(shoulder).normalize();
     pole.set(arm.sign*.45,-.8,0);pole.addScaledVector(axis,-pole.dot(axis));
     pole.normalize();const along=(arm.a**2-arm.b**2+distance**2)/(2*distance);
     elbow.copy(shoulder).addScaledVector(axis,along).addScaledVector(pole,Math.sqrt(Math.max(0,arm.a**2-along**2)));
@@ -105,10 +106,12 @@ export function createCatchMotion(root){
     q.setFromRotationMatrix(basis.makeBasis(across,finger,normal)).multiply(arm.lowerFrameInverse);
     arm.lower.parent.updateWorldMatrix(true,false);parent.copy(arm.lower.parent.getWorldQuaternion(parent)).invert();q.premultiply(parent);arm.lower.quaternion.slerp(q,weight);
     distributeElbowRoll(arm);
+    arm.limitForearm(arm.lower.quaternion);
     finger.copy(commonFinger);normal.copy(palmNormal);
     across.crossVectors(finger,normal).normalize();
     q.setFromRotationMatrix(basis.makeBasis(across,finger,normal)).multiply(arm.inverseFrame);
     arm.hand.parent.updateWorldMatrix(true,false);parent.copy(arm.hand.parent.getWorldQuaternion(parent)).invert();q.premultiply(parent);arm.hand.quaternion.slerp(q,weight);
+    arm.limitWrist(arm.hand.quaternion);
     // Extend the four fingers in the palm plane instead of retaining the curled rest pose.
     arm.hand.updateWorldMatrix(true,false);
     finger.set(0,1,0).applyQuaternion(arm.inverseFrame.clone().invert()).applyQuaternion(arm.hand.getWorldQuaternion(new THREE.Quaternion())).normalize();

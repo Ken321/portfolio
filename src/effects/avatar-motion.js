@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { createHandContact } from './avatar-bow-head-hold.js';
+import { ARM_LIMITS, limitArmReach, createRotationLimiter } from './avatar-arm-limits.js';
 import { createCatchMotion } from './avatar-catch-motion.js';
 import { createBodyMotion } from './avatar-body-motion.js';
 
@@ -11,11 +13,13 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
   const rest = new Map(Object.values(bones).filter(Boolean).map(b => [b, {local:b.quaternion.clone(),world:b.getWorldQuaternion(new THREE.Quaternion())}]));
   const bodyMotion=createBodyMotion(root);
   const catchMotion=createCatchMotion(root);
+  const scratch=createHandContact(root,{anchorBone:'DEF-spine.003',point:[-.10,1.00,.19],finger:[0,-1,-.1],normal:[0,.1,-1],pole:[-1,-.2,.3],curl:.45});
   const eyes=['DEF-eyeball.L','DEF-eyeball.R'].map(n=>bones[n]).filter(Boolean).map(bone=>({bone,x:0,z:0,position:bone.position.clone(),inward:new THREE.Vector3(0,-.001,0).applyQuaternion(bone.quaternion),downward:new THREE.Vector3(0,0,-.0025).applyQuaternion(bone.quaternion)}));
   const lookTarget=new THREE.Vector3(),lookDirection=new THREE.Vector3(),eyePosition=new THREE.Vector3();
   const eyeCenter=new THREE.Vector3(),gazeOrigin=new THREE.Vector3();
   const eyeWorld=new THREE.Quaternion(),eyeDelta=new THREE.Quaternion();
-  let hasLookTarget=false;
+  let hasLookTarget=false,idleSway=0,externalGesture=false;
+  const restingOffset=new THREE.Vector3();
   // The white eye surface is fitted to the eyelids, not a complete eyeball.
   // Keep its blink morphs but bind it to the head while the irises turn.
   const fixedEyeSkins=[];
@@ -71,6 +75,10 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
     bowAnchor.worldToLocal(target);
     return {side,sign,upper,lower,hand:palmBone,upperLength:shoulder.distanceTo(elbow),lowerLength:elbow.distanceTo(wrist),target,inverseFrame};
   });
+  for(const arm of bowArms){
+    arm.limitForearm=createRotationLimiter(arm.lower.quaternion.clone(),180,ARM_LIMITS.forearmTwist);
+    arm.limitWrist=createRotationLimiter(arm.hand.quaternion.clone(),ARM_LIMITS.wristSwing,ARM_LIMITS.wristTwist);
+  }
   const bowShoulder=new THREE.Vector3(),bowTarget=new THREE.Vector3(),bowAxis=new THREE.Vector3(),bowPole=new THREE.Vector3(),bowElbow=new THREE.Vector3();
   const bowFrame=new THREE.Quaternion(),bowOld=new THREE.Quaternion(),bowHeadRotation=new THREE.Quaternion(),bowRestInverse=rest.get(bowAnchor).world.clone().invert();
   function poseBowHands(weight,yawn=false){
@@ -81,13 +89,14 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
       arm.upper.updateWorldMatrix(true,false);arm.upper.getWorldPosition(bowShoulder);
       bowTarget.copy(arm.target).applyMatrix4(bowAnchor.matrixWorld);
       if(yawn)bowTarget.set(-.10,1.40,.24);
-      bowAxis.copy(bowTarget).sub(bowShoulder);const distance=THREE.MathUtils.clamp(bowAxis.length(),.05,arm.upperLength+arm.lowerLength-.001);bowAxis.normalize();
+      const distance=limitArmReach(bowTarget,bowShoulder,arm.upperLength,arm.lowerLength);bowAxis.copy(bowTarget).sub(bowShoulder).normalize();
       bowPole.set(arm.sign,-.2,0).applyQuaternion(bowHeadRotation);bowPole.addScaledVector(bowAxis,-bowPole.dot(bowAxis)).normalize();
       const along=(arm.upperLength**2-arm.lowerLength**2+distance**2)/(2*distance);
       bowElbow.copy(bowShoulder).addScaledVector(bowAxis,along).addScaledVector(bowPole,Math.sqrt(Math.max(0,arm.upperLength**2-along**2)));
       direction.copy(bowElbow).sub(bowShoulder);bowOld.copy(arm.upper.quaternion);aim(`DEF-upper_arm.${arm.side}`,direction.x,direction.y,direction.z);bowFrame.copy(arm.upper.quaternion);arm.upper.quaternion.slerpQuaternions(bowOld,bowFrame,weight);
       arm.lower.updateWorldMatrix(true,false);arm.lower.getWorldPosition(bowElbow);
       direction.copy(bowTarget).sub(bowElbow);bowOld.copy(arm.lower.quaternion);aim(`DEF-forearm.${arm.side}`,direction.x,direction.y,direction.z);bowFrame.copy(arm.lower.quaternion);arm.lower.quaternion.slerpQuaternions(bowOld,bowFrame,weight);
+      arm.limitForearm(arm.lower.quaternion);
       // Keep the fingers aligned with the actual forearm, not a fixed downward pose.
       arm.hand.updateWorldMatrix(true,false);arm.hand.getWorldPosition(waveY).sub(bowElbow).normalize();
       waveZ.set(0,0,-1).applyQuaternion(bowHeadRotation);
@@ -95,7 +104,7 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
       waveX.crossVectors(waveY,waveZ).normalize();
       bowFrame.setFromRotationMatrix(waveBasis.makeBasis(waveX,waveY,waveZ)).multiply(arm.inverseFrame);
       arm.hand.parent.updateWorldMatrix(true,false);parentQ.copy(arm.hand.parent.getWorldQuaternion(parentQ)).invert();
-      bowFrame.premultiply(parentQ);arm.hand.quaternion.slerp(bowFrame,weight);
+      bowFrame.premultiply(parentQ);arm.hand.quaternion.slerp(bowFrame,weight);arm.limitWrist(arm.hand.quaternion);
     }
     waveZ.set(0,0,1);
   }
@@ -166,8 +175,13 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
   const ease=x=>x*x*(3-2*x);
   const softEase=x=>{x=THREE.MathUtils.clamp(x,0,1);return x*x*x*(x*(x*6-15)+10);};
   return {
+    shrug(){idleKind='shrug';idleTime=0;waveTime=-1;bowTime=-1;nextIdleAt=Infinity;},
+    scratch(){idleKind='scratch';idleTime=0;waveTime=-1;bowTime=-1;nextIdleAt=Infinity;},
+    yawn(){idleKind='yawn';idleTime=0;waveTime=-1;bowTime=-1;nextIdleAt=Infinity;},
+    cancelIdle(){idleKind=null;},
     greet(){bowTime=0;waveTime=-1;idleKind=null;autoBow=false;nextIdleAt=Infinity;},
     catchAt(point){if(catchMotion.trigger(point)){bowTime=-1;waveTime=-1;idleKind=null;autoBow=false;nextIdleAt=Infinity;}},
+    setExternalGesture(active){externalGesture=active;},
     setLookTarget(target){hasLookTarget=!!target;if(target)lookTarget.copy(target);},
     tick(time,dt,mode,level){
       elapsed+=dt;const active=mode!=='idle';
@@ -184,7 +198,7 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
         }
       }
       let idleWeight=0,yawnWeight=0,lookWeight=0;
-      if(idleKind){idleTime+=dt;idleWeight=softEase(idleTime/.9)*softEase((4.2-idleTime)/1.2);if(idleKind==='yawn')yawnWeight=idleWeight;if(idleKind==='look')lookWeight=idleWeight;if(idleTime>=4.2)idleKind=null;}
+      if(idleKind){idleTime+=dt;const duration=idleKind==='shrug'?2.4:idleKind==='scratch'?4.3:4.2;idleWeight=softEase(idleTime/.9)*softEase((duration-idleTime)/1.2);if(idleKind==='yawn')yawnWeight=idleWeight;if(idleKind==='look')lookWeight=idleWeight;if(idleTime>=duration)idleKind=null;}
 
       let wave=0;
       if(waveTime>=0){waveTime+=dt;wave=softEase((waveTime-.25)/.95)*softEase((4.8-waveTime)/1.3);if(waveTime>=5.6)waveTime=-1;}
@@ -192,16 +206,34 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
       if(bowTime>=0){bowTime+=dt;bowHands=softEase(bowTime/.65)*softEase((3.4-bowTime)/.55);bow=softEase((bowTime-.45)/.75)*softEase((2.9-bowTime)/.9);if(bowTime>=3.4)bowTime=-1;}
       const phase=Math.max(0,waveTime-1.05)*5.2;
       const waveAngle=Math.sin(phase)*.27+Math.sin(phase*.5+.6)*.025;
-      const {support,turn,nod}=bodyMotion.update(waveTime,dt,catchMotion.update(dt));
+      const quiet=!active && !externalGesture && waveTime<0 && bowTime<0 && !idleKind && !catchMotion.active;
+      idleSway+=((quiet?1:0)-idleSway)*(1-Math.exp(-(quiet?2:8)*Math.max(0,dt)));
+      const shrugWeight=idleKind==='shrug'?softEase(idleTime/.8)*(1-softEase((idleTime-1.15)/.55)):0;
+      const scratchPhase=idleKind==='scratch'?idleTime:0;
+      const scratchWeight=idleKind==='scratch'?idleWeight:0;
+      const stroke=.012*Math.sin((scratchPhase-.75)*13)*softEase((scratchPhase-.75)/.3);
+      const swayPhase=elapsed*1.55;
+      const sway=(Math.sin(swayPhase)+.18*Math.sin(elapsed*.71+.6))*idleSway;
+      const armLag=Math.sin(swayPhase-.45)*idleSway;
+      // Idle sway pivots above the waist; only deliberate actions translate the hips.
+      restingOffset.copy(catchMotion.update(dt));
+      const {support,turn,nod}=bodyMotion.update(waveTime,dt,restingOffset);
       rotate('DEF-spine.001',-.012*support,.025*turn,.020*support);
       rotate('DEF-spine.002',bow*.30+.014*turn,.030*turn,.026*turn);
       rotate('DEF-spine.003',bow*.28+Math.sin(time*1.45)*.006,.035*turn,Math.sin(time*2)*gesture*.025+.015*turn);
       rotate('DEF-spine.006',bow*.32+.035*nod+(.04+Math.sin(time*5)*.07)*gesture,Math.sin(time*1.7)*gesture*.06-.045*turn,Math.sin(time*2.9)*gesture*.025-.045*turn);
       rotate('DEF-spine.003',-.06*yawnWeight,.08*lookWeight,0);
       rotate('DEF-spine.006',-.12*yawnWeight,.38*lookWeight*Math.cos((idleTime-.9)*.9),0);
+      rotate('DEF-spine.002',0,0,.012*sway);
+      rotate('DEF-spine.003',0,.008*armLag,.010*sway);
+      // Let the head follow gently, slightly behind the torso.
+      rotate('DEF-spine.006',0,.004*Math.sin(swayPhase-.35)*idleSway,.012*Math.sin(swayPhase-.3)*idleSway);
+      rotate('DEF-spine.002',.012*scratchWeight,0,-.012*scratchWeight);
+      rotate('DEF-spine.003',.018*scratchWeight,-.018*scratchWeight,.003*Math.sin(scratchPhase*13-.3)*scratchWeight);
+      rotate('DEF-spine.006',.05*scratchWeight,.025*scratchWeight,0);
       root.updateMatrixWorld(true);
-      turnShoulder('DEF-shoulder.R',-.060*turn);
-      turnShoulder('DEF-shoulder.L',.015*turn);
+      turnShoulder('DEF-shoulder.R',-.060*turn-.22*shrugWeight);
+      turnShoulder('DEF-shoulder.L',.015*turn+.22*shrugWeight);
       // Aim deform bones in world space, preserving the rest-pose twist.
       aim('DEF-upper_arm.L',.25+.03*turn,-.96,.04+.035*turn);
       aim('DEF-forearm.L',.15+.025*turn,-.98,.10-.02*turn);
@@ -213,6 +245,7 @@ export function createAvatarMotion(root,{externalIdle=false}={}) {
       alignUpperArmTwist(wave,waveAngle);
       orientWaveBone(bones['DEF-forearm.R'],forearmFrameInverse,wave,waveAngle);
       orientWaveBone(hand,palmFrameInverse,wave,waveAngle+.045*Math.sin(phase-.7));
+      scratch.pose(scratchWeight,stroke);
       poseBowHands(bowHands);
       poseBowHands(yawnWeight,true);
       catchMotion.pose();

@@ -170,7 +170,7 @@ test('wave shifts weight through hips and torso while keeping both feet planted'
  }
  assert.ok(hipTravel>.015 && hipTravel<.035,'Weight transfer should be visible but small');
  assert.ok(chestTurn>.035 && headMotion>.03,'Torso and head must participate');
- assert.ok(hips.position.distanceTo(hipStart)<.0001,'Weight should settle after the wave');
+ assert.ok(hips.position.distanceTo(hipStart)<.012,'Weight should settle into a small idle sway after the wave');
  motion.dispose();
 });
 
@@ -353,4 +353,51 @@ test('palm inspection lowers gaze toward the hands without strong convergence',a
   assert.ok(gaze[0].angleTo(gaze[1])<.04,'Eye directions must remain nearly parallel');
   motion.dispose();
  }
+});
+
+test('scratch gesture and quiet idle keep hips fixed, then yield to an external gesture',async()=>{
+ const {scene}=await loadRig(),motion=createAvatarMotion(scene,{externalIdle:true});
+ const bone=n=>scene.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n));
+ const position=n=>bone(n).getWorldPosition(new THREE.Vector3());
+ scene.updateMatrixWorld(true);const feet=['L','R'].map(s=>position(`DEF-foot.${s}`)),hips=position('DEF-spine');
+ motion.scratch();
+ const hand=bone('DEF-hand.R');let minX=Infinity,maxX=-Infinity,first=null,largestWristChange=0;
+ const chest=bone('DEF-spine.003');let firstChest=null,chestMotion=0;
+ for(let i=0;i<600;i++){
+  motion.tick(i/60,1/60,'idle',0);scene.updateMatrixWorld(true);
+  if(i===150){const right=position('DEF-hand.R'),left=position('DEF-hand.L');assert.ok(right.y>.94 && right.y<1.07 && right.z>.1,'Right hand reaches abdomen');assert.ok(left.y<right.y-.1,'Other hand stays down');}
+  if(i<90)continue;
+  const p=position('DEF-spine');minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);
+  assert.ok(p.distanceTo(hips)<.0001,'Idle sway must keep the hips fixed');
+  if(!firstChest)firstChest=chest.getWorldQuaternion(new THREE.Quaternion());
+  chestMotion=Math.max(chestMotion,firstChest.angleTo(chest.getWorldQuaternion(new THREE.Quaternion())));
+  ['L','R'].forEach((s,j)=>assert.ok(position(`DEF-foot.${s}`).distanceTo(feet[j])<.002,'Feet should not slide'));
+  if(!first)first=hand.quaternion.clone();largestWristChange=Math.max(largestWristChange,first.angleTo(hand.quaternion));
+ }
+ assert.ok(maxX-minX<.0001,'The waist must not translate sideways');
+ assert.ok(chestMotion>.025 && chestMotion<.15,'The torso should sway gently above the waist');
+ assert.ok(largestWristChange>.1,'The hand changes pose to scratch rather than dangling');
+ motion.setExternalGesture(true);
+ for(let i=0;i<180;i++)motion.tick(10+i/60,1/60,'idle',0);
+ scene.updateMatrixWorld(true);assert.ok(position('DEF-spine').distanceTo(hips)<.0001,'Fade idle movement out for authored gestures');
+ motion.dispose();
+});
+
+test('shrug raises both shoulders then releases without swinging the hands forwards',async()=>{
+ const {scene}=await loadRig(),motion=createAvatarMotion(scene,{externalIdle:true});
+ const pos=n=>scene.getObjectByName(THREE.PropertyBinding.sanitizeNodeName(n)).getWorldPosition(new THREE.Vector3());
+ for(let i=0;i<120;i++)motion.tick(i/60,1/60,'listening',0);
+ scene.updateMatrixWorld(true);
+ const shoulders=['L','R'].map(s=>pos(`DEF-upper_arm.${s}`)),hands=['L','R'].map(s=>pos(`DEF-hand.${s}`));
+ motion.shrug();
+ for(let i=0;i<180;i++){
+  motion.tick(2+i/60,1/60,'idle',0);scene.updateMatrixWorld(true);
+  for(const [j,s] of ['L','R'].entries()){
+   const hand=pos(`DEF-hand.${s}`);
+   assert.ok(Math.abs(hand.z-hands[j].z)<.025,'Hands stay down, without a forward/back swing');
+   if(i===60)assert.ok(pos(`DEF-upper_arm.${s}`).y-shoulders[j].y>.01,'Both clavicles lift the shoulders');
+   if(i===179)assert.ok(Math.abs(pos(`DEF-upper_arm.${s}`).y-shoulders[j].y)<.005,'Shoulders settle down');
+  }
+ }
+ assert.equal(motion.debug().action,'idle');motion.dispose();
 });
