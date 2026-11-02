@@ -504,7 +504,7 @@
       "format": "esm"
     },
     "src/styles.css": {
-      "bytes": 18631,
+      "bytes": 18962,
       "imports": []
     }
   },
@@ -852,15 +852,15 @@
       },
       "bytes": 713
     },
-    "assets/build/styles-FO57JVZW.css": {
+    "assets/build/styles-5OXIO7PN.css": {
       "imports": [],
       "entryPoint": "src/styles.css",
       "inputs": {
         "src/styles.css": {
-          "bytesInOutput": 17534
+          "bytesInOutput": 17704
         }
       },
-      "bytes": 17535
+      "bytes": 17705
     }
   }
 }

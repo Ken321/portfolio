@@ -141,3 +141,10 @@
  .voice-character:has([data-voice-caption]:not(:empty)) .voice-ui{border-top:0}
 }
 @media(max-width:600px){.voice-stage .voice-caption{margin-inline:20px}}
+
+/* Give mobile Safari a definite hero height; intrinsic grid/aspect-ratio sizing
+   can otherwise shrink the art column to the title's content height. */
+@media(max-width:900px){
+ .hero-shell{container-type:inline-size}
+ .hero-art{width:100%;aspect-ratio:auto;height:calc(100vw * 1.618033989);height:calc(100cqi * 1.618033989)}
+}
