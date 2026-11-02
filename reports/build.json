@@ -1,5 +1,10 @@
 {
   "inputs": {
+    "src/hero-touch.js": {
+      "bytes": 1464,
+      "imports": [],
+      "format": "esm"
+    },
     "src/timing.js": {
       "bytes": 277,
       "imports": [],
@@ -41,8 +46,13 @@
       "imports": []
     },
     "src/effects/shared.js": {
-      "bytes": 1892,
+      "bytes": 1980,
       "imports": [
+        {
+          "path": "src/hero-touch.js",
+          "kind": "import-statement",
+          "original": "../hero-touch.js"
+        },
         {
           "path": "node_modules/three/examples/jsm/loaders/FontLoader.js",
           "kind": "import-statement",
@@ -194,7 +204,7 @@
       "format": "esm"
     },
     "src/effects/hero.js": {
-      "bytes": 35818,
+      "bytes": 35891,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -278,7 +288,7 @@
       "format": "esm"
     },
     "src/effects/ken.js": {
-      "bytes": 6689,
+      "bytes": 6917,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -441,8 +451,13 @@
       "format": "esm"
     },
     "src/effects-controller.js": {
-      "bytes": 7416,
+      "bytes": 7490,
       "imports": [
+        {
+          "path": "src/hero-touch.js",
+          "kind": "import-statement",
+          "original": "./hero-touch.js"
+        },
         {
           "path": "src/timing.js",
           "kind": "import-statement",
@@ -504,15 +519,15 @@
       "format": "esm"
     },
     "src/styles.css": {
-      "bytes": 18962,
+      "bytes": 19166,
       "imports": []
     }
   },
   "outputs": {
-    "assets/build/app-LZTKKBKG.js": {
+    "assets/build/app-QZU22LKQ.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-5DX6XRCB.js",
+          "path": "assets/build/effects-controller-PDGWDFTK.js",
           "kind": "dynamic-import"
         },
         {
@@ -529,14 +544,18 @@
       },
       "bytes": 7987
     },
-    "assets/build/hero-KLYPW6PR.js": {
+    "assets/build/hero-VK4TOORJ.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-DFZL4AI5.js",
+          "path": "assets/build/chunk-GDTSZPI5.js",
           "kind": "import-statement"
         },
         {
-          "path": "assets/build/chunk-AG2NIBDL.js",
+          "path": "assets/build/chunk-S5WRHXED.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "assets/build/chunk-V2K23ZXQ.js",
           "kind": "import-statement"
         }
       ],
@@ -573,19 +592,23 @@
           "bytesInOutput": 1209
         },
         "src/effects/hero.js": {
-          "bytesInOutput": 14523
+          "bytesInOutput": 14546
         }
       },
-      "bytes": 31495
+      "bytes": 31546
     },
-    "assets/build/ken-UOGHBYHJ.js": {
+    "assets/build/ken-HF7OUNIG.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-DFZL4AI5.js",
+          "path": "assets/build/chunk-GDTSZPI5.js",
           "kind": "import-statement"
         },
         {
-          "path": "assets/build/chunk-AG2NIBDL.js",
+          "path": "assets/build/chunk-S5WRHXED.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "assets/build/chunk-V2K23ZXQ.js",
           "kind": "import-statement"
         }
       ],
@@ -604,15 +627,15 @@
           "bytesInOutput": 1656
         },
         "src/effects/ken.js": {
-          "bytesInOutput": 3418
+          "bytesInOutput": 3566
         }
       },
-      "bytes": 8670
+      "bytes": 8846
     },
-    "assets/build/chunk-DFZL4AI5.js": {
+    "assets/build/chunk-GDTSZPI5.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-AG2NIBDL.js",
+          "path": "assets/build/chunk-S5WRHXED.js",
           "kind": "import-statement"
         }
       ],
@@ -626,10 +649,14 @@
       },
       "bytes": 532
     },
-    "assets/build/avatar-LJWF3ENX.js": {
+    "assets/build/avatar-C4RT55NG.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-AG2NIBDL.js",
+          "path": "assets/build/chunk-S5WRHXED.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "assets/build/chunk-V2K23ZXQ.js",
           "kind": "import-statement"
         },
         {
@@ -667,10 +694,15 @@
           "bytesInOutput": 2233
         }
       },
-      "bytes": 91161
+      "bytes": 91189
     },
-    "assets/build/chunk-AG2NIBDL.js": {
-      "imports": [],
+    "assets/build/chunk-S5WRHXED.js": {
+      "imports": [
+        {
+          "path": "assets/build/chunk-V2K23ZXQ.js",
+          "kind": "import-statement"
+        }
+      ],
       "exports": [
         "$",
         "A",
@@ -784,23 +816,27 @@
           "bytesInOutput": 61578
         },
         "src/effects/shared.js": {
-          "bytesInOutput": 989
+          "bytesInOutput": 1003
         }
       },
-      "bytes": 672415
+      "bytes": 672470
     },
-    "assets/build/effects-controller-5DX6XRCB.js": {
+    "assets/build/effects-controller-PDGWDFTK.js": {
       "imports": [
         {
-          "path": "assets/build/hero-KLYPW6PR.js",
+          "path": "assets/build/chunk-V2K23ZXQ.js",
+          "kind": "import-statement"
+        },
+        {
+          "path": "assets/build/hero-VK4TOORJ.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/ken-UOGHBYHJ.js",
+          "path": "assets/build/ken-HF7OUNIG.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/avatar-LJWF3ENX.js",
+          "path": "assets/build/avatar-C4RT55NG.js",
           "kind": "dynamic-import"
         }
       ],
@@ -813,10 +849,23 @@
           "bytesInOutput": 91
         },
         "src/effects-controller.js": {
-          "bytesInOutput": 4296
+          "bytesInOutput": 4302
         }
       },
-      "bytes": 4414
+      "bytes": 4460
+    },
+    "assets/build/chunk-V2K23ZXQ.js": {
+      "imports": [],
+      "exports": [
+        "a",
+        "b"
+      ],
+      "inputs": {
+        "src/hero-touch.js": {
+          "bytesInOutput": 821
+        }
+      },
+      "bytes": 844
     },
     "assets/build/voice-UB45LCPV.js": {
       "imports": [
@@ -852,15 +901,15 @@
       },
       "bytes": 713
     },
-    "assets/build/styles-5OXIO7PN.css": {
+    "assets/build/styles-OPMQWKBX.css": {
       "imports": [],
       "entryPoint": "src/styles.css",
       "inputs": {
         "src/styles.css": {
-          "bytesInOutput": 17704
+          "bytesInOutput": 17828
         }
       },
-      "bytes": 17705
+      "bytes": 17829
     }
   }
 }

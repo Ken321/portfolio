@@ -1,3 +1,4 @@
+import { bindHeroTouch } from '../hero-touch.js';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import bold from 'three/examples/fonts/helvetiker_bold.typeface.json';
 import regular from 'three/examples/fonts/helvetiker_regular.typeface.json';
@@ -8,6 +9,7 @@ const hover = matchMedia('(hover: hover) and (pointer: fine)');
 export const isMobile = () => mobile.matches;
 export const pixelRatio = () => Math.min(devicePixelRatio || 1, isMobile() ? 1 : 1.5);
 export const globalPointer = { active: false, nx: 0, ny: 0, cell: null };
+bindHeroTouch(window, globalPointer);
 window.addEventListener('pointermove', event => {
   if (!hover.matches || event.pointerType === 'touch') return;
   globalPointer.active = true;

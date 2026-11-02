@@ -148,3 +148,8 @@
  .hero-shell{container-type:inline-size}
  .hero-art{width:100%;aspect-ratio:auto;height:calc(100vw * 1.618033989);height:calc(100cqi * 1.618033989)}
 }
+
+/* iOS must not select the ASCII glyphs or show a long-press callout. */
+.hero-art,.hero-art *, .contact-play:has(.effect-ready){
+ -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
+}

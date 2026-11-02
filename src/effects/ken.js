@@ -51,6 +51,8 @@ export function createKen(cell) {
     if(event.target.closest('a,button') || event.pointerType!=='touch' || activeTouch!==null)return;
     activeTouch=event.pointerId;interaction.setPointerCapture(activeTouch);handleMove(event);
   };
+  const touchMove=event=>{if(activeTouch!==null && event.touches.length===1)event.preventDefault();};
+  interaction.addEventListener('touchmove',touchMove,{passive:false});
   const up=event=>{if(event.pointerId===activeTouch)leave();};
   const pointerLeave=()=>{if(activeTouch===null)leave();};
   interaction.addEventListener('pointerdown',down);
@@ -111,7 +113,7 @@ export function createKen(cell) {
     },
     debug(){return {drawCalls:renderer.info.render.calls,triangles:renderer.info.render.triangles,bodies:count,colliders:count,contacts:simulation.contactCount,sleeping:simulation.sleeping};},
     dispose(){
-      disposed=true;interaction.removeEventListener('pointermove',handleMove);interaction.removeEventListener('pointerleave',pointerLeave);interaction.removeEventListener('pointerdown',down);interaction.removeEventListener('pointerup',up);interaction.removeEventListener('lostpointercapture',leave);interaction.removeEventListener('pointercancel',leave);window.removeEventListener('blur',leave);
+      disposed=true;interaction.removeEventListener('touchmove',touchMove);interaction.removeEventListener('pointermove',handleMove);interaction.removeEventListener('pointerleave',pointerLeave);interaction.removeEventListener('pointerdown',down);interaction.removeEventListener('pointerup',up);interaction.removeEventListener('lostpointercapture',leave);interaction.removeEventListener('pointercancel',leave);window.removeEventListener('blur',leave);
       meshes.forEach(mesh=>mesh.dispose());disposeScene(scene);renderer.dispose();renderer.forceContextLoss();renderer.domElement.remove();
     }
   };

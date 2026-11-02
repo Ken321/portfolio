@@ -366,6 +366,7 @@ import { AsciiEffect } from './ascii.js';
 
       let previousTime = null;
       function update(t) {
+        scatter = globalPointer.active && globalPointer.cell === cellEl;
         const active = globalPointer.active;
         const targetY = active ? THREE.MathUtils.clamp(globalPointer.nx * NUMBER_ROT_MAX_Y, -NUMBER_ROT_MAX_Y, NUMBER_ROT_MAX_Y) : 0;
         const targetX = active ? THREE.MathUtils.clamp(-globalPointer.ny * NUMBER_ROT_MAX_X, -NUMBER_ROT_MAX_X, NUMBER_ROT_MAX_X) : 0;

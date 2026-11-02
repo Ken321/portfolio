@@ -1,3 +1,4 @@
+import { isEffectDrag } from './hero-touch.js';
 import { advanceTime, frameInterval } from './timing.js';
 const mobile = matchMedia('(max-width: 900px), (pointer: coarse)');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
@@ -130,8 +131,8 @@ export function startEffects() {
       if (state.effect) fail(state, new Error('WebGL context lost'));
     }, true);
   });
-  const pauseScroll = () => {
-    if (!mobile.matches) return;
+  const pauseScroll = event => {
+    if (!mobile.matches || isEffectDrag(event)) return;
     scrolling = true; schedule(); clearTimeout(scrollTimer);
     scrollTimer = setTimeout(() => { scrolling = false; schedule(); }, 160);
   };
