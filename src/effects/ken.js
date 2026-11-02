@@ -96,6 +96,7 @@ export function createKen(cell) {
   }
   copyPrevious();
   return {
+    isInteracting:()=>activeTouch!==null,
     resize(w,h){
       if(w===width&&h===height)return;
       width=w;height=h;needsRedraw=true;renderer.setSize(w,h,false);camera.aspect=w/h;

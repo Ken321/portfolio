@@ -6,7 +6,7 @@
       "format": "esm"
     },
     "src/timing.js": {
-      "bytes": 277,
+      "bytes": 572,
       "imports": [],
       "format": "esm"
     },
@@ -288,7 +288,7 @@
       "format": "esm"
     },
     "src/effects/ken.js": {
-      "bytes": 6917,
+      "bytes": 6959,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -451,7 +451,7 @@
       "format": "esm"
     },
     "src/effects-controller.js": {
-      "bytes": 7490,
+      "bytes": 7552,
       "imports": [
         {
           "path": "src/hero-touch.js",
@@ -524,10 +524,10 @@
     }
   },
   "outputs": {
-    "assets/build/app-QZU22LKQ.js": {
+    "assets/build/app-LB3VCIH7.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-PDGWDFTK.js",
+          "path": "assets/build/effects-controller-WYHJWYYC.js",
           "kind": "dynamic-import"
         },
         {
@@ -597,7 +597,7 @@
       },
       "bytes": 31546
     },
-    "assets/build/ken-HF7OUNIG.js": {
+    "assets/build/ken-3V3PAVCW.js": {
       "imports": [
         {
           "path": "assets/build/chunk-GDTSZPI5.js",
@@ -627,10 +627,10 @@
           "bytesInOutput": 1656
         },
         "src/effects/ken.js": {
-          "bytesInOutput": 3566
+          "bytesInOutput": 3593
         }
       },
-      "bytes": 8846
+      "bytes": 8873
     },
     "assets/build/chunk-GDTSZPI5.js": {
       "imports": [
@@ -821,7 +821,7 @@
       },
       "bytes": 672470
     },
-    "assets/build/effects-controller-PDGWDFTK.js": {
+    "assets/build/effects-controller-WYHJWYYC.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
@@ -832,7 +832,7 @@
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/ken-HF7OUNIG.js",
+          "path": "assets/build/ken-3V3PAVCW.js",
           "kind": "dynamic-import"
         },
         {
@@ -846,13 +846,13 @@
       "entryPoint": "src/effects-controller.js",
       "inputs": {
         "src/timing.js": {
-          "bytesInOutput": 91
+          "bytesInOutput": 198
         },
         "src/effects-controller.js": {
-          "bytesInOutput": 4302
+          "bytesInOutput": 4327
         }
       },
-      "bytes": 4460
+      "bytes": 4587
     },
     "assets/build/chunk-V2K23ZXQ.js": {
       "imports": [],

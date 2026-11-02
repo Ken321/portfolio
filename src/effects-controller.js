@@ -1,5 +1,5 @@
 import { isEffectDrag } from './hero-touch.js';
-import { advanceTime, frameInterval } from './timing.js';
+import { advanceTime, effectFrameInterval } from './timing.js';
 const mobile = matchMedia('(max-width: 900px), (pointer: coarse)');
 const reduced = matchMedia('(prefers-reduced-motion: reduce)');
 let motionReduced = reduced.matches;
@@ -7,18 +7,20 @@ const states = [];
 const diagnostics = new URLSearchParams(location.search).has('perf');
 document.addEventListener('portfolio:work-page', () => schedule());
 let frame = 0, lastFrame = null, scrolling = false, scrollTimer;
-const canRun = state => state.visible && state.effect && !document.hidden && !scrolling && !motionReduced && !document.body.classList.contains('work-page-open') && !document.body.classList.contains('work-page-animating');
+const canRun = state => state.visible && state.effect && !document.hidden && !motionReduced && !document.body.classList.contains('work-page-open') && !document.body.classList.contains('work-page-animating');
+
+const intervalFor = state => effectFrameInterval({mobile:mobile.matches, scrolling, kind:state.kind, interacting:state.effect?.isInteracting?.() ?? false});
 
 function render(now) {
   frame = 0;
   const active = states.filter(canRun);
   if (!active.length) { lastFrame = null; return; }
-  const interval = active.some(s => s.kind === 'ken') ? 1000 / 60 : frameInterval(mobile.matches);
+  const interval = Math.min(...active.map(intervalFor));
   const elapsed = lastFrame === null ? interval : now - lastFrame;
   if (elapsed >= interval - .5) {
     lastFrame = now;
     for (const state of active) {
-      const stateInterval = state.kind === 'ken' ? 1000 / 60 : frameInterval(mobile.matches);
+      const stateInterval = intervalFor(state);
       const stateElapsed = state.lastDrawTime == null ? stateInterval : now - state.lastDrawTime;
       if (stateElapsed < stateInterval - .5) continue;
       state.lastDrawTime = now;
@@ -131,13 +133,13 @@ export function startEffects() {
       if (state.effect) fail(state, new Error('WebGL context lost'));
     }, true);
   });
-  const pauseScroll = event => {
+  const trackScroll = event => {
     if (!mobile.matches || isEffectDrag(event)) return;
     scrolling = true; schedule(); clearTimeout(scrollTimer);
     scrollTimer = setTimeout(() => { scrolling = false; schedule(); }, 160);
   };
-  window.addEventListener('scroll', pauseScroll, { passive: true });
-  window.addEventListener('touchmove', pauseScroll, { passive: true });
+  window.addEventListener('scroll', trackScroll, { passive: true });
+  window.addEventListener('touchmove', trackScroll, { passive: true });
   document.addEventListener('visibilitychange', schedule);
   reduced.addEventListener('change', event => {
     motionReduced = event.matches;
