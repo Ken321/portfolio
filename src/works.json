@@ -40,22 +40,22 @@
     "anchor": "center",
     "images": [
       {
-        "src": "./assets/images/block-breaker-400-ae6177fe.webp",
+        "src": "./assets/images/block-breaker-400-6875795c.webp",
         "width": 400,
-        "height": 702,
-        "bytes": 33918
+        "height": 225,
+        "bytes": 29896
       },
       {
-        "src": "./assets/images/block-breaker-800-58f504db.webp",
+        "src": "./assets/images/block-breaker-800-1ef5f513.webp",
         "width": 800,
-        "height": 1403,
-        "bytes": 77488
+        "height": 450,
+        "bytes": 97646
       },
       {
-        "src": "./assets/images/block-breaker-1280-4e81ac12.webp",
-        "width": 1280,
-        "height": 2245,
-        "bytes": 132418
+        "src": "./assets/images/block-breaker-1200-ff91dc17.webp",
+        "width": 1200,
+        "height": 675,
+        "bytes": 173548
       }
     ]
   },
