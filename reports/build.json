@@ -254,24 +254,45 @@
       ],
       "format": "esm"
     },
-    "src/effects/ken-shapes.js": {
-      "bytes": 710,
-      "imports": [
-        {
-          "path": "node_modules/three/examples/jsm/geometries/TextGeometry.js",
-          "kind": "import-statement",
-          "original": "three/addons/geometries/TextGeometry.js"
-        }
-      ],
-      "format": "esm"
-    },
-    "src/effects/ken-physics.js": {
-      "bytes": 6620,
+    "src/effects/ken-colliders.js": {
+      "bytes": 5579,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/ken-shapes.js": {
+      "bytes": 933,
+      "imports": [
+        {
+          "path": "node_modules/three/examples/jsm/geometries/TextGeometry.js",
+          "kind": "import-statement",
+          "original": "three/addons/geometries/TextGeometry.js"
+        },
+        {
+          "path": "src/effects/ken-colliders.js",
+          "kind": "import-statement",
+          "original": "./ken-colliders.js"
+        }
+      ],
+      "format": "esm"
+    },
+    "src/effects/ken-physics.js": {
+      "bytes": 7371,
+      "imports": [
+        {
+          "path": "node_modules/three/build/three.module.js",
+          "kind": "import-statement",
+          "original": "three"
+        },
+        {
+          "path": "src/effects/ken-colliders.js",
+          "kind": "import-statement",
+          "original": "./ken-colliders.js"
         }
       ],
       "format": "esm"
@@ -288,7 +309,7 @@
       "format": "esm"
     },
     "src/effects/ken.js": {
-      "bytes": 6959,
+      "bytes": 7014,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -571,10 +592,10 @@
     }
   },
   "outputs": {
-    "assets/build/app-OP73FCCN.js": {
+    "assets/build/app-SA4OYK3A.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-PF7IEH3L.js",
+          "path": "assets/build/effects-controller-EFQA2PJF.js",
           "kind": "dynamic-import"
         },
         {
@@ -644,7 +665,7 @@
       },
       "bytes": 31546
     },
-    "assets/build/ken-BU3HP5RM.js": {
+    "assets/build/ken-624SXZHZ.js": {
       "imports": [
         {
           "path": "assets/build/chunk-GDTSZPI5.js",
@@ -664,20 +685,23 @@
       ],
       "entryPoint": "src/effects/ken.js",
       "inputs": {
+        "src/effects/ken-colliders.js": {
+          "bytesInOutput": 2970
+        },
         "src/effects/ken-shapes.js": {
-          "bytesInOutput": 308
+          "bytesInOutput": 420
         },
         "src/effects/ken-physics.js": {
-          "bytesInOutput": 3016
+          "bytesInOutput": 3199
         },
         "src/effects/ken-material.js": {
           "bytesInOutput": 1656
         },
         "src/effects/ken.js": {
-          "bytesInOutput": 3593
+          "bytesInOutput": 3643
         }
       },
-      "bytes": 8871
+      "bytes": 12187
     },
     "assets/build/chunk-GDTSZPI5.js": {
       "imports": [
@@ -874,7 +898,7 @@
       },
       "bytes": 672470
     },
-    "assets/build/effects-controller-PF7IEH3L.js": {
+    "assets/build/effects-controller-EFQA2PJF.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
@@ -885,7 +909,7 @@
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/ken-BU3HP5RM.js",
+          "path": "assets/build/ken-624SXZHZ.js",
           "kind": "dynamic-import"
         },
         {

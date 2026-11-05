@@ -1,14 +1,16 @@
 import { Vector3, Quaternion, Euler } from 'three';
+import { createCollider, updateCollider, glyphContact } from './ken-colliders.js';
 export const STEP = 1 / 120;
 const RESPONSE_SPEED = 2.3;
 const MAX_SPEED = 7 * RESPONSE_SPEED;
 const DAMPING = Math.exp(-2.8 * RESPONSE_SPEED * STEP);
 const axis = new Vector3(), turn = new Quaternion();
+const contact = { depth: 0, normal: new Vector3() };
 
-// Small, fixed-step sphere simulation. Rendering geometry does not enter the solver.
+// Fixed-step compound-box simulation. Shapes are prepared once from the glyphs.
 export function createPhysics(assets, count) {
   const bodies = [];
-  let quietSteps = 0, sleeping = false;
+  let quietSteps = 0, sleeping = false, quietMotion = 0;
   let pointerX = null, pointerY = null, lastPointerX = null, lastPointerY = null;
   let contactCount = 0;
   const aspect = count <= 18 ? 1.1 : 1.35;
@@ -21,10 +23,11 @@ export function createPhysics(assets, count) {
       position, previousPosition: position.clone(), velocity: position.clone().multiplyScalar(-.35),
       quaternion: new Quaternion().setFromEuler(new Euler(Math.sin(i*1.3)*.55, Math.cos(i*.9)*.65, Math.sin(i*2.4)*.6)),
       angular: new Vector3(Math.sin(i+.4)*.22, Math.cos(i+.8)*.28, Math.sin(i*1.8)*.18),
-      radius: asset.radius, inverseMass: 1 / (asset.radius ** 3),
+      radius: asset.radius, inverseMass: 1 / (asset.radius ** 3), collider: createCollider(asset),
     });
   }
-  function solve(iterations) {
+  bodies.forEach(updateCollider);
+  function solve(iterations, broadOnly = false) {
     for (let pass = 0; pass < iterations; pass++) {
       let maxOverlap = 0;
       for (let i = 0; i < count; i++) for (let j = i + 1; j < count; j++) {
@@ -33,9 +36,16 @@ export function createPhysics(assets, count) {
         const limit=a.radius+b.radius;
         const distanceSq=dx*dx+dy*dy+dz*dz;
         if(distanceSq>=limit*limit)continue;
-        const distance=Math.sqrt(distanceSq);
-        if(distance<1e-8){dx=1;dy=0;dz=0;}else{dx/=distance;dy/=distance;dz/=distance;}
-        const overlap=limit-distance;
+        let overlap;
+        if (broadOnly) {
+          const distance=Math.sqrt(distanceSq);
+          if(distance<1e-8){dx=1;dy=0;dz=0;}else{dx/=distance;dy/=distance;dz/=distance;}
+          overlap=limit-distance;
+        } else {
+          if (!glyphContact(a,b,contact)) continue;
+          overlap=contact.depth;
+          dx=contact.normal.x;dy=contact.normal.y;dz=contact.normal.z;
+        }
         maxOverlap=Math.max(maxOverlap,overlap);
         const massSum=a.inverseMass+b.inverseMass;
         const correction=(overlap+.00001)/massSum;
@@ -60,7 +70,8 @@ export function createPhysics(assets, count) {
       if(maxOverlap<.0001)break;
     }
   }
-  solve(20);
+  // Start without interlocking pieces, then let contour contacts compact the cluster.
+  solve(20, true);
   function step(pointer) {
     // Fixed-step pointer velocity transfers a swipe's direction without event-rate dependence.
     let swipeX=0,swipeY=0;
@@ -71,7 +82,7 @@ export function createPhysics(assets, count) {
     }
     lastPointerX=pointer?.x??null;lastPointerY=pointer?.y??null;
     if (pointer ? pointerX === null || Math.hypot(pointer.x-pointerX,pointer.y-pointerY) > .006 : pointerX !== null) {
-      sleeping=false;quietSteps=0;
+      sleeping=false;quietSteps=0;quietMotion=0;
       pointerX=pointer?.x??null;pointerY=pointer?.y??null;
     }
     if(sleeping)return;
@@ -80,7 +91,7 @@ export function createPhysics(assets, count) {
       const body=bodies[i],p=body.position,v=body.velocity;
       body.previousPosition.copy(p);
       // Strong central attraction; no perpetual orbit or time-driven spin.
-      // A deeper cluster overlaps in projection without shrinking collision spheres.
+      // Contour contacts allow a deeper, closer cluster without intersecting glyphs.
       let ax=-p.x*3, ay=-p.y*4, az=-p.z*1.5;
       if(pointer){
         // Project the cursor ray onto this body's depth, not only the z=0 plane.
@@ -110,10 +121,13 @@ export function createPhysics(assets, count) {
       if(angularSpeed>1e-8){axis.copy(spin).multiplyScalar(1/angularSpeed);turn.setFromAxisAngle(axis,Math.min(angularSpeed,6)*STEP);body.quaternion.premultiply(turn).normalize();}
     }
     // Positional corrections follow integration, unlike the one-pass reference.
+    bodies.forEach(updateCollider);
     solve(10);
     for(const body of bodies)maxMotion=Math.max(maxMotion,body.position.distanceToSquared(body.previousPosition));
     // Keep the rest threshold relative to the faster simulation response.
-    if(maxMotion<1e-6*RESPONSE_SPEED*RESPONSE_SPEED && maxSpin<.03)quietSteps++;else quietSteps=0;
+    // Average small box-edge correction jitter; sustained movement still resets sleep.
+    quietMotion = quietMotion * .95 + maxMotion * .05;
+    if(quietMotion<1e-6*RESPONSE_SPEED*RESPONSE_SPEED && maxSpin<.03)quietSteps++;else quietSteps=0;
     if(quietSteps>=90){sleeping=true;for(const body of bodies){body.velocity.set(0,0,0);body.angular.set(0,0,0);}}
 
   }

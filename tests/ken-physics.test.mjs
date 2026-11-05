@@ -4,12 +4,33 @@ import { readFile } from 'node:fs/promises';
 import { FontLoader } from 'three/addons/loaders/FontLoader.js';
 import { createLetterAssets } from '../src/effects/ken-shapes.js';
 import { createPhysics } from '../src/effects/ken-physics.js';
+import { createCollider, glyphContact, updateCollider } from '../src/effects/ken-colliders.js';
+import { Vector3, Quaternion } from 'three';
+const contact = {depth:0, normal:new Vector3()};
 const font=new FontLoader().parse(JSON.parse(await readFile(new URL('../node_modules/three/examples/fonts/helvetiker_bold.typeface.json',import.meta.url),'utf8')));
 const assets=createLetterAssets(font);
-test('one collision sphere encloses every rendered letter vertex',()=>{
+test('thin digits can approach inside the old sphere while rotated contours still collide',()=>{
+  const asset=assets[2];
+  const make=()=>({position:new Vector3(),quaternion:new Quaternion(),radius:asset.radius,collider:createCollider(asset)});
+  const a=make(),b=make();updateCollider(a);updateCollider(b);
+  b.position.x=.65;
+  assert.ok(b.position.x<a.radius+b.radius,'Old whole-glyph spheres would leave a large gap');
+  assert.ok(!glyphContact(a,b,contact),'Separated stems must be able to approach closely');
+  b.position.x=.58;
+  assert.ok(glyphContact(a,b,contact),'Visible bases must not pass through each other');
+  a.quaternion.setFromAxisAngle(new Vector3(0,0,1),Math.PI/2);
+  b.quaternion.copy(a.quaternion);updateCollider(a);updateCollider(b);
+  b.position.x=1.25;assert.ok(!glyphContact(a,b,contact));
+  b.position.x=1.1;assert.ok(glyphContact(a,b,contact),'The rotated full height must become collision width');
+});
+test('contour boxes enclose every rendered vertex, including bevels',()=>{
   for(const asset of assets){
     const p=asset.geometry.getAttribute('position');
-    for(let i=0;i<p.count;i++)assert.ok(Math.hypot(p.getX(i),p.getY(i),p.getZ(i)) < asset.radius);
+    for(let i=0;i<p.count;i++){
+      const v=new Vector3().fromBufferAttribute(p,i);
+      assert.ok(asset.boxes.some(b=>Math.abs(v.x-b.center.x)<=b.half.x+1e-7&&Math.abs(v.y-b.center.y)<=b.half.y+1e-7&&Math.abs(v.z-b.center.z)<=b.half.z+1e-7),'Every rendered vertex must be covered');
+      assert.ok(v.length()<asset.radius);
+    }
   }
 });
 for(const count of [9,15,18,21,36])test(`${count} letters remain separated and bounded during 20 seconds of pointer sweeps`,()=>{
@@ -23,12 +44,12 @@ for(const count of [9,15,18,21,36])test(`${count} letters remain separated and b
       assert.ok(Math.abs(a.quaternion.length()-1)<1e-6);
       for(let j=i+1;j<count;j++){
         const b=sim.bodies[j];
-        maxOverlap=Math.max(maxOverlap,a.radius+b.radius-a.position.distanceTo(b.position));
+        if(step%12===0&&glyphContact(a,b,contact))maxOverlap=Math.max(maxOverlap,contact.depth);
       }
     }
   }
   assert.ok(sim.contactCount>0);
-  assert.ok(maxOverlap<.005,`Excessive sphere overlap ${maxOverlap}`);
+  assert.ok(maxOverlap<.01,`Excessive contour overlap ${maxOverlap}`);
 });
 test('hover visibly displaces the gathering cluster',()=>{
   const idle=createPhysics(assets,9),hover=createPhysics(assets,9);
@@ -37,11 +58,11 @@ test('hover visibly displaces the gathering cluster',()=>{
   assert.ok(idle.bodies.some((b,i)=>b.position.distanceTo(start[i])>.1));
   assert.ok(hover.bodies.some((b,i)=>b.position.distanceTo(idle.bodies[i].position)>.3));
 });
-test('bounded integration prevents fast opposing spheres tunnelling',()=>{
+test('bounded integration prevents fast opposing glyphs tunnelling',()=>{
   const sim=createPhysics(assets,2),[a,b]=sim.bodies;
   a.position.set(-2,0,0);b.position.set(2,0,0);
   a.velocity.set(200,0,0);b.velocity.set(-200,0,0);
-  for(let i=0;i<100;i++){sim.step(null);assert.ok(a.position.x<b.position.x);assert.ok(a.position.distanceTo(b.position)>=a.radius+b.radius-.005);}
+  for(let i=0;i<100;i++){sim.step(null);assert.ok(a.position.x<b.position.x);assert.ok(!glyphContact(a,b,contact)||contact.depth<.01);}
 });
 
 for(const count of [9,15,18,21,36])test(`${count} letters settle, wake on hover, then settle again`,()=>{

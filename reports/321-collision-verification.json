@@ -1,0 +1,47 @@
+{
+  "date": "2026-11-05",
+  "environment": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v20.19.6"
+  },
+  "method": "Conservative projected-triangle raster cover; merged extruded boxes, rotated OBB SAT; broad-phase sphere and piece AABB rejection",
+  "cellSize": 0.055,
+  "boxMargin": 0.003,
+  "boxesPerDigit": [
+    {
+      "digit": "3",
+      "boxes": 21
+    },
+    {
+      "digit": "2",
+      "boxes": 22
+    },
+    {
+      "digit": "1",
+      "boxes": 3
+    }
+  ],
+  "assetCreationMs": 45.449208999999996,
+  "measurements": [
+    {
+      "count": 18,
+      "physicsStepMedianMs": 0.23929200000000606,
+      "physicsStepP95Ms": 0.783333999999968,
+      "physicsStepMeanMs": 0.32669755333333245,
+      "maxSampledPenetration": 0.00046857556511448184,
+      "secondsToSettleAfterSweeps": 2.9916666666666667,
+      "sleeping": true
+    },
+    {
+      "count": 36,
+      "physicsStepMedianMs": 1.228832999999895,
+      "physicsStepP95Ms": 2.158042000000023,
+      "physicsStepMeanMs": 1.2582640949999986,
+      "maxSampledPenetration": 0.001273348355777304,
+      "secondsToSettleAfterSweeps": 4.633333333333334,
+      "sleeping": true
+    }
+  ],
+  "limitations": "Local Node CPU measurements, not browser total frame time or phone GPU/thermal performance. Sampled residual contact penetration is a solver tolerance, not an exact-mesh CCD guarantee."
+}

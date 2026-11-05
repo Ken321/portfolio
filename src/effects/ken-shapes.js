@@ -1,4 +1,5 @@
 import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
+import { createGlyphBoxes } from './ken-colliders.js';
 export function createLetterAssets(font) {
   return [...'321'].map(ch => {
     const geometry = new TextGeometry(ch, {
@@ -8,8 +9,9 @@ export function createLetterAssets(font) {
     });
     geometry.center();
     geometry.computeBoundingSphere();
-    // One conservative sphere covers every vertex, including rounded corners.
-    const radius = geometry.boundingSphere.radius + .025;
-    return { geometry, radius, center: geometry.boundingSphere.center.clone() };
+    const boxes = createGlyphBoxes(geometry);
+    // The sphere is broad-phase only; contact uses the rotated contour boxes.
+    const radius = Math.max(...boxes.map(box => Math.hypot(Math.abs(box.center.x) + box.half.x, Math.abs(box.center.y) + box.half.y, Math.abs(box.center.z) + box.half.z)));
+    return { geometry, boxes, radius, center: geometry.boundingSphere.center.clone() };
   });
 }
