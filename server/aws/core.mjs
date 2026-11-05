@@ -70,7 +70,7 @@ export function createHandlers({store, queue, getKey, env, fetcher=fetch, now=Da
         // Schedule BEFORE creating a paid call. No call starts without a durable cleanup job.
         await queue(token,seconds+30);
         const form=new FormData();form.set('sdp',body);
-        form.set('session',JSON.stringify({type:'realtime',model:env.OPENAI_REALTIME_MODEL||'gpt-realtime-2.1-mini',instructions:useNotes?instructions:portfolioInstructions,tools:useNotes?referenceTools:[],max_output_tokens:4096,audio:{input:{turn_detection:{type:'server_vad',create_response:true,interrupt_response:true,silence_duration_ms:650}},output:{voice:env.OPENAI_REALTIME_VOICE||'alloy'}}}));
+        form.set('session',JSON.stringify({type:'realtime',model:env.OPENAI_REALTIME_MODEL||'gpt-realtime-2.1-mini',instructions:useNotes?instructions:portfolioInstructions,tools:useNotes?referenceTools:[],max_output_tokens:4096,audio:{input:{turn_detection:{type:'server_vad',create_response:true,interrupt_response:true,silence_duration_ms:650}},output:{voice:env.OPENAI_REALTIME_VOICE||'echo'}}}));
         upstreamStarted=true;
         const r=await fetcher('https://api.openai.com/v1/realtime/calls',{method:'POST',headers:{Authorization:`Bearer ${key}`},body:form,signal:AbortSignal.timeout(20000)});
         if(!r.ok){upstreamStarted=false;throw Error('upstream');}

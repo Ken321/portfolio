@@ -67,3 +67,14 @@ test('only note-capable clients receive reference tools; old cached pages retain
  assert.deepEqual(sessions[0].tools,[]);assert.ok(!sessions[0].instructions.includes('BEGIN_NOTE_CATALOG_DATA'));
  assert.equal(sessions[1].tools[0].name,'read_note_articles');
 });
+test('AWS sessions default to Echo and honor an explicit voice override',async()=>{
+ for(const [voice,expected] of [[undefined,'echo'],['alloy','alloy']]) {
+  let session;
+  const f=fixture({env:{VOICE_ALLOWED_ORIGINS:'https://321ken.com',VOICE_ENABLED:'true',...(voice?{OPENAI_REALTIME_VOICE:voice}:{})},fetcher:async(url,init)=>{
+   session=JSON.parse(init.body.get('session'));return new Response('answer',{headers:{location:'/voice_test'}});
+  }});
+  assert.equal((await f.request()).statusCode,200);
+  assert.equal(session.audio.output.voice,expected);
+  assert.equal(session.model,'gpt-realtime-2.1-mini');
+ }
+});

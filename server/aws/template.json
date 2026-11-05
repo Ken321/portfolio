@@ -220,7 +220,7 @@
               "Ref": "DailyLimit"
             },
             "OPENAI_REALTIME_MODEL": "gpt-realtime-2.1-mini",
-            "OPENAI_REALTIME_VOICE": "alloy"
+            "OPENAI_REALTIME_VOICE": "echo"
           }
         }
       }
@@ -361,7 +361,7 @@
               "Ref": "DailyLimit"
             },
             "OPENAI_REALTIME_MODEL": "gpt-realtime-2.1-mini",
-            "OPENAI_REALTIME_VOICE": "alloy"
+            "OPENAI_REALTIME_VOICE": "echo"
           }
         }
       }

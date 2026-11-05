@@ -99,7 +99,7 @@ export function createVoiceServer({env=process.env, fetcher=fetch, durationMs=18
       let sdp='';for await(const chunk of req){sdp+=chunk;if(sdp.length>65536)return reply(413,{error:'size'});}
       if(!sdp.startsWith('v=0'))return reply(400,{error:'sdp'});
       const form=new FormData();form.set('sdp',sdp);
-      form.set('session',JSON.stringify({type:'realtime',model:env.OPENAI_REALTIME_MODEL||'gpt-realtime-2.1-mini',instructions:useNotes?instructions:portfolioInstructions,tools:useNotes?referenceTools:[],max_output_tokens:4096,audio:{input:{turn_detection:{type:'server_vad',create_response:true,interrupt_response:true,silence_duration_ms:650}},output:{voice:env.OPENAI_REALTIME_VOICE||'alloy'}}}));
+      form.set('session',JSON.stringify({type:'realtime',model:env.OPENAI_REALTIME_MODEL||'gpt-realtime-2.1-mini',instructions:useNotes?instructions:portfolioInstructions,tools:useNotes?referenceTools:[],max_output_tokens:4096,audio:{input:{turn_detection:{type:'server_vad',create_response:true,interrupt_response:true,silence_duration_ms:650}},output:{voice:env.OPENAI_REALTIME_VOICE||'echo'}}}));
       const r=await fetcher('https://api.openai.com/v1/realtime/calls',{method:'POST',headers:{Authorization:`Bearer ${key}`},body:form,signal:AbortSignal.timeout(25000)});
       if(!r.ok)return reply(502,{error:'upstream'});
       const id=r.headers.get('location')?.split('/').pop();

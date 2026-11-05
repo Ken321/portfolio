@@ -10,7 +10,7 @@ The static GitHub Pages site remains unchanged as a deployment platform. Voice s
 2. Run `npm run voice` alongside the existing static preview on port 8765.
 3. Click 話しかける, allow the microphone, then speak. Test interruption, mute, end, denied permission and tab switching on real Safari/iOS and Chrome/Android.
 
-The default model is `gpt-realtime-2.1-mini` and voice is `alloy`, configurable by environment. Access must be available on your API project. A successful build or mocked test does not verify model access, actual voice quality, WebRTC connectivity or mobile microphone permissions.
+The default model is `gpt-realtime-2.1-mini` and voice is `echo`, configurable by environment. Access must be available on your API project. A successful build or mocked test does not verify model access, actual voice quality, WebRTC connectivity or mobile microphone permissions.
 
 ## Deployment
 

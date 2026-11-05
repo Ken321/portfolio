@@ -49,3 +49,15 @@ test('local opt-in keeps old browser sessions compatible',async t=>{
  await request('/voice/session',offer);await request('/voice/session?references=note-v1',offer);
  assert.deepEqual(sessions[0].tools,[]);assert.ok(!sessions[0].instructions.includes('BEGIN_NOTE_CATALOG_DATA'));assert.equal(sessions[1].tools[0].name,'read_note_articles');
 });
+test('local sessions default to Echo and honor an explicit voice override',async t=>{
+ for(const [voice,expected] of [[undefined,'echo'],['alloy','alloy']]) {
+  let session;
+  const request=await fixture(t,{env:{OPENAI_API_KEY:'test',...(voice?{OPENAI_REALTIME_VOICE:voice}:{})},fetcher:async(url,init)=>{
+   if(url.endsWith('/hangup'))return new Response(null,{status:200});
+   session=JSON.parse(init.body.get('session'));return new Response('answer',{headers:{location:'/voice_test'}});
+  }});
+  assert.equal((await request('/voice/session',offer)).status,200);
+  assert.equal(session.audio.output.voice,expected);
+  assert.equal(session.model,'gpt-realtime-2.1-mini');
+ }
+});
