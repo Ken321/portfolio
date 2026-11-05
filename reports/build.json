@@ -549,6 +549,11 @@
       ],
       "format": "esm"
     },
+    "src/user-transcript.js": {
+      "bytes": 5621,
+      "imports": [],
+      "format": "esm"
+    },
     "src/note-tools.js": {
       "bytes": 2049,
       "imports": [],
@@ -560,8 +565,13 @@
       "format": "esm"
     },
     "src/voice.js": {
-      "bytes": 10513,
+      "bytes": 10768,
       "imports": [
+        {
+          "path": "src/user-transcript.js",
+          "kind": "import-statement",
+          "original": "./user-transcript.js"
+        },
         {
           "path": "src/note-tools.js",
           "kind": "import-statement",
@@ -597,19 +607,19 @@
       "format": "esm"
     },
     "src/styles.css": {
-      "bytes": 19370,
+      "bytes": 20515,
       "imports": []
     }
   },
   "outputs": {
-    "assets/build/app-SMEEJF2R.js": {
+    "assets/build/app-WDUZPK3R.js": {
       "imports": [
         {
           "path": "assets/build/effects-controller-TSQJXYWC.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/voice-BWNGG6EL.js",
+          "path": "assets/build/voice-JEHF6CPD.js",
           "kind": "dynamic-import"
         }
       ],
@@ -954,7 +964,7 @@
       },
       "bytes": 844
     },
-    "assets/build/voice-BWNGG6EL.js": {
+    "assets/build/voice-JEHF6CPD.js": {
       "imports": [
         {
           "path": "assets/build/chunk-DSOSAS5T.js",
@@ -966,6 +976,9 @@
       ],
       "entryPoint": "src/voice.js",
       "inputs": {
+        "src/user-transcript.js": {
+          "bytesInOutput": 4265
+        },
         "src/note-tools.js": {
           "bytesInOutput": 1323
         },
@@ -973,10 +986,10 @@
           "bytesInOutput": 1289
         },
         "src/voice.js": {
-          "bytesInOutput": 10621
+          "bytesInOutput": 10700
         }
       },
-      "bytes": 13299
+      "bytes": 17643
     },
     "assets/build/chunk-DSOSAS5T.js": {
       "imports": [],
@@ -991,15 +1004,15 @@
       },
       "bytes": 713
     },
-    "assets/build/styles-BJLISBJT.css": {
+    "assets/build/styles-LWQZBST2.css": {
       "imports": [],
       "entryPoint": "src/styles.css",
       "inputs": {
         "src/styles.css": {
-          "bytesInOutput": 17939
+          "bytesInOutput": 18918
         }
       },
-      "bytes": 17940
+      "bytes": 18919
     }
   }
 }

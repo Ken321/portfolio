@@ -1,3 +1,4 @@
+import { createUserTranscript } from './user-transcript.js';
 import { createNoteToolHandler } from './note-tools.js';
 import { createVoiceDiagnostics } from './voice-diagnostics.js';
 import { connectSpeechMeter } from './voice-motion.js';
@@ -12,6 +13,7 @@ export function createVoice(root) {
   window.portfolioVoiceDiagnostics={read:diagnostics.read};
   let run=null,completed=false;
   const text=(ja,en)=>document.documentElement.lang==='en'?en:ja;
+  const userTranscript=createUserTranscript(root,{text});
   const state=(value,ja,en)=>{scene.dataset.voiceState=value;status.textContent=['listening','speaking','thinking'].includes(value)?'':text(ja,en);};
   const idle=()=>state('idle','','');
   const setMuteLabel=muted=>{
@@ -22,7 +24,7 @@ export function createVoice(root) {
   };
   function finish(message,reason='ended'){
     const r=run;if(!r)return;diagnostics.record('session.end',{reason});run=null;
-    clearTimeout(r.timer);clearTimeout(r.connectTimer);r.abort.abort();r.stream?.getTracks().forEach(t=>t.stop());r.pc?.close();r.audio.pause();r.audio.srcObject=null;r.disconnectMeter?.();r.context?.close().catch(()=>{});
+    userTranscript.finish();clearTimeout(r.timer);clearTimeout(r.connectTimer);r.abort.abort();r.stream?.getTracks().forEach(t=>t.stop());r.pc?.close();r.audio.pause();r.audio.srcObject=null;r.disconnectMeter?.();r.context?.close().catch(()=>{});
     if(r.token)fetch(`${base}/voice/end`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:r.token}),keepalive:true}).catch(()=>{});
     start.hidden=false;end.hidden=true;mute.hidden=true;setMuteLabel(false);
     idle();
@@ -61,11 +63,13 @@ export function createVoice(root) {
       r.noteTools=createNoteToolHandler({send:event=>dc.send(JSON.stringify(event)),base,getToken:()=>r.token,isCurrent:()=>run===r,signal:r.abort.signal});
       dc.onopen=()=>{
         if(run!==r)return;r.started=true;clearTimeout(r.connectTimer);mute.hidden=false;
+        userTranscript.start(event=>dc.send(JSON.stringify(event)));
         state('listening','聞いています。','Listening.');
         dc.send(JSON.stringify({type:'response.create',response:{instructions:document.documentElement.lang==='en'?'Introduce yourself briefly as the AI guide to Ken’s portfolio. Audibly start with “Oh, um, hello!” in a timid, flustered voice, with a brief restart mid-sentence. Invite a question casually. Keep the whole greeting around 20–30 words, a soft target; finish naturally even if longer. Gradually reduce volume over the last few syllables of each sentence, with slightly breathy, less distinct articulation, while keeping every word audible and complete. Begin the next sentence at a comfortable soft volume again. Never describe this delivery or say you are nervous.':'「あ、えっと、こんにちは！」と実際に言い淀んで話し始めてください。Kenの作品を案内するAIだと短く名乗り、「よ、よかったら、何か聞いてください」のように質問を歓迎してください。常にオドオドした、ためらいがはっきり聞こえる声で、途中にも短いつかえや間を入れます。丁寧語ですがフランクに。流暢な司会口調にしないでください。全体を40〜60文字程度の短い挨拶にしてください。文字数は目安なので、超えても文を最後まで話してください。各文の語尾に向かって少しずつ声量を落とし、最後の数音は息混じりで少しぼそぼそと、滑舌を柔らかく曖昧にしてください。ただし語尾を省略したり無音にせず、言葉は聞き取れるように最後まで発音してください。次の文は聞こえる柔らかな声量に戻してください。この話し方を説明したり、自分が緊張していると言ったりしないでください。'}}));
       };
       dc.onmessage=({data})=>{
         if(run!==r)return;let e;try{e=JSON.parse(data);}catch{return;}
+        if(userTranscript.event(e))return;
         diagnostics.event(e);
         void r.noteTools.handle(e).catch(()=>{});
         if(e.type==='input_audio_buffer.speech_started'){r.noteTools.interrupt();state('listening','聞いています。','Listening.');}
