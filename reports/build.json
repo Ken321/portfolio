@@ -340,7 +340,7 @@
       "format": "esm"
     },
     "src/effects/avatar-arm-limits.js": {
-      "bytes": 2055,
+      "bytes": 4497,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -367,7 +367,7 @@
       "format": "esm"
     },
     "src/effects/avatar-catch-motion.js": {
-      "bytes": 10192,
+      "bytes": 12596,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -549,6 +549,11 @@
       ],
       "format": "esm"
     },
+    "src/voice-deadline.js": {
+      "bytes": 3154,
+      "imports": [],
+      "format": "esm"
+    },
     "src/user-transcript.js": {
       "bytes": 5621,
       "imports": [],
@@ -565,8 +570,13 @@
       "format": "esm"
     },
     "src/voice.js": {
-      "bytes": 10768,
+      "bytes": 12164,
       "imports": [
+        {
+          "path": "src/voice-deadline.js",
+          "kind": "import-statement",
+          "original": "./voice-deadline.js"
+        },
         {
           "path": "src/user-transcript.js",
           "kind": "import-statement",
@@ -607,19 +617,19 @@
       "format": "esm"
     },
     "src/styles.css": {
-      "bytes": 20515,
+      "bytes": 21110,
       "imports": []
     }
   },
   "outputs": {
-    "assets/build/app-WDUZPK3R.js": {
+    "assets/build/app-4Q5EKC4H.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-TSQJXYWC.js",
+          "path": "assets/build/effects-controller-IDKFLZU3.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/voice-JEHF6CPD.js",
+          "path": "assets/build/voice-VHIUTHAO.js",
           "kind": "dynamic-import"
         }
       ],
@@ -740,7 +750,7 @@
       },
       "bytes": 532
     },
-    "assets/build/avatar-FRO7YAJM.js": {
+    "assets/build/avatar-DMFH37F6.js": {
       "imports": [
         {
           "path": "assets/build/chunk-S5WRHXED.js",
@@ -761,22 +771,22 @@
       "entryPoint": "src/effects/avatar.js",
       "inputs": {
         "src/effects/avatar-arm-limits.js": {
-          "bytesInOutput": 795
+          "bytesInOutput": 1829
         },
         "src/effects/avatar-bow-head-hold.js": {
-          "bytesInOutput": 2731
+          "bytesInOutput": 2740
         },
         "src/effects/avatar-catch-motion.js": {
-          "bytesInOutput": 6013
+          "bytesInOutput": 6945
         },
         "src/effects/avatar-body-motion.js": {
           "bytesInOutput": 2497
         },
         "src/effects/avatar-motion.js": {
-          "bytesInOutput": 11378
+          "bytesInOutput": 11359
         },
         "src/effects/avatar-mixamo-motion.js": {
-          "bytesInOutput": 3252
+          "bytesInOutput": 3268
         },
         "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
           "bytesInOutput": 22393
@@ -791,7 +801,7 @@
           "bytesInOutput": 2233
         }
       },
-      "bytes": 97257
+      "bytes": 99235
     },
     "assets/build/chunk-S5WRHXED.js": {
       "imports": [
@@ -918,7 +928,7 @@
       },
       "bytes": 672470
     },
-    "assets/build/effects-controller-TSQJXYWC.js": {
+    "assets/build/effects-controller-IDKFLZU3.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
@@ -933,7 +943,7 @@
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/avatar-FRO7YAJM.js",
+          "path": "assets/build/avatar-DMFH37F6.js",
           "kind": "dynamic-import"
         }
       ],
@@ -964,7 +974,7 @@
       },
       "bytes": 844
     },
-    "assets/build/voice-JEHF6CPD.js": {
+    "assets/build/voice-VHIUTHAO.js": {
       "imports": [
         {
           "path": "assets/build/chunk-DSOSAS5T.js",
@@ -976,6 +986,9 @@
       ],
       "entryPoint": "src/voice.js",
       "inputs": {
+        "src/voice-deadline.js": {
+          "bytesInOutput": 2337
+        },
         "src/user-transcript.js": {
           "bytesInOutput": 4265
         },
@@ -986,10 +999,10 @@
           "bytesInOutput": 1289
         },
         "src/voice.js": {
-          "bytesInOutput": 10700
+          "bytesInOutput": 11747
         }
       },
-      "bytes": 17643
+      "bytes": 21027
     },
     "assets/build/chunk-DSOSAS5T.js": {
       "imports": [],
@@ -1004,15 +1017,15 @@
       },
       "bytes": 713
     },
-    "assets/build/styles-LWQZBST2.css": {
+    "assets/build/styles-PINAEBI7.css": {
       "imports": [],
       "entryPoint": "src/styles.css",
       "inputs": {
         "src/styles.css": {
-          "bytesInOutput": 18918
+          "bytesInOutput": 19506
         }
       },
-      "bytes": 18919
+      "bytes": 19507
     }
   }
 }

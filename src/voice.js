@@ -1,9 +1,11 @@
+import { createVoiceDeadline } from './voice-deadline.js';
 import { createUserTranscript } from './user-transcript.js';
 import { createNoteToolHandler } from './note-tools.js';
 import { createVoiceDiagnostics } from './voice-diagnostics.js';
 import { connectSpeechMeter } from './voice-motion.js';
 export function createVoice(root) {
   const start=root.querySelector('[data-voice-start]'),end=root.querySelector('[data-voice-end]'),mute=root.querySelector('[data-voice-mute]');
+  const muteLabel=root.querySelector('[data-voice-mute-label]');
   const status=root.querySelector('[data-voice-status]'),caption=root.querySelector('[data-voice-caption]');
   const scene=root.querySelector('.avatar-scene');
   const configured=document.querySelector('meta[name="voice-api"]')?.content;
@@ -11,25 +13,28 @@ export function createVoice(root) {
   let storage;try{storage=window.localStorage;}catch{}
   const diagnostics=createVoiceDiagnostics(storage);
   window.portfolioVoiceDiagnostics={read:diagnostics.read};
-  let run=null,completed=false;
+  let run=null,completed=false,captionTimer;
   const text=(ja,en)=>document.documentElement.lang==='en'?en:ja;
   const userTranscript=createUserTranscript(root,{text});
   const state=(value,ja,en)=>{scene.dataset.voiceState=value;status.textContent=['listening','speaking','thinking'].includes(value)?'':text(ja,en);};
   const idle=()=>state('idle','','');
   const setMuteLabel=muted=>{
     mute.setAttribute('aria-pressed',String(muted));
-    mute.dataset.ja=muted?'マイクオン':'マイクオフ';
-    mute.dataset.en=muted?'Unmute microphone':'Mute microphone';
-    mute.textContent=text(mute.dataset.ja,mute.dataset.en);
+    muteLabel.dataset.ja=muted?'マイクをつける':'マイクをオフる';
+    muteLabel.dataset.en=muted?'Unmute microphone':'Mute microphone';
+    muteLabel.textContent=text(muteLabel.dataset.ja,muteLabel.dataset.en);
   };
   function finish(message,reason='ended'){
     const r=run;if(!r)return;diagnostics.record('session.end',{reason});run=null;
-    userTranscript.finish();clearTimeout(r.timer);clearTimeout(r.connectTimer);r.abort.abort();r.stream?.getTracks().forEach(t=>t.stop());r.pc?.close();r.audio.pause();r.audio.srcObject=null;r.disconnectMeter?.();r.context?.close().catch(()=>{});
+    userTranscript.finish();r.deadline?.stop();clearTimeout(captionTimer);
+    if(reason==='time_limit'&&!r.farewellPlayed)caption.textContent='';
+    else captionTimer=setTimeout(()=>{caption.textContent='';},3000);
+    clearTimeout(r.timer);clearTimeout(r.connectTimer);r.abort.abort();r.stream?.getTracks().forEach(t=>t.stop());r.pc?.close();r.audio.pause();r.audio.srcObject=null;r.disconnectMeter?.();r.context?.close().catch(()=>{});
     if(r.token)fetch(`${base}/voice/end`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:r.token}),keepalive:true}).catch(()=>{});
-    start.hidden=false;end.hidden=true;mute.hidden=true;setMuteLabel(false);
+    start.hidden=false;end.hidden=true;mute.hidden=true;mute.disabled=false;setMuteLabel(false);
     idle();
     if(r.started){
-      completed=true;start.disabled=true;start.dataset.ja='お話ありがとう！';start.dataset.en='Thanks for chatting!';start.textContent=text(start.dataset.ja,start.dataset.en);
+      completed=true;start.hidden=true;start.disabled=true;end.hidden=false;end.disabled=true;end.dataset.voiceCompleted='true';end.dataset.ja='お話ありがとう！';end.dataset.en='Thanks for chatting!';end.textContent=text(end.dataset.ja,end.dataset.en);
     }
     if(message && !['user_end','time_limit'].includes(reason))status.textContent=message;
   }
@@ -44,7 +49,7 @@ export function createVoice(root) {
     const AudioContextClass=window.AudioContext||window.webkitAudioContext;
     if(AudioContextClass){try{r.context=new AudioContextClass();r.context.resume().catch(()=>{});}catch{}}
 
-    start.hidden=true;end.hidden=false;caption.textContent='';state('connecting','接続しています…','Connecting…');
+    clearTimeout(captionTimer);start.hidden=true;end.hidden=false;caption.textContent='';state('connecting','接続しています…','Connecting…');
     r.connectTimer=setTimeout(()=>{if(run===r)finish(text('接続できませんでした。もう一度お試しください。','Could not connect. Please try again.'));},35000);
     try {
       const availability=await fetch(`${base}/voice/status`,{signal:r.abort.signal});
@@ -60,7 +65,12 @@ export function createVoice(root) {
         r.audio.play().catch(()=>finish(text('音声を再生できませんでした。もう一度お試しください。','Audio playback was blocked. Please try again.')));};
       r.pc.onconnectionstatechange=()=>{diagnostics.record('connection.state',{state:r.pc.connectionState});if(run===r && ['failed','closed','disconnected'].includes(r.pc.connectionState))finish(text('会話が終了しました。','Conversation ended.'),'connection');};
       const dc=r.pc.createDataChannel('oai-events');r.dc=dc;
-      r.noteTools=createNoteToolHandler({send:event=>dc.send(JSON.stringify(event)),base,getToken:()=>r.token,isCurrent:()=>run===r,signal:r.abort.signal});
+      r.noteTools=createNoteToolHandler({send:event=>dc.send(JSON.stringify(event)),base,getToken:()=>r.token,isCurrent:()=>run===r&&!r.deadline?.isClosing(),signal:r.abort.signal});
+      r.deadline=createVoiceDeadline({send:event=>dc.send(JSON.stringify(event)),language:()=>document.documentElement.lang,
+        onClosing:()=>{r.noteTools.interrupt();r.stream.getAudioTracks().forEach(t=>t.enabled=false);setMuteLabel(true);mute.disabled=true;caption.textContent='';state('thinking','最後のご挨拶です。','Wrapping up.');},
+        onText:delta=>{caption.textContent+=delta;},onSpeaking:()=>state('speaking','',''),
+        onFinish:played=>{if(run!==r)return;r.farewellPlayed=played;finish(undefined,'time_limit');},
+        playoutMs:750+1000*((r.context?.baseLatency||0)+(r.context?.outputLatency||0))});
       dc.onopen=()=>{
         if(run!==r)return;r.started=true;clearTimeout(r.connectTimer);mute.hidden=false;
         userTranscript.start(event=>dc.send(JSON.stringify(event)));
@@ -69,7 +79,10 @@ export function createVoice(root) {
       };
       dc.onmessage=({data})=>{
         if(run!==r)return;let e;try{e=JSON.parse(data);}catch{return;}
-        if(userTranscript.event(e))return;
+        if(r.deadline.isClosing()){
+          if(e.type==='error'&&e.error?.event_id==='portfolio-user-transcription-enable-v1')return;
+          if(r.deadline.event(e))return;
+        }else{if(userTranscript.event(e))return;r.deadline.event(e);}
         diagnostics.event(e);
         void r.noteTools.handle(e).catch(()=>{});
         if(e.type==='input_audio_buffer.speech_started'){r.noteTools.interrupt();state('listening','聞いています。','Listening.');}
@@ -82,11 +95,12 @@ export function createVoice(root) {
         if(e.type==='error')finish(text('会話に接続できませんでした。もう一度お試しください。','Conversation failed. Please try again.'));
       };
       await r.pc.setLocalDescription(await r.pc.createOffer());
+      r.offerStarted=performance.now();
       const response=await fetch(`${base}/voice/session?references=note-v1`,{method:'POST',headers:{'Content-Type':'application/sdp'},body:r.pc.localDescription.sdp,signal:r.abort.signal});
       if(!response.ok)throw new Error(response.status===429?'limit':'connection');
       const answer=await response.json();r.token=answer.token;
       if(run!==r){fetch(`${base}/voice/end`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:r.token})}).catch(()=>{});return;}
-      r.timer=setTimeout(()=>finish(undefined,'time_limit'),answer.maxSeconds*1000);
+      r.deadline.arm(r.offerStarted,answer.maxSeconds);
       await r.pc.setRemoteDescription({type:'answer',sdp:answer.sdp});
     }catch(error){
       if(run!==r)return;
@@ -98,7 +112,7 @@ export function createVoice(root) {
     }
   }
   start.addEventListener('click',begin);end.addEventListener('click',()=>finish(undefined,'user_end'));
-  mute.addEventListener('click',()=>{if(!run?.stream)return;const muted=mute.getAttribute('aria-pressed')!=='true';run.stream.getAudioTracks().forEach(t=>t.enabled=!muted);setMuteLabel(muted);status.textContent='';});
+  mute.addEventListener('click',()=>{if(!run?.stream||run.deadline?.isClosing())return;const muted=mute.getAttribute('aria-pressed')!=='true';run.stream.getAudioTracks().forEach(t=>t.enabled=!muted);setMuteLabel(muted);status.textContent='';});
   document.addEventListener('visibilitychange',()=>{if(document.hidden)finish(undefined,'page_hidden');});
   window.addEventListener('pagehide',()=>finish(undefined,'pagehide'));
   document.addEventListener('portfolio:work-page',()=>{if(document.body.classList.contains('work-page-animating'))finish();});

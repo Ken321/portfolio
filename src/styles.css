@@ -141,6 +141,9 @@
  .voice-character:has([data-voice-caption]:not(:empty)) .voice-ui{border-top:0}
 }
 @media(max-width:600px){.voice-stage .voice-caption{margin-inline:20px}}
+.voice-controls [data-voice-mute]:not([hidden]){display:inline-flex;align-items:center;justify-content:center;gap:8px;max-width:100%}
+.voice-controls [data-voice-mute] svg{flex:none;width:18px;height:18px}
+.voice-controls [data-voice-mute][aria-pressed="false"] [data-voice-mute-slash]{display:none}
 
 /* Give mobile Safari a definite hero height; intrinsic grid/aspect-ratio sizing
    can otherwise shrink the art column to the title's content height. */
@@ -171,3 +174,5 @@
  .voice-stage .voice-caption::before{top:auto;bottom:-7px;right:calc(50% - 6px);border-top:0;border-left:0;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}
 }
 @media(max-width:600px){.voice-stage .voice-caption{margin-inline:20px}}
+.voice-controls [data-voice-completed]:disabled{width:100%;background:var(--ink);color:var(--bg);border-color:var(--ink);opacity:1}
+.voice-controls [data-voice-completed]:hover,.voice-controls [data-voice-completed]:focus-visible{background:transparent;color:var(--ink);border-color:var(--ink)}
