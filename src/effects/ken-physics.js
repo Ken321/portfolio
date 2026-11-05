@@ -50,7 +50,8 @@ export function createPhysics(assets, count) {
           a.velocity.x-=dx*impulse*a.inverseMass;a.velocity.y-=dy*impulse*a.inverseMass;a.velocity.z-=dz*impulse*a.inverseMass;
           b.velocity.x+=dx*impulse*b.inverseMass;b.velocity.y+=dy*impulse*b.inverseMass;b.velocity.z+=dz*impulse*b.inverseMass;
           // A little tangential rolling makes contacts readable, without a mesh solver.
-          const rolling = Math.abs(speed) > .15 * RESPONSE_SPEED * RESPONSE_SPEED ? .18 : 0;
+          // Ignore low-energy packing contacts so a settled cluster does not keep spinning.
+          const rolling = Math.abs(speed) > .3 * RESPONSE_SPEED * RESPONSE_SPEED ? .18 : 0;
           const tx=(dy*vz-dz*vy)*rolling,ty=(dz*vx-dx*vz)*rolling,tz=(dx*vy-dy*vx)*rolling;
           a.angular.x+=tx;a.angular.y+=ty;a.angular.z+=tz;
           b.angular.x+=tx;b.angular.y+=ty;b.angular.z+=tz;

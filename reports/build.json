@@ -255,7 +255,7 @@
       "format": "esm"
     },
     "src/effects/ken-shapes.js": {
-      "bytes": 623,
+      "bytes": 710,
       "imports": [
         {
           "path": "node_modules/three/examples/jsm/geometries/TextGeometry.js",
@@ -266,7 +266,7 @@
       "format": "esm"
     },
     "src/effects/ken-physics.js": {
-      "bytes": 6528,
+      "bytes": 6620,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -571,10 +571,10 @@
     }
   },
   "outputs": {
-    "assets/build/app-MYQDSX5K.js": {
+    "assets/build/app-OP73FCCN.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-JXS2AH44.js",
+          "path": "assets/build/effects-controller-PF7IEH3L.js",
           "kind": "dynamic-import"
         },
         {
@@ -644,7 +644,7 @@
       },
       "bytes": 31546
     },
-    "assets/build/ken-3V3PAVCW.js": {
+    "assets/build/ken-BU3HP5RM.js": {
       "imports": [
         {
           "path": "assets/build/chunk-GDTSZPI5.js",
@@ -665,10 +665,10 @@
       "entryPoint": "src/effects/ken.js",
       "inputs": {
         "src/effects/ken-shapes.js": {
-          "bytesInOutput": 309
+          "bytesInOutput": 308
         },
         "src/effects/ken-physics.js": {
-          "bytesInOutput": 3017
+          "bytesInOutput": 3016
         },
         "src/effects/ken-material.js": {
           "bytesInOutput": 1656
@@ -677,7 +677,7 @@
           "bytesInOutput": 3593
         }
       },
-      "bytes": 8873
+      "bytes": 8871
     },
     "assets/build/chunk-GDTSZPI5.js": {
       "imports": [
@@ -874,7 +874,7 @@
       },
       "bytes": 672470
     },
-    "assets/build/effects-controller-JXS2AH44.js": {
+    "assets/build/effects-controller-PF7IEH3L.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
@@ -885,7 +885,7 @@
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/ken-3V3PAVCW.js",
+          "path": "assets/build/ken-BU3HP5RM.js",
           "kind": "dynamic-import"
         },
         {
