@@ -40,3 +40,8 @@ test('CLI refuses default/read-only profiles before running any AWS operation', 
   assert.doesNotMatch(result.stderr, /ENOENT/);
  }
 });
+
+test('accepts completed rollback as stable but rejects active or failed recovery', () => {
+ validateStack({...stack(),StackStatus:'UPDATE_ROLLBACK_COMPLETE'});
+ for(const StackStatus of ['UPDATE_ROLLBACK_IN_PROGRESS','UPDATE_ROLLBACK_FAILED','UPDATE_ROLLBACK_COMPLETE_CLEANUP_IN_PROGRESS']) assert.throws(()=>validateStack({...stack(),StackStatus}));
+});

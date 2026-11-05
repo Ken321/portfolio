@@ -7,7 +7,7 @@ export const target = Object.freeze({
 function requireThat(ok, message) { if (!ok) throw new Error(message); }
 export function validateStack(stack) {
  requireThat(stack.StackId === target.stack && !stack.RoleARN, 'Unexpected stack or service role');
- requireThat(['UPDATE_COMPLETE', 'CREATE_COMPLETE'].includes(stack.StackStatus), 'Stack is not ready');
+ requireThat(['UPDATE_COMPLETE', 'CREATE_COMPLETE', 'UPDATE_ROLLBACK_COMPLETE'].includes(stack.StackStatus), 'Stack is not ready');
  const params = new Map(stack.Parameters.map(p => [p.ParameterKey, p.ParameterValue]));
  requireThat(params.get('CodeBucket') === target.bucket && /^voice\/[a-f0-9]+\.zip$/.test(params.get('CodeKey')), 'Unexpected artifact location');
  return params;
