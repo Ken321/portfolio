@@ -587,7 +587,7 @@
       "format": "esm"
     },
     "src/styles.css": {
-      "bytes": 19166,
+      "bytes": 19370,
       "imports": []
     }
   },
@@ -978,15 +978,15 @@
       },
       "bytes": 713
     },
-    "assets/build/styles-OPMQWKBX.css": {
+    "assets/build/styles-BJLISBJT.css": {
       "imports": [],
       "entryPoint": "src/styles.css",
       "inputs": {
         "src/styles.css": {
-          "bytesInOutput": 17828
+          "bytesInOutput": 17939
         }
       },
-      "bytes": 17829
+      "bytes": 17940
     }
   }
 }

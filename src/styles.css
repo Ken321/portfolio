@@ -149,6 +149,10 @@
  .hero-art{width:100%;aspect-ratio:auto;height:calc(100vw * 1.618033989);height:calc(100cqi * 1.618033989)}
 }
 
+/* Match the static hero numerals to each effect frame, including narrow mobile cells. */
+.hero-art .effect-cell{container-type:size}
+.hero-art .effect-poster{font-size:min(160cqw,115cqh);line-height:1}
+
 /* iOS must not select the ASCII glyphs or show a long-press callout. */
 .hero-art,.hero-art *, .contact-play:has(.effect-ready){
  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;
