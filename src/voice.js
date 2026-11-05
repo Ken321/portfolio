@@ -1,3 +1,4 @@
+import { createNoteToolHandler } from './note-tools.js';
 import { createVoiceDiagnostics } from './voice-diagnostics.js';
 import { connectSpeechMeter } from './voice-motion.js';
 export function createVoice(root) {
@@ -57,6 +58,7 @@ export function createVoice(root) {
         r.audio.play().catch(()=>finish(text('音声を再生できませんでした。もう一度お試しください。','Audio playback was blocked. Please try again.')));};
       r.pc.onconnectionstatechange=()=>{diagnostics.record('connection.state',{state:r.pc.connectionState});if(run===r && ['failed','closed','disconnected'].includes(r.pc.connectionState))finish(text('会話が終了しました。','Conversation ended.'),'connection');};
       const dc=r.pc.createDataChannel('oai-events');r.dc=dc;
+      r.noteTools=createNoteToolHandler({send:event=>dc.send(JSON.stringify(event)),base,getToken:()=>r.token,isCurrent:()=>run===r,signal:r.abort.signal});
       dc.onopen=()=>{
         if(run!==r)return;r.started=true;clearTimeout(r.connectTimer);mute.hidden=false;
         state('listening','聞いています。','Listening.');
@@ -65,7 +67,8 @@ export function createVoice(root) {
       dc.onmessage=({data})=>{
         if(run!==r)return;let e;try{e=JSON.parse(data);}catch{return;}
         diagnostics.event(e);
-        if(e.type==='input_audio_buffer.speech_started'){state('listening','聞いています。','Listening.');}
+        void r.noteTools.handle(e).catch(()=>{});
+        if(e.type==='input_audio_buffer.speech_started'){r.noteTools.interrupt();state('listening','聞いています。','Listening.');}
         if(e.type==='input_audio_buffer.speech_stopped')state('thinking','考えています…','Thinking…');
         if(e.type==='response.created')caption.textContent='';
         if(e.type==='output_audio_buffer.started')state('speaking','話しています。','Speaking.');
@@ -75,7 +78,7 @@ export function createVoice(root) {
         if(e.type==='error')finish(text('会話に接続できませんでした。もう一度お試しください。','Conversation failed. Please try again.'));
       };
       await r.pc.setLocalDescription(await r.pc.createOffer());
-      const response=await fetch(`${base}/voice/session`,{method:'POST',headers:{'Content-Type':'application/sdp'},body:r.pc.localDescription.sdp,signal:r.abort.signal});
+      const response=await fetch(`${base}/voice/session?references=note-v1`,{method:'POST',headers:{'Content-Type':'application/sdp'},body:r.pc.localDescription.sdp,signal:r.abort.signal});
       if(!response.ok)throw new Error(response.status===429?'limit':'connection');
       const answer=await response.json();r.token=answer.token;
       if(run!==r){fetch(`${base}/voice/end`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:r.token})}).catch(()=>{});return;}

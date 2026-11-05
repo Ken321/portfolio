@@ -549,14 +549,24 @@
       ],
       "format": "esm"
     },
+    "src/note-tools.js": {
+      "bytes": 2049,
+      "imports": [],
+      "format": "esm"
+    },
     "src/voice-diagnostics.js": {
       "bytes": 1756,
       "imports": [],
       "format": "esm"
     },
     "src/voice.js": {
-      "bytes": 10206,
+      "bytes": 10513,
       "imports": [
+        {
+          "path": "src/note-tools.js",
+          "kind": "import-statement",
+          "original": "./note-tools.js"
+        },
         {
           "path": "src/voice-diagnostics.js",
           "kind": "import-statement",
@@ -592,14 +602,14 @@
     }
   },
   "outputs": {
-    "assets/build/app-73WXFN3G.js": {
+    "assets/build/app-SMEEJF2R.js": {
       "imports": [
         {
           "path": "assets/build/effects-controller-TSQJXYWC.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/voice-UB45LCPV.js",
+          "path": "assets/build/voice-BWNGG6EL.js",
           "kind": "dynamic-import"
         }
       ],
@@ -944,7 +954,7 @@
       },
       "bytes": 844
     },
-    "assets/build/voice-UB45LCPV.js": {
+    "assets/build/voice-BWNGG6EL.js": {
       "imports": [
         {
           "path": "assets/build/chunk-DSOSAS5T.js",
@@ -956,14 +966,17 @@
       ],
       "entryPoint": "src/voice.js",
       "inputs": {
+        "src/note-tools.js": {
+          "bytesInOutput": 1323
+        },
         "src/voice-diagnostics.js": {
           "bytesInOutput": 1289
         },
         "src/voice.js": {
-          "bytesInOutput": 10419
+          "bytesInOutput": 10621
         }
       },
-      "bytes": 11774
+      "bytes": 13299
     },
     "assets/build/chunk-DSOSAS5T.js": {
       "imports": [],

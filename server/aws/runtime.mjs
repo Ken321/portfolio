@@ -23,6 +23,11 @@ const store={
         if(!e.CancellationReasons?.some(r=>r.Code==='ConditionalCheckFailed'))throw e;}
     }return null;
   },
+  async claimReference(token,now,durationMs){
+    try {
+      await db.send(new UpdateCommand({TableName,Key:{pk:`call#${token}`},UpdateExpression:'SET referenceReads = if_not_exists(referenceReads, :zero) + :one',ConditionExpression:'attribute_exists(id) AND createdAt > :earliest AND (attribute_not_exists(referenceReads) OR referenceReads < :limit)',ExpressionAttributeValues:{':zero':0,':one':1,':earliest':now-durationMs,':limit':12}}));return true;
+    } catch(e){if(e.name==='ConditionalCheckFailedException')return false;throw e;}
+  },
   async activate(token,id){await db.send(new UpdateCommand({TableName,Key:{pk:`call#${token}`},UpdateExpression:'SET id = :id',ConditionExpression:'attribute_exists(pk)',ExpressionAttributeValues:{':id':id}}));},
   async release(token,slot){
     try {await db.send(new TransactWriteCommand({TransactItems:[

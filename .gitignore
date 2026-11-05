@@ -6,3 +6,6 @@ node_modules/
 !.env.example
 
 .aws-build/
+
+# Full article snapshots are distributed only with the private voice API package.
+server/data/note-articles.json

@@ -35,3 +35,17 @@ test('malformed offers rejected and upstream errors do not expose credentials',a
  assert.equal((await request('/voice/session',{...offer,body:'bad'})).status,400);
  const r=await request('/voice/session',offer);assert.equal(r.status,502);assert.deepEqual(await r.json(),{error:'upstream'});
 });
+test('local article lookup requires an active session and enforces the read cap',async t=>{
+ const request=await fixture(t,{env:{OPENAI_API_KEY:'test'},readReference:ids=>{if(ids?.[0]!=='n123')throw Error('bad');return {articles:[{body:'complete public text'}]};},fetcher:async url=>url.endsWith('/hangup')?new Response(null,{status:200}):new Response('answer',{headers:{location:'/call_note'}})});
+ const read=token=>request('/voice/articles',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,article_ids:['n123']})});
+ assert.equal((await read('invalid')).status,403);
+ const {token}=await(await request('/voice/session',offer)).json();
+ for(let i=0;i<12;i++)assert.equal((await read(token)).status,200);
+ assert.equal((await read(token)).status,429);
+ await request('/voice/end',{method:'POST',body:JSON.stringify({token})});assert.equal((await read(token)).status,403);
+});
+test('local opt-in keeps old browser sessions compatible',async t=>{
+ const sessions=[];const request=await fixture(t,{env:{OPENAI_API_KEY:'test'},referenceTools:[{type:'function',name:'read_note_articles'}],fetcher:async(url,init)=>{if(url.endsWith('/hangup'))return new Response(null,{status:200});sessions.push(JSON.parse(init.body.get('session')));return new Response('answer',{headers:{location:'/test'}});}});
+ await request('/voice/session',offer);await request('/voice/session?references=note-v1',offer);
+ assert.deepEqual(sessions[0].tools,[]);assert.ok(!sessions[0].instructions.includes('BEGIN_NOTE_CATALOG_DATA'));assert.equal(sessions[1].tools[0].name,'read_note_articles');
+});

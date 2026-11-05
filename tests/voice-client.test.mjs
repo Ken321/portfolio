@@ -27,7 +27,7 @@ test('microphone denial restores controls with an actionable message',async t=>{
  await voice.begin();assert.match(nodes['[data-voice-status]'].textContent,/マイクの許可/);assert.equal(nodes['[data-voice-start]'].hidden,false);
 });
 test('a connected conversation can only run once per page and thanks appears on disabled button',async t=>{
- const track=Object.assign(new EventTarget(),{enabled:true,stop(){}});let channel;let sessions=0;const {voice,nodes}=setup(t,async url=>({ok:true,json:async()=>url.endsWith('/voice/status')?{available:true}:url.endsWith('/voice/session')?(sessions++,{token:'test',sdp:'answer',maxSeconds:180}):{ended:true}}),async()=>({getTracks:()=>[track],getAudioTracks:()=>[track]}));
+ const track=Object.assign(new EventTarget(),{enabled:true,stop(){}});let channel;let sessions=0;const {voice,nodes}=setup(t,async url=>({ok:true,json:async()=>url.endsWith('/voice/status')?{available:true}:url.includes('/voice/session')?(sessions++,{token:'test',sdp:'answer',maxSeconds:180}):{ended:true}}),async()=>({getTracks:()=>[track],getAudioTracks:()=>[track]}));
  const previous=Object.getOwnPropertyDescriptor(globalThis,'RTCPeerConnection');
  t.after(()=>{if(previous)Object.defineProperty(globalThis,'RTCPeerConnection',previous);else delete globalThis.RTCPeerConnection;});
  globalThis.RTCPeerConnection=class{
