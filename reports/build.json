@@ -570,7 +570,7 @@
       "format": "esm"
     },
     "src/voice.js": {
-      "bytes": 12164,
+      "bytes": 12119,
       "imports": [
         {
           "path": "src/voice-deadline.js",
@@ -622,14 +622,14 @@
     }
   },
   "outputs": {
-    "assets/build/app-4Q5EKC4H.js": {
+    "assets/build/app-XBLCQT73.js": {
       "imports": [
         {
           "path": "assets/build/effects-controller-IDKFLZU3.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/voice-VHIUTHAO.js",
+          "path": "assets/build/voice-I46S2SOM.js",
           "kind": "dynamic-import"
         }
       ],
@@ -974,7 +974,7 @@
       },
       "bytes": 844
     },
-    "assets/build/voice-VHIUTHAO.js": {
+    "assets/build/voice-I46S2SOM.js": {
       "imports": [
         {
           "path": "assets/build/chunk-DSOSAS5T.js",
@@ -999,10 +999,10 @@
           "bytesInOutput": 1289
         },
         "src/voice.js": {
-          "bytesInOutput": 11747
+          "bytesInOutput": 11657
         }
       },
-      "bytes": 21027
+      "bytes": 20937
     },
     "assets/build/chunk-DSOSAS5T.js": {
       "imports": [],
