@@ -1,0 +1,160 @@
+{
+  "date": "2026-11-05",
+  "units": "Scene units. Negative Z is farther from the camera; bounds include rotated compound colliders.",
+  "parameters": {
+    "horizontalPull": {
+      "before": 3,
+      "after": 2
+    },
+    "rearSoftLimitCenterZ": -0.6,
+    "rearExtraPull": 8,
+    "unchanged": [
+      "camera",
+      "initial positions",
+      "vertical pull 4",
+      "front depth pull 1.5",
+      "glyph geometry and compound contacts"
+    ]
+  },
+  "comparisons": [
+    {
+      "count": 18,
+      "before": {
+        "count": 18,
+        "idleSeconds": 2.95,
+        "idle": {
+          "minX": -1.6978763555775214,
+          "maxX": 1.772095825149802,
+          "xSpan": 3.469972180727323,
+          "back": -1.9280156714446142,
+          "front": 2.251351661946008,
+          "zSpan": 4.179367333390622,
+          "centerZ": -0.10232797690281441,
+          "zP10": -1.3368816356241335,
+          "zP90": 1.477376078660297
+        },
+        "afterSweepSeconds": 3.575,
+        "sleeping": true,
+        "afterSweep": {
+          "minX": -1.6605416155647879,
+          "maxX": 1.8113637735083512,
+          "xSpan": 3.471905389073139,
+          "back": -2.316917323986787,
+          "front": 2.3934663334735826,
+          "zSpan": 4.710383657460369,
+          "centerZ": -0.059640250209574565,
+          "zP10": -1.543059479837302,
+          "zP90": 1.3927801780163878
+        }
+      },
+      "after": {
+        "count": 18,
+        "idleSeconds": 3.575,
+        "idle": {
+          "minX": -2.169440290993769,
+          "maxX": 2.169161244626424,
+          "xSpan": 4.338601535620192,
+          "back": -1.5794006362699373,
+          "front": 2.154023479448772,
+          "zSpan": 3.733424115718709,
+          "centerZ": 0.17261350627818528,
+          "zP10": -0.863978012718949,
+          "zP90": 1.391891902212741
+        },
+        "afterSweepSeconds": 4.558333333333334,
+        "sleeping": true,
+        "afterSweep": {
+          "minX": -2.006971829761094,
+          "maxX": 1.997219184180854,
+          "xSpan": 4.0041910139419485,
+          "back": -1.8234578136040058,
+          "front": 2.1349972750999355,
+          "zSpan": 3.9584550887039414,
+          "centerZ": 0.19817478475004677,
+          "zP10": -0.970230066093215,
+          "zP90": 1.3958892379312675
+        }
+      }
+    },
+    {
+      "count": 36,
+      "before": {
+        "count": 36,
+        "idleSeconds": 3.6166666666666667,
+        "idle": {
+          "minX": -3.0654705275671024,
+          "maxX": 2.8338483331970075,
+          "xSpan": 5.89931886076411,
+          "back": -2.655296625687477,
+          "front": 2.8706480900468785,
+          "zSpan": 5.525944715734355,
+          "centerZ": -0.11630081809235494,
+          "zP10": -1.4914336854977945,
+          "zP90": 1.3886050052374874
+        },
+        "afterSweepSeconds": 3.0833333333333335,
+        "sleeping": true,
+        "afterSweep": {
+          "minX": -2.599733325712513,
+          "maxX": 2.178326409254837,
+          "xSpan": 4.77805973496735,
+          "back": -2.7197142700565826,
+          "front": 2.9757840636033173,
+          "zSpan": 5.6954983336599,
+          "centerZ": -0.059121999238953706,
+          "zP10": -1.6427559441858155,
+          "zP90": 1.7281302109537278
+        }
+      },
+      "after": {
+        "count": 36,
+        "idleSeconds": 5.758333333333334,
+        "idle": {
+          "minX": -3.1377787632448264,
+          "maxX": 3.1694290157503886,
+          "xSpan": 6.307207778995215,
+          "back": -1.8376296260736509,
+          "front": 3.0234948947369995,
+          "zSpan": 4.86112452081065,
+          "centerZ": 0.18915376881834634,
+          "zP10": -0.8407897882118708,
+          "zP90": 1.6159737981718094
+        },
+        "afterSweepSeconds": 7.025,
+        "sleeping": true,
+        "afterSweep": {
+          "minX": -3.8461108445247447,
+          "maxX": 2.8764103081529364,
+          "xSpan": 6.722521152677681,
+          "back": -1.9064998999154141,
+          "front": 3.117197769422341,
+          "zSpan": 5.023697669337755,
+          "centerZ": 0.28822451240745256,
+          "zP10": -0.8887965925368381,
+          "zP90": 1.7527040595089773
+        }
+      }
+    }
+  ],
+  "limitations": "Soft force, not a hard clipping plane. Exact packing changes with rotation, interaction history and floating-point platform. Camera/front force are unchanged; front extent can change slightly due to redistribution.",
+  "performance": {
+    "platform": "darwin",
+    "arch": "arm64",
+    "node": "v20.19.6",
+    "results": [
+      {
+        "count": 18,
+        "meanStepMs": 0.2488481916666669,
+        "p95StepMs": 0.6105829999999912,
+        "maxSampledContactDepth": 0.0001162099081226664
+      },
+      {
+        "count": 36,
+        "meanStepMs": 1.151171198333332,
+        "p95StepMs": 1.8475409999999783,
+        "maxSampledContactDepth": 0.0006434294680970898
+      }
+    ],
+    "limitation": "Local Node physics CPU time only; not browser total frame time or mobile hardware."
+  }
+}

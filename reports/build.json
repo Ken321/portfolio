@@ -282,7 +282,7 @@
       "format": "esm"
     },
     "src/effects/ken-physics.js": {
-      "bytes": 7371,
+      "bytes": 7602,
       "imports": [
         {
           "path": "node_modules/three/build/three.module.js",
@@ -592,10 +592,10 @@
     }
   },
   "outputs": {
-    "assets/build/app-SA4OYK3A.js": {
+    "assets/build/app-73WXFN3G.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-EFQA2PJF.js",
+          "path": "assets/build/effects-controller-TSQJXYWC.js",
           "kind": "dynamic-import"
         },
         {
@@ -665,7 +665,7 @@
       },
       "bytes": 31546
     },
-    "assets/build/ken-624SXZHZ.js": {
+    "assets/build/ken-5TCU22YU.js": {
       "imports": [
         {
           "path": "assets/build/chunk-GDTSZPI5.js",
@@ -692,7 +692,7 @@
           "bytesInOutput": 420
         },
         "src/effects/ken-physics.js": {
-          "bytesInOutput": 3199
+          "bytesInOutput": 3239
         },
         "src/effects/ken-material.js": {
           "bytesInOutput": 1656
@@ -701,7 +701,7 @@
           "bytesInOutput": 3643
         }
       },
-      "bytes": 12187
+      "bytes": 12227
     },
     "assets/build/chunk-GDTSZPI5.js": {
       "imports": [
@@ -898,7 +898,7 @@
       },
       "bytes": 672470
     },
-    "assets/build/effects-controller-EFQA2PJF.js": {
+    "assets/build/effects-controller-TSQJXYWC.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
@@ -909,7 +909,7 @@
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/ken-624SXZHZ.js",
+          "path": "assets/build/ken-5TCU22YU.js",
           "kind": "dynamic-import"
         },
         {

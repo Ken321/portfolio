@@ -58,11 +58,11 @@ test('hover visibly displaces the gathering cluster',()=>{
   assert.ok(idle.bodies.some((b,i)=>b.position.distanceTo(start[i])>.1));
   assert.ok(hover.bodies.some((b,i)=>b.position.distanceTo(idle.bodies[i].position)>.3));
 });
-test('bounded integration prevents fast opposing glyphs tunnelling',()=>{
+test('fast opposing glyphs stay separated, including when they slide around in depth',()=>{
   const sim=createPhysics(assets,2),[a,b]=sim.bodies;
   a.position.set(-2,0,0);b.position.set(2,0,0);
   a.velocity.set(200,0,0);b.velocity.set(-200,0,0);
-  for(let i=0;i<100;i++){sim.step(null);assert.ok(a.position.x<b.position.x);assert.ok(!glyphContact(a,b,contact)||contact.depth<.01);}
+  for(let i=0;i<100;i++){sim.step(null);assert.ok(!glyphContact(a,b,contact)||contact.depth<.01);}
 });
 
 for(const count of [9,15,18,21,36])test(`${count} letters settle, wake on hover, then settle again`,()=>{
@@ -100,10 +100,32 @@ test('a quick swipe produces energetic spin and translation, then settles',()=>{
 });
 
 
-test('return response covers the reference distance in about half a second',()=>{
+test('the wider horizontal gathering still returns within one second',()=>{
   const sim=createPhysics([{radius:1}],1),body=sim.bodies[0];
   body.position.set(3,0,0);body.velocity.set(0,0,0);
   let steps=0;
   while(body.position.x>1 && steps<120){sim.step(null);steps++;}
-  assert.ok(steps/120>=.45 && steps/120<=.55,`Return took ${steps/120}s`);
+  assert.ok(steps/120>=.45 && steps/120<=1,`Return took ${steps/120}s`);
+});
+
+test('only excess rear depth gets extra push while horizontal gathering is gentler',()=>{
+  const make=(x,y,z)=>{const sim=createPhysics([{radius:1}],1),b=sim.bodies[0];b.position.set(x,y,z);b.velocity.set(0,0,0);b.angular.set(0,0,0);sim.step(null);return b;};
+  const front=make(0,0,1),nearRear=make(0,0,-.4),rear=make(0,0,-1);
+  assert.ok(Math.abs(nearRear.velocity.z/.4+front.velocity.z)<1e-10,'The central depth force remains symmetric before the rear boundary');
+  assert.ok(rear.velocity.z>Math.abs(front.velocity.z)*2,'Extra force acts on excess rear depth');
+  assert.ok(Math.abs(make(1,0,0).velocity.x)<Math.abs(make(0,1,0).velocity.y),'The cluster can spread horizontally more easily');
+});
+
+test('settled desktop cluster stays shallow at the rear and spreads sideways',()=>{
+  const sim=createPhysics(assets,36);
+  for(let i=0;i<1200&&!sim.sleeping;i++)sim.step(null);
+  assert.ok(sim.sleeping);
+  let left=Infinity,right=-Infinity,rear=Infinity,front=-Infinity;
+  for(const b of sim.bodies)for(const p of b.collider.pieces){
+    left=Math.min(left,b.position.x+p.offset.x-p.extent.x);right=Math.max(right,b.position.x+p.offset.x+p.extent.x);
+    rear=Math.min(rear,b.position.z+p.offset.z-p.extent.z);front=Math.max(front,b.position.z+p.offset.z+p.extent.z);
+  }
+  assert.ok(rear>-2.15,`Rear is too deep: ${rear}`);
+  assert.ok(front>2&&front<3.5,`Front moved too far: ${front}`);
+  assert.ok(right-left>(front-rear)*1.1,'The main spread must be horizontal');
 });

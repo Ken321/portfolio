@@ -4,6 +4,9 @@ export const STEP = 1 / 120;
 const RESPONSE_SPEED = 2.3;
 const MAX_SPEED = 7 * RESPONSE_SPEED;
 const DAMPING = Math.exp(-2.8 * RESPONSE_SPEED * STEP);
+const HORIZONTAL_PULL = 2;
+const REAR_SOFT_LIMIT = -.6;
+const REAR_PULL = 8;
 const axis = new Vector3(), turn = new Quaternion();
 const contact = { depth: 0, normal: new Vector3() };
 
@@ -92,7 +95,9 @@ export function createPhysics(assets, count) {
       body.previousPosition.copy(p);
       // Strong central attraction; no perpetual orbit or time-driven spin.
       // Contour contacts allow a deeper, closer cluster without intersecting glyphs.
-      let ax=-p.x*3, ay=-p.y*4, az=-p.z*1.5;
+      // Keep the front response; excess rear depth is redirected into a wider cluster.
+      let ax=-p.x*HORIZONTAL_PULL, ay=-p.y*4;
+      let az=-p.z*1.5+Math.max(0,REAR_SOFT_LIMIT-p.z)*REAR_PULL;
       if(pointer){
         // Project the cursor ray onto this body's depth, not only the z=0 plane.
         const perspective=pointer.cameraZ ? (pointer.cameraZ-p.z)/pointer.cameraZ : 1;
