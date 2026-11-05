@@ -32,7 +32,9 @@ export function updateParameters(stack, codeKey) {
  requireThat(/^voice\/[a-f0-9]{64}\.zip$/.test(codeKey), 'Unexpected new artifact key');
  return stack.Parameters.map(p => p.ParameterKey === 'CodeKey' ? { ParameterKey: p.ParameterKey, ParameterValue: codeKey } : { ParameterKey: p.ParameterKey, UsePreviousValue: true });
 }
-export function validateChangeSet(changeSet) {
+export function validateChangeSet(changeSet, review) {
+ if (review) validateReviewBinding(changeSet, review);
+ requireThat(!changeSet.StatusReason && !changeSet.NextToken, 'Incomplete, warning-bearing or paginated change set');
  requireThat(changeSet.StackId === target.stack && changeSet.Status === 'CREATE_COMPLETE' && changeSet.ExecutionStatus === 'AVAILABLE', 'Change set is not executable');
  requireThat(!changeSet.RoleARN && (!changeSet.ChangeSetType || changeSet.ChangeSetType === 'UPDATE'), 'Unexpected change set role/type');
  const changes = changeSet.Changes ?? [];
@@ -42,14 +44,63 @@ export function validateChangeSet(changeSet) {
   const r = change.ResourceChange;
   requireThat(change.Type === 'Resource' && r && r.Action === 'Modify' && r.ResourceType === 'AWS::Lambda::Function' && r.Replacement === 'False', 'Non-code modification or replacement');
   requireThat(isDeepStrictEqual(r.Scope, ['Properties']) && r.Details?.length > 0, 'Missing property change evidence');
+  const staticDetails = r.Details.filter(d => d.ChangeSource === 'ParameterReference' && d.CausingEntity === 'CodeKey' && d.Evaluation === 'Static');
+  requireThat(staticDetails.length === 1, 'Missing or ambiguous static CodeKey evidence');
+  requireThat(r.Details.length <= 2, 'Unexpected additional detail');
   for (const d of r.Details) {
-   requireThat(d.Target?.Attribute === 'Properties' && d.Target.Name === 'Code' && d.Target.RequiresRecreation === 'Never' && d.ChangeSource === 'ParameterReference' && d.CausingEntity === 'CodeKey' && d.Evaluation === 'Static', 'Change is not solely the CodeKey parameter');
+   requireThat(d.Target?.Attribute === 'Properties' && d.Target.Name === 'Code' && d.Target.RequiresRecreation === 'Never', 'Change is not solely the CodeKey parameter');
+   const staticCode = d === staticDetails[0];
+   // AWS documents an identical Dynamic/DirectModification companion for a changed Ref parameter.
+   // Admit it only with complete, bound property evidence, never on its own.
+   requireThat(staticCode || (review && d.ChangeSource === 'DirectModification' && d.Evaluation === 'Dynamic' && !d.CausingEntity && isDeepStrictEqual(d.Target, staticDetails[0].Target)), 'Unmatched or unreviewed dynamic detail');
+   if (review) requireThat(d.Target.Path === '/Properties/Code/S3Key' && d.Target.AttributeChangeType === 'Modify' && d.Target.BeforeValue === review.oldKey && d.Target.AfterValue === review.newKey, 'Unexpected property-level code evidence');
   }
   ids.push(r.LogicalResourceId);
  }
  requireThat(isDeepStrictEqual(ids.sort(), ['Api', 'Cleanup']), 'Unexpected logical resources');
 }
+function validateReviewBinding(changeSet, review) {
+ requireThat(changeSet.ChangeSetId === review.changeSetId && changeSet.ChangeSetName === review.name && review.changeSetId?.startsWith(`arn:aws:cloudformation:${target.region}:${target.account}:changeSet/${review.name}/`), 'Unexpected reviewed change set identity');
+ requireThat(/^voice\/[a-f0-9]{64}\.zip$/.test(review.newKey) && review.newKey !== review.oldKey, 'Unexpected reviewed ZIP');
+ const params = new Map((changeSet.Parameters ?? []).map(p => [p.ParameterKey,p.ParameterValue]));
+ requireThat(params.size === review.parameters.size && changeSet.Parameters.length === params.size && [...review.parameters].every(([k,v]) => params.get(k) === (k === 'CodeKey' ? review.newKey : v)), 'Change set parameters differ from reviewed update');
+ validateTemplate(review.template);
+ validateCodeContexts(changeSet, review.oldKey, review.newKey);
+ for (const {ResourceChange:r} of changeSet.Changes ?? []) {
+  const resource=review.template.Resources[r.LogicalResourceId];
+  requireThat(resource?.Type === 'AWS::Lambda::Function' && ['Api','Cleanup'].includes(r.LogicalResourceId) && r.PhysicalResourceId === `portfolio-voice-${r.LogicalResourceId === 'Api' ? 'api' : 'cleanup'}`, 'Unexpected physical function');
+  for (const field of ['BeforeContext','AfterContext']) {
+   const context=JSON.parse(r[field]);
+   requireThat(isDeepStrictEqual(Object.keys(context).sort(), ['Properties']) && isDeepStrictEqual(Object.keys(context.Properties).sort(), Object.keys(resource.Properties).sort()), 'Incomplete resource property context');
+   requireThat(context.Properties.FunctionName === r.PhysicalResourceId, 'Context function mismatch');
+   const env=resource.Properties.Environment?.Variables;
+   if(env) requireThat(isDeepStrictEqual(Object.keys(context.Properties.Environment?.Variables ?? {}).sort(),Object.keys(env).sort()), 'Incomplete environment context');
+   function resolved(v) {
+    if(typeof v === 'string') return !/KNOWN_AFTER_APPLY|\{\{|\$\{/.test(v);
+    if(v === null || v === undefined) return false;
+    if(Array.isArray(v)) return v.every(resolved);
+    if(typeof v === 'object') return !Object.keys(v).some(k => k === 'Ref' || k.startsWith('Fn::') || k === 'redacted') && Object.values(v).every(resolved);
+    return true;
+   }
+   requireThat(resolved(context), 'Unresolved or redacted property context');
+  }
+ }
+}
 export function validateUnchanged(before, after) {
  validateStack(after);
  requireThat(isDeepStrictEqual(before.Parameters, after.Parameters) && before.LastUpdatedTime === after.LastUpdatedTime, 'Stack changed concurrently; inspect before retry');
+}
+
+export function validateCodeContexts(changeSet, oldKey, newKey) {
+ for (const { ResourceChange: r } of changeSet.Changes) {
+  requireThat(typeof r.BeforeContext === 'string' && typeof r.AfterContext === 'string', 'Missing before/after context');
+  let before,after;
+  try { before=JSON.parse(r.BeforeContext);after=JSON.parse(r.AfterContext); }
+  catch { throw new Error('Invalid before/after context'); }
+  requireThat(before?.Properties?.Code?.S3Key === oldKey && after?.Properties?.Code?.S3Key === newKey, 'Unexpected code key context');
+  requireThat(before.Properties.Code.S3Bucket === target.bucket && after.Properties.Code.S3Bucket === target.bucket, 'Unexpected code bucket context');
+  const b=structuredClone(before),a=structuredClone(after);
+  delete b.Properties.Code.S3Key;delete a.Properties.Code.S3Key;
+  requireThat(isDeepStrictEqual(b,a), 'Context changed outside Code.S3Key');
+ }
 }
