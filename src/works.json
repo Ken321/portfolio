@@ -62,14 +62,14 @@
   {
     "id": "scene-9",
     "title": "AR Kami-Zumo",
-    "descriptionJa": "空中のボタンには、押した手応えがない。ならば、実際に触れられる机を操作に使ったらどうだろう。そんな仮説から作った、最初のAR作品です。<br><br>机に置いたARの土俵で、二人で紙相撲を遊びます。土俵脇のマーカーを手で叩くと、力士が動く仕組みです。もともと力士に直接触れない遊びなので、机の手触りを残したまま、力士をデジタルに置き換えられると考えました。<br><br>必殺技や進行方向の操作も加えています。一方で、叩く強さの反映や手の認識精度には課題が残りました。「現実のモノを間に挟むと、操作した実感が変わる」という考えを、まず触れる形にした試作です。<br><br><small>使用技術：Unity / AR Foundation / MediaPipeUnityPlugin</small>",
-    "descriptionEn": "A floating button has no surface to press. What if a real table could provide that feeling instead? This question led to my first AR project.<br><br>Two people play paper sumo on an AR ring placed on a table. Tapping marked spots beside the ring moves the wrestlers. In physical paper sumo, you never touch the wrestlers directly, so it seemed a good way to keep the real sensation of tapping while making the wrestlers digital.<br><br>I added special moves and some directional control. Detecting hands reliably and reflecting how hard a player taps remained challenges. It is a working prototype of an idea: placing a real object between your hands and a digital world can change how an interaction feels.<br><br><small>Built with: Unity / AR Foundation / MediaPipeUnityPlugin</small>",
-    "link": "https://youtu.be/nF4E8MjyVu8?si=C9Tpxh7yzLl8rq2K",
-    "linkLabel": "Watch on YouTube",
-    "category": "AR / WebXR",
+    "descriptionJa": "空中のボタンには、押した手応えがない。ならば、実際に触れられる机を操作に使ったらどうだろう。最初のAR作品で試したこのアイデアを、スマートフォンのブラウザで遊べるWeb ARゲームに作り直しました。<br><br>スマートフォンを横向きに構え、机にARの土俵を配置。二人の手をカメラで捉え、土俵の左右に表示されるパッドの位置で実際の机をトントンと叩いて遊びます。画面のボタンではなく、机の手触りを遊びの中心に置いています。<br><br>トントンすると両方の力士が揺れ、物理演算による押し合いや転倒が起こります。叩いた回数でゲージが溜まり、選んだ力士のジャンプ・重量化・ワープ・巨大化が自動で発動。名前と結果の公開に同意して遊び、取組履歴は誰でも見られます。<br><br><small>使用技術：8th Wall / MediaPipe / Three.js / Rapier<br>手指の映像から入力を推定するため、実際の接触や叩く強さを測定するものではありません。</small>",
+    "descriptionEn": "A floating button has no surface to press. What if a real table could provide that feeling instead? I rebuilt this idea from my first AR project as a Web AR game playable in a smartphone browser.<br><br>Hold the phone in landscape and place an AR sumo ring on a table. The camera tracks both players’ hands as they tap the real table at the pads shown beside the ring. The tactile surface of the table, rather than an on-screen button, is the interface.<br><br>Each tap shakes both wrestlers, while physics drives their collisions, pushing and falls. Taps fill a gauge that automatically triggers the selected wrestler’s jump, heavyweight, warp or giant move. Players agree to publish their names and results, and anyone can view the bout history.<br><br><small>Built with: 8th Wall / MediaPipe / Three.js / Rapier<br>Input is inferred from fingertip images; the game does not measure physical contact or tapping force.</small>",
+    "link": "https://kamizumo-web.vercel.app",
+    "linkLabel": "Play Web AR",
+    "category": "Web AR / Hand tracking / Physics",
     "image": "img/kamizumo.png",
-    "summaryJa": "机を叩く手触りを、ARの操作に。",
-    "summaryEn": "The table becomes the AR interface.",
+    "summaryJa": "机をトントン、二人で遊ぶWeb AR紙相撲。",
+    "summaryEn": "Tap a real table. Play Web AR sumo together.",
     "anchor": "center",
     "images": [
       {
