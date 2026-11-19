@@ -89,7 +89,7 @@
   {
     "id": "scene-13",
     "title": "Drive The Earth",
-    "descriptionJa": "8thwallのSky Effectを使うと空にARを重ねられるので、空に映して遊ぶゲームを考えていました。空を何かが飛び回る、いや、普通だ。空から星が落ちてくる。なるほど。見た目は面白い。どうゲームにするか？　落ちてくる星を良ければ良いのでは？　避けるってどうやって？　地球を運べばよいではないか。ということで、100万馬力のロボットが、近づいてくる惑星をすり抜け、地球を運んで行くというゲームにしました。星が近づいてくるのはインパクトがあるのですが、地球を運んでいる感じはしない。スケール感って難しいなと思います。",
+    "descriptionJa": "8thwallのSky Effectを使うと空にARを重ねられるので、空に映して遊ぶゲームを考えていました。空を何かが飛び回る、いや、普通だ。空から星が落ちてくる。なるほど。見た目は面白い。どうゲームにするか？　落ちてくる星を避ければ良いのでは？　避けるってどうやって？　地球を運べばよいではないか。ということで、100万馬力のロボットが、近づいてくる惑星をすり抜け、地球を運んで行くというゲームにしました。星が近づいてくるのはインパクトがあるのですが、地球を運んでいる感じはしない。スケール感って難しいなと思います。",
     "descriptionEn": "8th Wall’s Sky Effect lets you overlay AR on the sky, so I was thinking about games you could play up there. Something flying around? Too ordinary. Stars falling from the sky? Now that would look interesting. But how would it work as a game? You could dodge the falling stars. How would you dodge them? Why not move the Earth itself? That is how it became a game about a million-horsepower robot carrying Earth through approaching planets. The planets coming toward you make an impression, but it does not really feel like you are carrying Earth. A sense of scale is a difficult thing to create.",
     "link": "https://ken321.github.io/drive-the-earth/",
     "linkLabel": "Play",
