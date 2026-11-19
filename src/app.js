@@ -1,3 +1,4 @@
+import {finishInitialLoading} from './loading.js';
 let language = 'ja';
 function applyLanguage(lang) {
   language = lang; document.documentElement.lang = lang;
@@ -158,9 +159,10 @@ if(restoredWork)void showWork(restoredWork);
 document.querySelector('.site-header a[href="#top"]').addEventListener('click',event=>{
   if(activeWork){event.preventDefault();closeWork();}
 });
-// Navigation and work details are already usable before loading any 3D code.
+// Prepare initially visible effects behind the loading screen.
+let initialEffects = Promise.resolve();
 if ('IntersectionObserver' in window && 'ResizeObserver' in window) {
-  import('./effects-controller.js').then(({ startEffects }) => startEffects()).catch(error => console.warn('Static portfolio mode', error));
+  initialEffects = import('./effects-controller.js').then(({ startEffects }) => startEffects()).catch(error => console.warn('Static portfolio mode', error));
 }
 document.querySelectorAll('.avatar-scene').forEach(node => node.addEventListener('keydown', event => {
   if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); node.click(); }
@@ -175,3 +177,5 @@ voiceRoot?.querySelector('[data-voice-start]').addEventListener('click',async fu
   catch{voiceRoot.querySelector('[data-voice-status]').textContent=document.documentElement.lang==='en'?'Could not load voice chat. Please try again.':'音声会話を読み込めませんでした。もう一度お試しください。';}
   finally{button.disabled=false;}
 });
+
+finishInitialLoading(initialEffects);

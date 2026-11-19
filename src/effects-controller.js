@@ -154,4 +154,5 @@ export function startEffects() {
   if (new URLSearchParams(location.search).has('perf')) {
     window.__portfolioPerformance = () => states.map(s => ({ kind: s.kind, visible: s.visible, loaded: !!s.effect, frames: s.frames, time: s.time, state: s.node.dataset.state, diagnostics: s.effect?.debug?.() }));
   }
+  return Promise.allSettled(states.filter(s=>{const r=s.node.getBoundingClientRect();return r.top<innerHeight&&r.bottom>0;}).map(load));
 }

@@ -1,5 +1,10 @@
 {
   "inputs": {
+    "src/loading.js": {
+      "bytes": 676,
+      "imports": [],
+      "format": "esm"
+    },
     "src/hero-touch.js": {
       "bytes": 1464,
       "imports": [],
@@ -10,38 +15,38 @@
       "imports": [],
       "format": "esm"
     },
-    "node_modules/three/build/three.module.js": {
+    "../portofolio/node_modules/three/build/three.module.js": {
       "bytes": 1298981,
       "imports": [],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/geometries/TextGeometry.js": {
+    "../portofolio/node_modules/three/examples/jsm/geometries/TextGeometry.js": {
       "bytes": 1572,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/loaders/FontLoader.js": {
+    "../portofolio/node_modules/three/examples/jsm/loaders/FontLoader.js": {
       "bytes": 3204,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/fonts/helvetiker_bold.typeface.json": {
+    "../portofolio/node_modules/three/examples/fonts/helvetiker_bold.typeface.json": {
       "bytes": 61632,
       "imports": []
     },
-    "node_modules/three/examples/fonts/helvetiker_regular.typeface.json": {
+    "../portofolio/node_modules/three/examples/fonts/helvetiker_regular.typeface.json": {
       "bytes": 63182,
       "imports": []
     },
@@ -54,144 +59,144 @@
           "original": "../hero-touch.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/loaders/FontLoader.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/loaders/FontLoader.js",
           "kind": "import-statement",
           "original": "three/addons/loaders/FontLoader.js"
         },
         {
-          "path": "node_modules/three/examples/fonts/helvetiker_bold.typeface.json",
+          "path": "../portofolio/node_modules/three/examples/fonts/helvetiker_bold.typeface.json",
           "kind": "import-statement",
           "original": "three/examples/fonts/helvetiker_bold.typeface.json"
         },
         {
-          "path": "node_modules/three/examples/fonts/helvetiker_regular.typeface.json",
+          "path": "../portofolio/node_modules/three/examples/fonts/helvetiker_regular.typeface.json",
           "kind": "import-statement",
           "original": "three/examples/fonts/helvetiker_regular.typeface.json"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/shaders/CopyShader.js": {
+    "../portofolio/node_modules/three/examples/jsm/shaders/CopyShader.js": {
       "bytes": 571,
       "imports": [],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/postprocessing/Pass.js": {
+    "../portofolio/node_modules/three/examples/jsm/postprocessing/Pass.js": {
       "bytes": 1706,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/postprocessing/ShaderPass.js": {
+    "../portofolio/node_modules/three/examples/jsm/postprocessing/ShaderPass.js": {
       "bytes": 1576,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/Pass.js",
           "kind": "import-statement",
           "original": "./Pass.js"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/postprocessing/MaskPass.js": {
+    "../portofolio/node_modules/three/examples/jsm/postprocessing/MaskPass.js": {
       "bytes": 2231,
       "imports": [
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/Pass.js",
           "kind": "import-statement",
           "original": "./Pass.js"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/postprocessing/EffectComposer.js": {
+    "../portofolio/node_modules/three/examples/jsm/postprocessing/EffectComposer.js": {
       "bytes": 4651,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
         {
-          "path": "node_modules/three/examples/jsm/shaders/CopyShader.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/shaders/CopyShader.js",
           "kind": "import-statement",
           "original": "../shaders/CopyShader.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
           "kind": "import-statement",
           "original": "./ShaderPass.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/MaskPass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/MaskPass.js",
           "kind": "import-statement",
           "original": "./MaskPass.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/MaskPass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/MaskPass.js",
           "kind": "import-statement",
           "original": "./MaskPass.js"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/postprocessing/RenderPass.js": {
+    "../portofolio/node_modules/three/examples/jsm/postprocessing/RenderPass.js": {
       "bytes": 1941,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/Pass.js",
           "kind": "import-statement",
           "original": "./Pass.js"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js": {
+    "../portofolio/node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js": {
       "bytes": 1147,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js": {
+    "../portofolio/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js": {
       "bytes": 12410,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/Pass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/Pass.js",
           "kind": "import-statement",
           "original": "./Pass.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/shaders/CopyShader.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/shaders/CopyShader.js",
           "kind": "import-statement",
           "original": "../shaders/CopyShader.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js",
           "kind": "import-statement",
           "original": "../shaders/LuminosityHighPassShader.js"
         }
@@ -207,17 +212,17 @@
       "bytes": 35891,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
         {
-          "path": "node_modules/three/examples/jsm/geometries/TextGeometry.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/geometries/TextGeometry.js",
           "kind": "import-statement",
           "original": "three/addons/geometries/TextGeometry.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/loaders/FontLoader.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/loaders/FontLoader.js",
           "kind": "import-statement",
           "original": "three/addons/loaders/FontLoader.js"
         },
@@ -227,22 +232,22 @@
           "original": "./shared.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/EffectComposer.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/EffectComposer.js",
           "kind": "import-statement",
           "original": "three/addons/postprocessing/EffectComposer.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/RenderPass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/RenderPass.js",
           "kind": "import-statement",
           "original": "three/addons/postprocessing/RenderPass.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/ShaderPass.js",
           "kind": "import-statement",
           "original": "three/addons/postprocessing/ShaderPass.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js",
           "kind": "import-statement",
           "original": "three/addons/postprocessing/UnrealBloomPass.js"
         },
@@ -258,7 +263,7 @@
       "bytes": 5579,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
@@ -269,7 +274,7 @@
       "bytes": 933,
       "imports": [
         {
-          "path": "node_modules/three/examples/jsm/geometries/TextGeometry.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/geometries/TextGeometry.js",
           "kind": "import-statement",
           "original": "three/addons/geometries/TextGeometry.js"
         },
@@ -285,7 +290,7 @@
       "bytes": 7602,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
@@ -301,7 +306,7 @@
       "bytes": 2403,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
@@ -312,7 +317,7 @@
       "bytes": 7014,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
@@ -343,7 +348,7 @@
       "bytes": 4497,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
@@ -354,7 +359,7 @@
       "bytes": 4864,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
@@ -370,7 +375,7 @@
       "bytes": 12596,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
@@ -386,7 +391,7 @@
       "bytes": 4282,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
@@ -397,7 +402,7 @@
       "bytes": 21750,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
@@ -428,7 +433,7 @@
       "bytes": 6189,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
@@ -450,32 +455,32 @@
       "imports": [],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
+    "../portofolio/node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
       "bytes": 24850,
       "imports": [],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/utils/BufferGeometryUtils.js": {
+    "../portofolio/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js": {
       "bytes": 31768,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         }
       ],
       "format": "esm"
     },
-    "node_modules/three/examples/jsm/loaders/GLTFLoader.js": {
+    "../portofolio/node_modules/three/examples/jsm/loaders/GLTFLoader.js": {
       "bytes": 110043,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
         {
-          "path": "node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js",
           "kind": "import-statement",
           "original": "../utils/BufferGeometryUtils.js"
         }
@@ -486,7 +491,7 @@
       "bytes": 4821,
       "imports": [
         {
-          "path": "node_modules/three/build/three.module.js",
+          "path": "../portofolio/node_modules/three/build/three.module.js",
           "kind": "import-statement",
           "original": "three"
         },
@@ -501,12 +506,12 @@
           "original": "../voice-motion.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/libs/meshopt_decoder.module.js",
           "kind": "import-statement",
           "original": "three/addons/libs/meshopt_decoder.module.js"
         },
         {
-          "path": "node_modules/three/examples/jsm/loaders/GLTFLoader.js",
+          "path": "../portofolio/node_modules/three/examples/jsm/loaders/GLTFLoader.js",
           "kind": "import-statement",
           "original": "three/addons/loaders/GLTFLoader.js"
         },
@@ -519,7 +524,7 @@
       "format": "esm"
     },
     "src/effects-controller.js": {
-      "bytes": 7552,
+      "bytes": 7689,
       "imports": [
         {
           "path": "src/hero-touch.js",
@@ -601,8 +606,13 @@
       "format": "esm"
     },
     "src/app.js": {
-      "bytes": 11676,
+      "bytes": 11809,
       "imports": [
+        {
+          "path": "src/loading.js",
+          "kind": "import-statement",
+          "original": "./loading.js"
+        },
         {
           "path": "src/effects-controller.js",
           "kind": "dynamic-import",
@@ -622,10 +632,10 @@
     }
   },
   "outputs": {
-    "assets/build/app-XBLCQT73.js": {
+    "assets/build/app-2TIDPGO6.js": {
       "imports": [
         {
-          "path": "assets/build/effects-controller-IDKFLZU3.js",
+          "path": "assets/build/effects-controller-CC5GMPJX.js",
           "kind": "dynamic-import"
         },
         {
@@ -636,20 +646,23 @@
       "exports": [],
       "entryPoint": "src/app.js",
       "inputs": {
+        "src/loading.js": {
+          "bytesInOutput": 405
+        },
         "src/app.js": {
-          "bytesInOutput": 7986
+          "bytesInOutput": 8019
         }
       },
-      "bytes": 7987
+      "bytes": 8425
     },
-    "assets/build/hero-VK4TOORJ.js": {
+    "assets/build/hero-NF7HPOVS.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-GDTSZPI5.js",
+          "path": "assets/build/chunk-FE4YX4AS.js",
           "kind": "import-statement"
         },
         {
-          "path": "assets/build/chunk-S5WRHXED.js",
+          "path": "assets/build/chunk-DF6QSMBF.js",
           "kind": "import-statement"
         },
         {
@@ -662,28 +675,28 @@
       ],
       "entryPoint": "src/effects/hero.js",
       "inputs": {
-        "node_modules/three/examples/jsm/shaders/CopyShader.js": {
+        "../portofolio/node_modules/three/examples/jsm/shaders/CopyShader.js": {
           "bytesInOutput": 427
         },
-        "node_modules/three/examples/jsm/postprocessing/Pass.js": {
+        "../portofolio/node_modules/three/examples/jsm/postprocessing/Pass.js": {
           "bytesInOutput": 617
         },
-        "node_modules/three/examples/jsm/postprocessing/ShaderPass.js": {
+        "../portofolio/node_modules/three/examples/jsm/postprocessing/ShaderPass.js": {
           "bytesInOutput": 779
         },
-        "node_modules/three/examples/jsm/postprocessing/MaskPass.js": {
+        "../portofolio/node_modules/three/examples/jsm/postprocessing/MaskPass.js": {
           "bytesInOutput": 1096
         },
-        "node_modules/three/examples/jsm/postprocessing/EffectComposer.js": {
+        "../portofolio/node_modules/three/examples/jsm/postprocessing/EffectComposer.js": {
           "bytesInOutput": 2568
         },
-        "node_modules/three/examples/jsm/postprocessing/RenderPass.js": {
+        "../portofolio/node_modules/three/examples/jsm/postprocessing/RenderPass.js": {
           "bytesInOutput": 970
         },
-        "node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js": {
+        "../portofolio/node_modules/three/examples/jsm/shaders/LuminosityHighPassShader.js": {
           "bytesInOutput": 873
         },
-        "node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js": {
+        "../portofolio/node_modules/three/examples/jsm/postprocessing/UnrealBloomPass.js": {
           "bytesInOutput": 8027
         },
         "src/effects/ascii.js": {
@@ -695,14 +708,14 @@
       },
       "bytes": 31546
     },
-    "assets/build/ken-5TCU22YU.js": {
+    "assets/build/ken-JBHWXGR3.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-GDTSZPI5.js",
+          "path": "assets/build/chunk-FE4YX4AS.js",
           "kind": "import-statement"
         },
         {
-          "path": "assets/build/chunk-S5WRHXED.js",
+          "path": "assets/build/chunk-DF6QSMBF.js",
           "kind": "import-statement"
         },
         {
@@ -733,10 +746,10 @@
       },
       "bytes": 12227
     },
-    "assets/build/chunk-GDTSZPI5.js": {
+    "assets/build/chunk-FE4YX4AS.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-S5WRHXED.js",
+          "path": "assets/build/chunk-DF6QSMBF.js",
           "kind": "import-statement"
         }
       ],
@@ -744,16 +757,16 @@
         "a"
       ],
       "inputs": {
-        "node_modules/three/examples/jsm/geometries/TextGeometry.js": {
+        "../portofolio/node_modules/three/examples/jsm/geometries/TextGeometry.js": {
           "bytesInOutput": 475
         }
       },
       "bytes": 532
     },
-    "assets/build/avatar-DMFH37F6.js": {
+    "assets/build/avatar-AIHV5KIE.js": {
       "imports": [
         {
-          "path": "assets/build/chunk-S5WRHXED.js",
+          "path": "assets/build/chunk-DF6QSMBF.js",
           "kind": "import-statement"
         },
         {
@@ -788,13 +801,13 @@
         "src/effects/avatar-mixamo-motion.js": {
           "bytesInOutput": 3268
         },
-        "node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
+        "../portofolio/node_modules/three/examples/jsm/libs/meshopt_decoder.module.js": {
           "bytesInOutput": 22393
         },
-        "node_modules/three/examples/jsm/utils/BufferGeometryUtils.js": {
+        "../portofolio/node_modules/three/examples/jsm/utils/BufferGeometryUtils.js": {
           "bytesInOutput": 991
         },
-        "node_modules/three/examples/jsm/loaders/GLTFLoader.js": {
+        "../portofolio/node_modules/three/examples/jsm/loaders/GLTFLoader.js": {
           "bytesInOutput": 44210
         },
         "src/effects/avatar.js": {
@@ -803,7 +816,7 @@
       },
       "bytes": 99235
     },
-    "assets/build/chunk-S5WRHXED.js": {
+    "assets/build/chunk-DF6QSMBF.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
@@ -910,16 +923,16 @@
         "za"
       ],
       "inputs": {
-        "node_modules/three/build/three.module.js": {
+        "../portofolio/node_modules/three/build/three.module.js": {
           "bytesInOutput": 547433
         },
-        "node_modules/three/examples/jsm/loaders/FontLoader.js": {
+        "../portofolio/node_modules/three/examples/jsm/loaders/FontLoader.js": {
           "bytesInOutput": 1395
         },
-        "node_modules/three/examples/fonts/helvetiker_bold.typeface.json": {
+        "../portofolio/node_modules/three/examples/fonts/helvetiker_bold.typeface.json": {
           "bytesInOutput": 60025
         },
-        "node_modules/three/examples/fonts/helvetiker_regular.typeface.json": {
+        "../portofolio/node_modules/three/examples/fonts/helvetiker_regular.typeface.json": {
           "bytesInOutput": 61578
         },
         "src/effects/shared.js": {
@@ -928,22 +941,22 @@
       },
       "bytes": 672470
     },
-    "assets/build/effects-controller-IDKFLZU3.js": {
+    "assets/build/effects-controller-CC5GMPJX.js": {
       "imports": [
         {
           "path": "assets/build/chunk-V2K23ZXQ.js",
           "kind": "import-statement"
         },
         {
-          "path": "assets/build/hero-VK4TOORJ.js",
+          "path": "assets/build/hero-NF7HPOVS.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/ken-5TCU22YU.js",
+          "path": "assets/build/ken-JBHWXGR3.js",
           "kind": "dynamic-import"
         },
         {
-          "path": "assets/build/avatar-DMFH37F6.js",
+          "path": "assets/build/avatar-AIHV5KIE.js",
           "kind": "dynamic-import"
         }
       ],
@@ -956,10 +969,10 @@
           "bytesInOutput": 198
         },
         "src/effects-controller.js": {
-          "bytesInOutput": 4327
+          "bytesInOutput": 4450
         }
       },
-      "bytes": 4587
+      "bytes": 4710
     },
     "assets/build/chunk-V2K23ZXQ.js": {
       "imports": [],

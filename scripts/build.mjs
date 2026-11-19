@@ -22,6 +22,7 @@ const details = works.map(w => {
   return `<template id="detail-${w.id}"><div class="detail-content"><div class="detail-description" data-lang-content="ja">${w.descriptionJa}</div><div class="detail-description" data-lang-content="en" hidden>${w.descriptionEn}</div><p class="detail-meta">${escape(w.category)}</p><div class="detail-actions"><a class="detail-link" href="${escape(w.link)}" target="_blank" rel="noopener noreferrer">${escape(w.linkLabel)} ↗</a><button type="button" class="work-close"><span data-ja="閉じる" data-en="Close">閉じる</span><span aria-hidden="true">−</span></button></div></div></template>`;
 }).join('\n');
 let html = await readFile(resolve(root, 'src/index.template.html'), 'utf8');
+html = html.replace('__BOOT__', await readFile(resolve(root,'src/loading-boot.js'),'utf8')).replace('__BOOT_CSS__',await readFile(resolve(root,'src/loading.css'),'utf8')).replace('__LOADER_LOGO__',(await readFile(resolve(root,'321ken_logo.svg'),'utf8')).replace(/<\?xml[^>]*>/,'').replace(/id="[^"]*"/g,''));
 html = html.replace('__WORKS__', cards).replace('__DETAILS__', details).replace('__JS__', entry('src/app.js')).replace('__CSS__', entry('src/styles.css'));
 await writeFile(resolve(root, 'index.html'), html);
 await mkdir(resolve(root, 'reports'), { recursive: true });

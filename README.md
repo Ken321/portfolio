@@ -50,3 +50,7 @@ Original images and `avatar.glb` are retained. The avatar model is loaded only n
 The avatar retains its original model and adds optional OpenAI voice chat with subtitles and listening/speaking head gestures. Setup and deployment requirements are in `server/README.md`. A separate voice server and private API key are required; the static site alone cannot provide AI conversations.
 
 Before publishing, review the local preview and check iPhone Safari and Android Chrome on actual devices. Desktop browser emulation is not proof of phone GPU performance or Core Web Vitals in production.
+
+## Initial loading screen
+
+The existing SVG logo hops and squashes while the initial page resources and visible effects initialize. Offscreen projects, avatar and voice still load lazily. Reduced-motion preferences keep the logo still; JavaScript-disabled browsers show the static page immediately. If initial scripts fail or take too long, a show-page button appears after 5 seconds and the static content is automatically revealed after 10 seconds. The loading bootstrap is inline and independent of the main module so a module failure cannot permanently hide content.
